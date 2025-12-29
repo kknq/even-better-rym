@@ -9,6 +9,9 @@ export const SERVICE_IDS = [
   'youtube',
   'melon',
   'beatport',
+  'qobuz',
+  'tidal',
+  'deezer',
 ] as const
 
 export type ServiceId = (typeof SERVICE_IDS)[number]
