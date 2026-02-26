@@ -4,6 +4,9 @@ export const streamLinkNames = [
   'soundcloud',
   'spotify',
   'applemusic',
+  'deezer',
+  'qobuz',
+  'tidal',
 ] as const
 export type StreamLinkName = (typeof streamLinkNames)[number]
 const isStreamLinkName = (string: string): string is StreamLinkName =>

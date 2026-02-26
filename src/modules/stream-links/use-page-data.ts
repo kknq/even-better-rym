@@ -209,6 +209,21 @@ function getFullLink(service: string, linkData: LinkData) {
       return `https://www.youtube.com/watch?v=${data.media_id}`
     }
 
+    case 'deezer': {
+      const data = linkData as DeezerLinkData
+      return `https://www.deezer.com/us/album/${data.media_id}`
+    }
+
+    case 'qobuz': {
+      const data = linkData as QobuzLinkData
+      return `https://open.qobuz.com/album/${data.media_id}`
+    }
+
+    case 'tidal': {
+      const data = linkData as TidalLinkData
+      return `https://tidal.com/album/${data.media_id}`
+    }
+
     default:
       throw new Error(`Cannot create links for service: ${service}`)
   }
@@ -220,6 +235,9 @@ type LinkData =
   | SoundcloudLinkData
   | BandcampLinkData
   | YoutubeLinkData
+  | DeezerLinkData
+  | QobuzLinkData
+  | TidalLinkData
 
 type SpotifyLinkData = { type: string; media_id: string }
 type AppleMusicLinkData = {
@@ -231,3 +249,6 @@ type AppleMusicLinkData = {
 type SoundcloudLinkData = { url: string }
 type BandcampLinkData = { url: string }
 type YoutubeLinkData = { media_id: string }
+type QobuzLinkData = { media_id: string }
+type DeezerLinkData = { media_id: string }
+type TidalLinkData = {  media_id: string }
