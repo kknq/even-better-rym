@@ -1,6 +1,8 @@
-# better-rym-vite
+# even-better-rym
 
-This template should help get you started developing a preact web extension in Vite.
+I was tired of getting no updates so I forked the original repo and will try to publish it. Feel free to contribute.
+
+All credit goes to [jgchk](https://github.com/jgchk) and all the beautiful people who maintained and made changes during the years
 
 ## Usage Notes
 
