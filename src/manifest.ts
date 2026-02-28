@@ -89,7 +89,7 @@ const ManifestV3 = {
   background: {
     service_worker: 'src/modules/background/index.ts',
   },
-  host_permissions: ['*://*/*'],
+  host_permissions: ['*https://rateyourmusic.com/*'],
 }
 
 export function getManifest(
