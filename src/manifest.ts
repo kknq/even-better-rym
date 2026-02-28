@@ -107,6 +107,13 @@ export function getManifest(
       ...manifest,
       ...ManifestV2,
       manifest_version: manifestVersion,
+      browser_specific_settings: {
+        gecko: {
+          data_collection_permissions: {
+            required: ["none"]
+          }
+        }
+      }
     }
   }
 
