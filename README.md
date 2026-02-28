@@ -6,16 +6,13 @@ All credit goes to [jgchk](https://github.com/jgchk) and all the beautiful peopl
 
 ## Usage Notes
 
-The extension manifest is defined in `src/manifest.js` and used by `@samrum/vite-plugin-web-extension` in the vite config.
+The extension manifest is defined in `src/manifest.ts` and used by `@samrum/vite-plugin-web-extension` in the vite config.
 
-Background, content scripts, options, and popup entry points exist in the `src/entries` directory.
-
-Content scripts are rendered by `src/entries/contentScript/renderContent.js` which renders content within a ShadowRoot
-and handles style injection for HMR and build modes.
+All adittional functionality and scripts are located in the `src/modules` directory.
 
 Otherwise, the project functions just like a regular Vite project.
 
-To switch between Manifest V2 and Manifest V3 builds, use the MANIFEST_VERSION environment variable defined in `.env`
+To switch between Manifest V2 and Manifest V3 builds, use the MANIFEST_VERSION environment variable defined in `.env` or just change the option in the vite.config.ts
 
 HMR during development in Manifest V3 requires Chromium version >= 110.0.5480.0.
 
@@ -38,7 +35,7 @@ npm install
 #### Development, HMR
 
 Hot Module Reloading is used to load changes inline without requiring extension rebuilds and extension/page reloads
-Currently only works in Chromium based browsers.
+Currently only works in Chromium based browsers. Can have issues with working correctly because of CORS.
 
 ```sh
 npm run dev
@@ -46,7 +43,8 @@ npm run dev
 
 #### Development, Watch
 
-Rebuilds extension on file changes. Requires a reload of the extension (and page reload if using content scripts)
+Rebuilds extension on file changes. Requires a reload of the extension (and page reload if using content scripts). 
+Safe and stable option to test changes, though it is quite a bit slower.
 
 ```sh
 npm run watch
