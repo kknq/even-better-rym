@@ -32,6 +32,8 @@ npm install
 
 ### Build
 
+For Spotify and Tidal search and Spotify import to work you'll need to add VITE_SPOTIFY_ID, VITE_SPOTIFY_SECRET, VITE_TIDAL_ID and VITE_TIDAL_SECRET into .env file or make it an environment variable.
+
 #### Development, HMR
 
 Hot Module Reloading is used to load changes inline without requiring extension rebuilds and extension/page reloads

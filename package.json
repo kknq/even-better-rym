@@ -1,6 +1,6 @@
 {
   "name": "even-better-rym",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "displayName": "EvenBetterRYM",
   "author": "kknq",
   "description": "Improvements for RateYourMusic",
@@ -9,8 +9,8 @@
     "build": "vite build",
     "watch": "vite build --watch --mode development --minify false",
     "dev": "vite",
-    "serve:firefox": "web-ext run --start-url \"https://rateyourmusic.com/release/album/electric-wizard/dopethrone/\"  --source-dir ./dist/",
-    "serve:chrome": "web-ext run -t chromium --start-url \"https://rateyourmusic.com/release/album/electric-wizard/dopethrone\" --source-dir ./dist",
+    "serve:firefox": "web-ext run --start-url \"https://rateyourmusic.com/release/album/the-collapsible-mammals/the-collapsible-mammals\"  --source-dir ./dist/",
+    "serve:chrome": "web-ext run -t chromium --start-url \"https://rateyourmusic.com/release/album/the-collapsible-mammals/the-collapsible-mammals\" --source-dir ./dist",
     "zip": "rm brym.zip || true && cd dist && atool -a ../brym.zip *",
     "test": "vitest",
     "lint": "prettier --check . && tsc --noEmit && eslint .",
