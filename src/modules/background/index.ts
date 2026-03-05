@@ -43,7 +43,7 @@ const setTabIcon = (tabId: number, enabled: boolean) => {
   })
   void browser.action.setTitle({
     tabId,
-    title: `BetterRYM ${enabled ? 'enabled' : 'disabled'}`,
+    title: `EvenBetterRYM ${enabled ? 'enabled' : 'disabled'}`,
   })
 }
 
