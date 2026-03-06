@@ -100,7 +100,7 @@ const sharedManifest = {
 } satisfies Partial<chrome.runtime.ManifestBase>
 
 const browserAction = {
-  default_title: 'BetterRYM',
+  default_title: 'EvenBetterRYM',
 }
 
 const ManifestV2 = {
