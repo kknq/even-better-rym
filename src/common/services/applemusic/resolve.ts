@@ -133,10 +133,11 @@ export const resolve: ResolveFunction = async (url) => {
       pipe(
         document_.querySelector<HTMLMetaElement>('meta[property="og:image"]') ??
           undefined,
-        ifDefined((el) => {
-          el.content.replace(/\d+x\d+bf-\d+\.jpg/, `${FULL_IMAGE_SIZE}.jpg`),
-      ),
-    )
+        ifDefined((el) => 
+          el.content.replace(/\d+x\d+[^.]*\.jpg/, `${FULL_IMAGE_SIZE}.jpg`)
+		  )
+		),
+	)
 
     const isDownloadable =
       document_.querySelector('button[aria-label$="iTunes Store"]') !== null ||
