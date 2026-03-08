@@ -2,10 +2,9 @@ import { h, render } from 'preact'
 
 import { Loader } from '../../common/components/loader'
 import { forceQuerySelector, waitForElement } from '../../common/utils/dom'
-import { fetch, fetchInPage } from '../../common/utils/fetch'
+import { fetchInPage } from '../../common/utils/fetch'
 import { parseMarkup } from '../../common/utils/markup'
 import { sanitize } from '../../common/utils/sanitize'
-import { sleep } from '~/common/utils/sleep'
 
 let headerArray: Element[]
 let currentPreferences: FormData
@@ -170,7 +169,7 @@ const closeUpShop = (button: HTMLAnchorElement) => {
           )}</div><div class="clear"></div>`,
         )
         forceQuerySelector<HTMLElement>(document)(
-          `.bubble_header   a[data-field=${field}]`,
+          `.bubble_header a[data-field=${field}]`,
         ).style.display = 'inline-block'
       },
     )
@@ -222,9 +221,9 @@ export const main = async () => {
   const key = await waitForElement('.profile_set_listening_btn a')
 
   if (key !== null) {
-    await sleep(100) // TODO: find a more robust way to wait for the relevant parts of the page to load, instead of an arbitrary timeout. It's probably waitForElement but I just don't know what to wait for yet
-
-    headerArray = [...document.querySelectorAll('.bubble_header  ')]
+    waitForElement('.bubble_header').then(() => {
+      headerArray = [...document.querySelectorAll('.bubble_header')]
+    })
 
     // perform these GETs in the page to avoid Cloudflare challenge issues
     const response = await fetchInPage({
