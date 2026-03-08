@@ -138,6 +138,7 @@ export function getManifest(
       manifest_version: manifestVersion,
       browser_specific_settings: {
         gecko: {
+          id: 'even-better-rym',
           data_collection_permissions: {
             required: ["none"]
           }
