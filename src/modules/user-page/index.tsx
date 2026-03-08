@@ -4,6 +4,7 @@ import { Loader } from '../../common/components/loader'
 import { forceQuerySelector, waitForElement } from '../../common/utils/dom'
 import { fetch } from '../../common/utils/fetch'
 import { parseMarkup } from '../../common/utils/markup'
+import { sanitize } from '../../common/utils/sanitize'
 
 let headerArray: Element[]
 let currentPreferences: FormData
@@ -38,9 +39,8 @@ const getCorrespondingContent = (alias: string) => {
 const createEditButton = (alias: string, field: string) => {
   const edit = document.createElement('a')
   getHeader(alias)?.prepend(edit)
-  edit.outerHTML = `<a href="javascript:void(0)" class="${BUTTON_CLASSES}" style="${
-    COMMON_STYLE + 'bottom:0.3em; font-size:.6em'
-  }" data-alias="${alias}" data-field="${field}">edit</a>`
+  edit.outerHTML = `<a href="javascript:void(0)" class="${BUTTON_CLASSES}" style="${COMMON_STYLE + 'bottom:0.3em; font-size:.6em'
+    }" data-alias="${alias}" data-field="${field}">edit</a>`
   forceQuerySelector<HTMLAnchorElement>(getHeader(alias))('a').addEventListener(
     'click',
     editClick,
@@ -135,7 +135,7 @@ const previewClick = (event: MouseEvent) => {
 
     void parseMarkup(
       forceQuerySelector<HTMLTextAreaElement>(container)('textarea').value ||
-        '',
+      '',
     ).then((value) => {
       const line = document.createElement('hr')
       line.style.margin = '1em 0'
@@ -161,7 +161,11 @@ const closeUpShop = (button: HTMLAnchorElement) => {
 
     void parseMarkup(currentPreferences.get(field)?.toString() ?? '').then(
       (value) => {
-        container.innerHTML = `<div style="padding:14px;">${value.outerHTML}</div><div class="clear"></div>`
+        // the markup returned by parseMarkup is untrusted; sanitize before
+        // inserting into the DOM
+        container.innerHTML = sanitize(
+          `<div style="padding:14px;">${value.outerHTML}</div><div class="clear"></div>`,
+        )
         forceQuerySelector<HTMLElement>(document)(
           `.bubble_header a[data-field=${field}]`,
         ).style.display = 'inline-block'
