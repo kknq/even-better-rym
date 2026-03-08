@@ -1,4 +1,4 @@
-import { fetch, fetchInPage } from './fetch'
+import { fetchInPage } from './fetch'
 
 export async function parseMarkup(markup: string): Promise<Element> {
   // if markup is empty, just return an empty span

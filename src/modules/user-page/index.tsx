@@ -225,7 +225,6 @@ export const main = async () => {
       headerArray = [...document.querySelectorAll('.bubble_header')]
     })
 
-    // perform these GETs in the page to avoid Cloudflare challenge issues
     const response = await fetchInPage({
       url: 'https://rateyourmusic.com/account/reorder',
     })
