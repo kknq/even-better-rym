@@ -139,7 +139,7 @@ export function getManifest(
       manifest_version: manifestVersion,
       browser_specific_settings: {
         gecko: {
-          id: 'even-better-rym@rateyourmusic.com',
+          id: '{ccc663fe-bdb6-4bf1-a2fa-0c55849e29ad}',
           data_collection_permissions: {
             required: ["none"]
           }
