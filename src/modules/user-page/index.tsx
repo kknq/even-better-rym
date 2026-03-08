@@ -242,19 +242,24 @@ export const main = async () => {
       )('#mediumForm'),
     )
 
-    createEditButton(
-      htmlOrder
-        .querySelector('li#fav_artists')
-        ?.textContent?.trim()
-        .toLowerCase() ?? 'favorite artists',
-      'fav_music',
-    )
-    createEditButton(
-      htmlOrder
-        .querySelector('li#other_comments')
-        ?.textContent?.trim()
-        .toLowerCase() ?? 'other comments',
-      'comments',
-    )
+    if (currentPreferences.get('fav_music') != '') {
+      createEditButton(
+        htmlOrder
+          .querySelector('li#fav_artists')
+          ?.textContent?.trim()
+          .toLowerCase() ?? 'favorite artists',
+        'fav_music',
+      )
+    }
+
+    if (currentPreferences.get('comments') != '') {
+      createEditButton(
+        htmlOrder
+          .querySelector('li#other_comments')
+          ?.textContent?.trim()
+          .toLowerCase() ?? 'other comments',
+        'comments',
+      )
+    }
   }
 }
