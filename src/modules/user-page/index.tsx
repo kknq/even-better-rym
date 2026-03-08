@@ -2,8 +2,9 @@ import { h, render } from 'preact'
 
 import { Loader } from '../../common/components/loader'
 import { forceQuerySelector, waitForElement } from '../../common/utils/dom'
-import { fetch } from '../../common/utils/fetch'
+import { fetchInPage } from '../../common/utils/fetch'
 import { parseMarkup } from '../../common/utils/markup'
+import { sanitize } from '../../common/utils/sanitize'
 
 let headerArray: Element[]
 let currentPreferences: FormData
@@ -38,9 +39,10 @@ const getCorrespondingContent = (alias: string) => {
 const createEditButton = (alias: string, field: string) => {
   const edit = document.createElement('a')
   getHeader(alias)?.prepend(edit)
-  edit.outerHTML = `<a href="javascript:void(0)" class="${BUTTON_CLASSES}" style="${
-    COMMON_STYLE + 'bottom:0.3em; font-size:.6em'
-  }" data-alias="${alias}" data-field="${field}">edit</a>`
+  edit.outerHTML = sanitize(
+    `<a href="javascript:void(0)" class="${BUTTON_CLASSES}" style="${COMMON_STYLE + 'bottom:0.3em; font-size:.6em'
+    }" data-alias="${alias}" data-field="${field}">edit</a>`,
+  )
   forceQuerySelector<HTMLAnchorElement>(getHeader(alias))('a').addEventListener(
     'click',
     editClick,
@@ -106,7 +108,7 @@ const saveClick = (event: MouseEvent) => {
     button.style.cursor != 'default'
   ) {
     const container = getCorrespondingContent(button.dataset.alias)
-    if (container.querySelector('svg[class*="loader"]') != null)
+    if (container.querySelector('svg[class*="loader"]') == null)
       lockAndLoad(button)
 
     currentPreferences.set(
@@ -127,7 +129,7 @@ const previewClick = (event: MouseEvent) => {
     const container = forceQuerySelector(
       getCorrespondingContent(button.dataset.alias),
     )('div')
-    if (container.querySelector('svg[class*="loader"]') != null)
+    if (container.querySelector('svg[class*="loader"]') == null)
       lockAndLoad(button)
 
     const existing = container.querySelector('.rendered_text')
@@ -135,7 +137,7 @@ const previewClick = (event: MouseEvent) => {
 
     void parseMarkup(
       forceQuerySelector<HTMLTextAreaElement>(container)('textarea').value ||
-        '',
+      '',
     ).then((value) => {
       const line = document.createElement('hr')
       line.style.margin = '1em 0'
@@ -156,12 +158,16 @@ const closeUpShop = (button: HTMLAnchorElement) => {
   if (button.dataset.alias != null && button.dataset.field != null) {
     const container = getCorrespondingContent(button.dataset.alias)
     const field = button.dataset.field
-    if (container.querySelector('svg[class*="loader"]') != null)
+    if (container.querySelector('svg[class*="loader"]') == null)
       lockAndLoad(button)
 
     void parseMarkup(currentPreferences.get(field)?.toString() ?? '').then(
       (value) => {
-        container.innerHTML = `<div style="padding:14px;">${value.outerHTML}</div><div class="clear"></div>`
+        container.innerHTML = sanitize(
+          `<div style="padding:14px;">${sanitize(
+            value.outerHTML,
+          )}</div><div class="clear"></div>`,
+        )
         forceQuerySelector<HTMLElement>(document)(
           `.bubble_header a[data-field=${field}]`,
         ).style.display = 'inline-block'
@@ -173,7 +179,6 @@ const closeUpShop = (button: HTMLAnchorElement) => {
 const lockAndLoad = (button: HTMLAnchorElement) => {
   if (!button.parentElement?.children)
     throw new Error('Unexpected null or undefined')
-
   for (const element of button.parentElement.children) {
     const anchor = element as HTMLElement
     anchor.style.color = 'var(--btn-secondary-text-disabled)'
@@ -204,8 +209,8 @@ const updateProfile = async () => {
   const entries: Dictionary = {}
   for (const [k, v] of currentPreferences) entries[k] = v as string
 
-  await fetch({
-    url: 'https://rateyourmusic.com/account/profile_edit_2',
+  await fetchInPage({
+    url: 'https://rateyourmusic.com/account/account_edit_2',
     method: 'POST',
     urlParameters: entries,
   })
@@ -216,35 +221,43 @@ export const main = async () => {
   const key = await waitForElement('.profile_set_listening_btn a')
 
   if (key !== null) {
-    headerArray = [...document.querySelectorAll('.bubble_header')]
+    waitForElement('.bubble_header').then(() => {
+      headerArray = [...document.querySelectorAll('.bubble_header')]
+    })
 
-    const response = await fetch({
-      url: 'https://rateyourmusic.com/account/order',
+    const response = await fetchInPage({
+      url: 'https://rateyourmusic.com/account/reorder',
     })
     const htmlOrder = new DOMParser().parseFromString(response, 'text/html')
 
-    const response2 = await fetch({
-      url: 'https://rateyourmusic.com/account/profile_edit',
+    const response2 = await fetchInPage({
+      url: 'https://rateyourmusic.com/account/account_edit',
     })
+
     currentPreferences = new FormData(
       forceQuerySelector<HTMLFormElement>(
         new DOMParser().parseFromString(response2, 'text/html'),
       )('#mediumForm'),
     )
 
-    createEditButton(
-      htmlOrder
-        .querySelector('li#fav_artists')
-        ?.textContent?.trim()
-        .toLowerCase() ?? 'favorite artists',
-      'fav_music',
-    )
-    createEditButton(
-      htmlOrder
-        .querySelector('li#other_comments')
-        ?.textContent?.trim()
-        .toLowerCase() ?? 'other comments',
-      'comments',
-    )
+    if (currentPreferences.get('fav_music') != '') {
+      createEditButton(
+        htmlOrder
+          .querySelector('li#fav_artists')
+          ?.textContent?.trim()
+          .toLowerCase() ?? 'favorite artists',
+        'fav_music',
+      )
+    }
+
+    if (currentPreferences.get('comments') != '') {
+      createEditButton(
+        htmlOrder
+          .querySelector('li#other_comments')
+          ?.textContent?.trim()
+          .toLowerCase() ?? 'other comments',
+        'comments',
+      )
+    }
   }
 }

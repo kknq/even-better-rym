@@ -15,7 +15,21 @@ export const waitForDocumentReady = (): Promise<void> =>
   })
 
 export const waitForElement = <E extends Element>(query: string): Promise<E> =>
-  waitForCallback(() => document.querySelector<E>(query) ?? undefined)
+  waitForCallback(() => {
+    if (query.startsWith('//') || query.startsWith('(')) {
+      const result = document.evaluate(
+        query,
+        document,
+        null,
+        XPathResult.FIRST_ORDERED_NODE_TYPE,
+        null
+      ).singleNodeValue as E | null;
+
+      return result ?? undefined;
+    }
+
+    return document.querySelector<E>(query) ?? undefined;
+  });
 
 export const waitForCallback = <T>(callback: () => T | undefined): Promise<T> =>
   new Promise((resolve, reject) => {

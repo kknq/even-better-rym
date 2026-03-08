@@ -1,4 +1,4 @@
-import { fetch } from './fetch'
+import { fetchInPage } from './fetch'
 
 export async function parseMarkup(markup: string): Promise<Element> {
   // if markup is empty, just return an empty span
@@ -8,7 +8,7 @@ export async function parseMarkup(markup: string): Promise<Element> {
     return span
   }
 
-  const output = await fetch({
+  const output = await fetchInPage({
     url: 'https://rateyourmusic.com/go/processpreview',
     method: 'POST',
     urlParameters: {

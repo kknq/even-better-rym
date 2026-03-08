@@ -1,5 +1,6 @@
 import { render } from 'preact'
 import { useCallback } from 'preact/hooks'
+import { sanitize } from '~/common/utils/sanitize'
 
 import { waitForElement } from '~/common/utils/dom'
 
@@ -20,8 +21,9 @@ function Label() {
 
     const labeltext = document.querySelector('#labeltext')
     if (labeltext)
-      labeltext.innerHTML =
-        '<span class="smallgray"> (Use search box on right to choose label )</span>'
+      labeltext.innerHTML = sanitize(
+        '<span class="smallgray"> (Use search box on right to choose label )</span>',
+      )
   }, [])
 
   const handleNoLabelClick = useCallback(() => {
