@@ -17,7 +17,7 @@ import type { ReleaseOptions } from '../utils/types'
 export default async function injectImportControls() {
   const siblingElement = await waitForElement('.submit_step_header')
   const app = document.createElement('div')
-  app.id = 'better-rym'
+  app.id = 'even-better-rym'
   siblingElement.before(app)
   render(<Import />, app)
 }
