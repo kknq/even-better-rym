@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill'
 
-import { getPageEnabled, pages, setPageEnabled } from '../../common/pages'
+import { getPageEnabled, globalPageKeys, pages } from '../../common/pages'
+import type { PageKey } from '../../common/pages'
 import type { BackgroundResponse } from '../../common/utils/messaging/codec'
 import { isBackgroundRequest } from '../../common/utils/messaging/codec'
 import { download } from './download'
@@ -48,8 +49,10 @@ const setTabIcon = (tabId: number, enabled: boolean) => {
 }
 
 browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
-  const pageUrls = Object.values(pages)
-  for (const pageUrl of pageUrls) {
+  const pageEntries = (Object.entries(pages) as [PageKey, string][]).filter(
+    ([key]) => !globalPageKeys.has(key),
+  )
+  for (const [, pageUrl] of pageEntries) {
     if (!tab.url) continue
     const url = new URL(tab.url)
     if (
@@ -63,15 +66,3 @@ browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
   }
 })
 
-browser.action.onClicked.addListener((tab) => {
-  const pageUrls = Object.values(pages)
-  for (const pageUrl of pageUrls) {
-    if (tab.url && new URL(tab.url).pathname.startsWith(pageUrl)) {
-      void getPageEnabled(pageUrl).then((enabled) => {
-        if (tab.id === undefined) return
-        void setPageEnabled(pageUrl, !enabled)
-        void setTabIcon(tab.id, !enabled)
-      })
-    }
-  }
-})
