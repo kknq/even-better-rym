@@ -5,7 +5,7 @@ import { StreamLinks } from './stream-links'
 
 export const main = async () => {
   const app = document.createElement('div')
-  app.id = 'better-rym'
+  app.id = 'even-better-rym'
 
   try {
     const siblingElement = await waitForElement(

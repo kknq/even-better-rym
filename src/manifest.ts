@@ -10,6 +10,7 @@ const hostsArray = [
     'https://itunes.apple.com/*',
     'https://bandcamp.com/*',
     'https://*.bandcamp.com/*',
+    'https://*.bcbits.com/*',
     'https://beatport.com/*',
     'https://deezer.com/*',
     'https://api.deezer.com/*',

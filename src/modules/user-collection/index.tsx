@@ -10,7 +10,7 @@ export async function injectCollectionFilterButtons() {
   if (document.URL.includes('stag')) return
 
   const app = document.createElement('div')
-  app.id = 'better-rym'
+  app.id = 'even-better-rym'
   siblingElement.after(app)
 
   const showReleaseTypes = !window.location.href.includes('film_collection')
