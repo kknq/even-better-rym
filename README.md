@@ -1,4 +1,4 @@
-# even-better-rym
+# even-better-rymt
 
 A browser extension that adds quality-of-life improvements to [RateYourMusic](https://rateyourmusic.com). Forked from the original [better-rym](https://github.com/jgchk/better-rym) to keep things maintained and moving forward. Contributions welcome.
 
