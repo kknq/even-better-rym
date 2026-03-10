@@ -15,7 +15,7 @@ const hostsArray = [
     'https://deezer.com/*',
     'https://api.deezer.com/*',
     'https://discogs.com/*',
-    'https://api.discogs.com/*',
+    'https://*.discogs.com/*',
     'https://melon.com/*',
     'https://qobuz.com/*',
     'https://*.qobuz.com/*',
