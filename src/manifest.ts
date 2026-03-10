@@ -103,6 +103,7 @@ const sharedManifest = {
 
 const browserAction = {
   default_title: 'EvenBetterRYM',
+  default_popup: 'src/modules/popup/index.html',
 }
 
 const ManifestV2 = {

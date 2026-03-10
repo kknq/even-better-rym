@@ -20,7 +20,7 @@ let keyHandler:
   | ((this: GlobalEventHandlers, event: KeyboardEvent) => unknown)
   | null
 let clickHandler:
-  | ((this: GlobalEventHandlers, event: MouseEvent) => unknown)
+  | ((this: GlobalEventHandlers, event: PointerEvent) => any)
   | null
 
 const SEARCH_REGEX =
@@ -45,7 +45,7 @@ function shortcutHandler(event: Event) {
         forceQuerySelector<HTMLElement>(document)(
           '#ui_search_icon_main_search',
         ),
-        event as MouseEvent,
+        event as PointerEvent,
       )
   }
 }
