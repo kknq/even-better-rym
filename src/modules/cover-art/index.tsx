@@ -7,7 +7,7 @@ export async function injectCoverArtDownloader() {
   const siblingElement = await waitForElement('#content_total_cover')
 
   const app = document.createElement('div')
-  app.id = 'better-rym'
+  app.id = 'even-better-rym'
   siblingElement.after(app)
 
   render(<CoverArtDownloader />, app)
