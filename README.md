@@ -107,13 +107,14 @@ npm install
 
 ### Environment Variables
 
-Create a `.env` file in the project root. The following variables are required for Spotify and Tidal features to work:
+Create a `.env` file in the project root. The following variables are required for Spotify, Tidal and YouTube features to work:
 
 ```
 VITE_SPOTIFY_ID=
 VITE_SPOTIFY_SECRET=
 VITE_TIDAL_ID=
 VITE_TIDAL_SECRET=
+VITE_YOUTUBE_KEY=
 ```
 
 ### Manifest Version
