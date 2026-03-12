@@ -12,6 +12,7 @@ export const pages = {
   voteHistoryDescriptors: '/rdescriptor/vote_history',
   streamLinkMissing: '/misc/media_link_you_know',
   searchBar: '/',
+  timeline: '/artist/',
 } as const
 
 export type PageKey = keyof typeof pages
@@ -28,6 +29,7 @@ export const pageLabels: Record<PageKey, string> = {
   voteHistoryDescriptors: 'Enhancements for Descriptor Vote History',
   streamLinkMissing: 'Filtering in "Media Link You Know" (/misc/media_link_you_know) List',
   searchBar: 'Search Bar Shortcuts',
+  timeline: 'Timeline for Artist Members'
 }
 
 // Page keys whose features are global and should not affect the toolbar icon

@@ -1,0 +1,443 @@
+.rymmt-link {
+  cursor: pointer;
+  color: #0645ad;
+  font-size: 12px;
+  margin-left: 8px;
+  user-select: none;
+  white-space: nowrap;
+}
+.rymmt-link:hover {
+  text-decoration: underline;
+}
+
+/* Theme variables (set at runtime from computed styles) */
+#rymmt-panel {
+  --rymmt-panel-bg: transparent;
+  --rymmt-panel-text: inherit;
+  --rymmt-panel-border: currentColor;
+
+  --rymmt-track-bg: transparent;
+  --rymmt-track-border: currentColor;
+
+  --rymmt-muted-text: inherit;
+
+  --rymmt-album-color: #ffffff;
+  --rymmt-live-color: #bdbdbd;
+  --rymmt-tick-color: rgba(255, 255, 255, 0.25);
+  --rymmt-tick-major-color: rgba(255, 255, 255, 0.45);
+  --rymmt-marker-halo: rgba(0, 0, 0, 0.55);
+  --rymmt-bar-outline: rgba(0, 0, 0, 0.45);
+}
+
+/* Panel layout */
+#rymmt-panel {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  width: min(820px, calc(100vw - 36px));
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.86);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  z-index: 2147483647;
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.55);
+  overflow: visible !important;
+  max-height: none !important;
+}
+#rymmt-panel.minimized {
+  height: auto;
+  max-height: none;
+  width: auto;
+}
+#rymmt-panel .rymmt-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  gap: 10px;
+  top: 0;
+  background: rgba(0, 0, 0, 0.92);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+}
+#rymmt-panel .rymmt-ttl {
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+#rymmt-panel .rymmt-btn {
+  appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 9px;
+  cursor: pointer;
+  font-size: 12px;
+}
+#rymmt-panel .rymmt-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+#rymmt-panel .rymmt-body {
+  padding: 10px 12px;
+}
+#rymmt-panel .rymmt-row2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0;
+}
+#rymmt-panel .rymmt-k {
+  color: rgba(255, 255, 255, 0.72);
+}
+#rymmt-panel .rymmt-v {
+  font-weight: 700;
+}
+#rymmt-panel .rymmt-sep {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 10px 0;
+}
+#rymmt-panel .rymmt-mini {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Force the timeline panel to be in normal flow (scrolls with page) */
+#rymmt-panel,
+.rymmt-panel {
+  position: static !important; /* kills sticky/fixed/relative positioning tricks */
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  z-index: auto !important;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Graph container */
+#rymmt-panel .rymmt-graph {
+  overflow-x: auto; /* keep: scrolls inside graph if years are wide */
+  overflow-y: visible;
+  position: static !important; /* prevents sticky/fixed hacks from taking effect */
+  border: 1px solid var(--rymmt-panel-border);
+  background: var(--rymmt-panel-bg);
+  color: var(--rymmt-panel-text);
+  padding: 10px;
+  border-radius: 6px;
+
+  width: 100%; /* NEW: make it respect container width */
+  max-width: 100%; /* NEW */
+  box-sizing: border-box; /* NEW */
+}
+#rymmt-panel .rymmt-graph-title {
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--rymmt-panel-text);
+  font-size: 18px;
+}
+
+/* The actual timeline UI container */
+.rymmt-graph {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Grid layout (name | track) */
+#rymmt-panel .rymmt-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  /* No internal vertical scrolling */
+  max-height: none;
+  overflow: visible;
+
+  /* optional */
+  padding-right: 0;
+}
+
+/* Each row is the 2-column layout (name | track) */
+#rymmt-panel .rymmt-row {
+  display: grid;
+
+  /* CHANGED: make track column shrinkable so it doesn't force overflow */
+  grid-template-columns: 260px minmax(0, 1fr);
+
+  column-gap: 12px;
+  align-items: center;
+}
+
+#rymmt-panel .rymmt-name {
+  font-size: 13px;
+  color: var(--rymmt-panel-text);
+  opacity: 0.9;
+  line-height: 1.2;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#rymmt-panel .rymmt-track {
+  position: relative;
+  height: 16px;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  border-radius: 0;
+
+  min-width: 0; /* NEW: critical for CSS grid—lets this column actually shrink */
+}
+
+/* Ticks behind everything */
+#rymmt-panel .rymmt-ticks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+#rymmt-panel .rymmt-tick {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 1px;
+  background: var(--rymmt-tick-color);
+}
+#rymmt-panel .rymmt-tick.major {
+  background: var(--rymmt-tick-major-color);
+}
+
+/* Member role bar */
+#rymmt-panel .rymmt-bar {
+  position: absolute;
+  top: 2px;
+  height: 14px;
+  border-radius: 2px;
+  z-index: 2;
+  outline: 1px solid var(--rymmt-bar-outline);
+  outline-offset: 0;
+
+  /* Stripe layout */
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 1px 0;
+  background: transparent;
+}
+#rymmt-panel .rymmt-stripe {
+  height: 2px;
+  width: 100%;
+  display: block;
+}
+
+/* Neutral bar when no roles are listed */
+.rymmt-stripe-neutral {
+  background: rgba(127, 127, 127, 0.45);
+}
+
+/* Release markers ON TOP so you always see them */
+#rymmt-panel .rymmt-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+#rymmt-panel .rymmt-marker {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background: var(--rymmt-album-color);
+  transform: translateX(-1px);
+  box-shadow: 0 0 0 1px var(--rymmt-marker-halo);
+}
+#rymmt-panel .rymmt-marker.live {
+  background: var(--rymmt-live-color);
+}
+
+/* Axis aligned to track column */
+#rymmt-panel .rymmt-axis {
+  display: grid;
+
+  /* CHANGED: match the row grid so axis doesn't overflow either */
+  grid-template-columns: 260px minmax(0, 1fr);
+
+  align-items: center;
+  margin-top: 10px;
+}
+#rymmt-panel .rymmt-axis-track {
+  display: flex;
+  justify-content: space-between;
+  color: var(--rymmt-panel-text);
+  width: 100%;
+  opacity: 0.9;
+
+  min-width: 0; /* NEW: keep the axis track shrinkable too */
+}
+#rymmt-panel .rymmt-axis-years {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  opacity: 0.9;
+}
+#rymmt-panel .rymmt-axis-years span {
+  font-size: 12px;
+}
+
+/* Release legend */
+#rymmt-panel .rymmt-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+#rymmt-panel .rymmt-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  border: 1px solid var(--rymmt-panel-border);
+  background: var(--rymmt-album-color);
+  vertical-align: middle;
+}
+#rymmt-panel .rymmt-swatch.live {
+  background: var(--rymmt-live-color);
+}
+
+/* Role legend can get long */
+#rymmt-panel .rymmt-role-legend {
+  max-height: 160px;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid var(--rymmt-panel-border);
+  background: var(--rymmt-track-bg);
+  border-radius: 6px;
+  margin-top: 10px;
+}
+#rymmt-panel .rymmt-role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 14px 3px 0;
+  font-size: 14px;
+  white-space: nowrap;
+  opacity: 0.95;
+}
+#rymmt-panel .rymmt-role-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  display: inline-block;
+  border: 1px solid var(--rymmt-panel-border);
+}
+
+#rymmt-panel .rymmt-note {
+  font-size: 12px;
+  color: var(--rymmt-muted-text);
+  margin-top: 10px;
+  opacity: 0.95;
+}
+
+/* ===== Make timeline behave like normal page content (no internal scrolling) ===== */
+
+/* Panel should NOT be its own scrolling viewport */
+#rymmt-panel,
+.rymmt-panel {
+  max-height: none !important;
+  overflow: visible !important; /* kill internal vertical scrolling */
+}
+
+/* Graph should NOT create its own horizontal scrollbar */
+#rymmt-panel .rymmt-graph,
+.rymmt-graph {
+  overflow: visible !important; /* kill internal horizontal scrolling too */
+}
+
+/* If any child accidentally creates scrolling, kill it */
+#rymmt-panel .rymmt-grid,
+#rymmt-panel .rymmt-body {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+/* Optional: role legend was intentionally scrollable; disable if you want fully "page-like" */
+#rymmt-panel .rymmt-role-legend {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 720px) {
+  #rymmt-panel {
+    right: 8px;
+    left: 8px;
+    width: auto;
+  }
+
+  /* CHANGED: same shrinkable pattern on mobile */
+  #rymmt-panel .rymmt-row {
+    grid-template-columns: 170px minmax(0, 1fr);
+  }
+  #rymmt-panel .rymmt-axis {
+    grid-template-columns: 170px minmax(0, 1fr);
+  }
+}
+#rymmt-panel .rymmt-grid {
+  position: relative;
+}
+
+#rymmt-panel .rymmt-markers-global {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(260px + 12px); /* name column + gap */
+  right: 0;
+  pointer-events: none;
+}
+
+/* Role color tokens (defaults) */
+#rymmt-panel{
+  --rymmt-role-vocals: #ff4d6d;
+  --rymmt-role-backing-vocals: #ff7a95;
+  --rymmt-role-rap: #f43f5e;
+
+  --rymmt-role-guitar: #22c55e;
+  --rymmt-role-rhythm-guitar: #16a34a;
+
+  --rymmt-role-bass: #3b82f6;
+  --rymmt-role-piccolo-bass: #2563eb;
+
+  --rymmt-role-drums: #f59e0b;
+  --rymmt-role-percussion: #fb7185;
+  --rymmt-role-congas: #f97316;
+  --rymmt-role-bongos: #ea580c;
+  --rymmt-role-timbales: #dc2626;
+
+  --rymmt-role-keyboards: #a855f7;
+  --rymmt-role-piano: #9333ea;
+  --rymmt-role-toy-piano: #c084fc;
+  --rymmt-role-synthesizer: #8b5cf6;
+  --rymmt-role-analogue-synthesizer: #7c3aed;
+  --rymmt-role-ondes-martenot: #6d28d9;
+  --rymmt-role-sampler: #4c1d95;
+  --rymmt-role-laptop: #6366f1;
+  --rymmt-role-glockenspiel: #eab308;
+
+  --rymmt-role-saxophone: #06b6d4;
+  --rymmt-role-trumpet: #0ea5e9;
+  --rymmt-role-trombone: #0284c7;
+  --rymmt-role-flute: #14b8a6;
+
+  --rymmt-role-producer: #64748b;
+  --rymmt-role-orchestration: #475569;
+  --rymmt-role-effects: #334155;
+}
