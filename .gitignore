@@ -6,3 +6,4 @@ profiles/
 brym.zip
 .eslintcache
 scripts/output/
+scripts/*.htm
