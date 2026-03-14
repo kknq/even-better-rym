@@ -1,4 +1,4 @@
-import { h } from 'preact'
+import { Fragment, h } from 'preact'
 
 import { FilterButton } from './filter-button'
 

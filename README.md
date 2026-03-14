@@ -33,8 +33,6 @@ Injects a "Step 0: Import" panel at the top of the release submission form. Past
 - **Tracklist - Clear Lengths** - Adds a "clear lengths" button next to the existing "clear all" button, which strips track duration data from the advanced tracklist input while leaving track names intact.
 - **Credits Section Enhancements** - Looks at the "Filed Under" artists and shows quick-add buttons to copy those artists directly into the credits field, saving repeated manual lookups.
 
-
-
 ---
 
 ### Cover Art Submission Helper
@@ -117,6 +115,8 @@ VITE_TIDAL_SECRET=
 VITE_YOUTUBE_KEY=
 ```
 
+Discogs also has an auth block, but it seems to work without any keys
+
 ### Manifest Version
 
 The extension supports both Manifest V2 and V3. Set the `MANIFEST_VERSION` environment variable to switch between them (defaults to V3):
@@ -163,6 +163,18 @@ npm run serve:chrome
 npm run serve:firefox
 ```
 
+### Scripts
+
+There's a `scripts` directory with a Python script to refresh the data in `src/modules/vote-history/data/genres.ts` and `src/modules/vote-history/data/descriptors.ts` files.
+To pull that off you need to download `.htm` data from [genre history](https://rateyourmusic.com/admin/queue/hq/profile_history?type=h&context=p&showall=1) and [descriptor history](https://rateyourmusic.com/admin/queue/hq/profile_history?type=d&context=p&showall=1)
+Then you just run the script:
+
+```sh
+npm run refresh-all
+```
+
+This will result in files being updated and as a bonus the entire list will also be put into `.txt` files in the `scripts/output` directory
+
 ### Other commands
 
 ```sh
@@ -175,14 +187,32 @@ npm test         # Run unit tests with Vitest
 
 ```
 src/
-  manifest.ts          # Extension manifest definition
-  common/              # Shared utilities, hooks, components, and service integrations
-    services/          # Per-service clients
-    utils/             # DOM helpers, storage, messaging, fetch wrappers, etc.
-    components/        # Shared Preact components
-  modules/             # One directory per feature
-    background/        # Service worker (message routing, tab icon management)
-    popup/             # Extension popup (feature toggle UI)
+  manifest.ts              # Extension manifest definition
+  shared/                  # Code shared across all modules
+    pages.ts               # Page URL patterns, labels, and global page key set (pure data, no I/O)
+    page-settings.ts       # Storage helpers (getPageEnabled / setPageEnabled) and runPage orchestrator
+    use-release-info.ts    # useReleaseInfo hook (shared by cover-art and release-submission)
+    components/            # Shared Preact components (ServiceLinkForm, ServiceSelector, etc.)
+    icons/                 # Generic icons
+    services/              # Per-service clients
+      applemusic/          # icon.tsx, icon-found.tsx, icon-notfound.tsx co-located here
+      bandcamp/
+      beatport/
+      deezer/
+      discogs/
+      melon/
+      qobuz/
+      soundcloud/
+      spotify/
+      tidal/
+      youtube/
+      index.ts             # SERVICES, SEARCHABLES, RESOLVABLES, EMBEDDABLES arrays
+      types.ts             # Service, Searchable, Resolvable, Embeddable types
+    utils/                 # DOM helpers, storage, cache, messaging, fetch wrappers, etc.
+      messaging.ts         # Background messaging types, codecs, and sendBackgroundMessage (flat file)
+  modules/                 # One directory per feature
+    background/            # Service worker (message routing, tab icon management)
+    popup/                 # Extension popup (feature toggle UI)
     cover-art/
     release-submission/
     search-bar/
@@ -194,7 +224,12 @@ src/
     vote-history/
 ```
 
-Each module follows the same pattern: a `main.ts` entry point that calls `runPage()` to check whether the feature is enabled before running, and an `index.ts` / `index.tsx` that contains the actual logic.
+Each module follows the same pattern:
+
+- `main.ts` - entry point; imports `pages` from `~/shared/pages` and `runPage` from `~/shared/page-settings` to guard execution behind the feature toggle.
+- `app.ts` / `app.tsx` - the actual logic or root Preact component for the feature.
+
+Service icons are co-located with their service (`services/spotify/icon.tsx`, `icon-found.tsx`, `icon-notfound.tsx`) rather than in a flat shared icons directory. Only generic UI icons (check, loader, x, info) live in `shared/icons/`.
 
 ## Credits
 

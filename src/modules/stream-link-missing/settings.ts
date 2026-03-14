@@ -1,4 +1,4 @@
-import * as storage from '../../common/utils/storage'
+import * as storage from '../../shared/utils/storage'
 import type { DisplayType } from './types'
 
 const displayTypeKey = 'brym.missingLinksDisplayType'

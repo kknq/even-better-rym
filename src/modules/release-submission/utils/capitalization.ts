@@ -1,5 +1,5 @@
-import { findLastIndex } from '../../../common/utils/array'
-import { pipe } from '../../../common/utils/pipe'
+import { findLastIndex } from '../../../shared/utils/array'
+import { pipe } from '../../../shared/utils/pipe'
 import type { Phrase, Token } from './tokenize'
 import { tokenize } from './tokenize'
 

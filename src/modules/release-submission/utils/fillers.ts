@@ -7,8 +7,8 @@ import type {
   ReleaseType,
   ResolveData,
   Track,
-} from '../../../common/services/types'
-import { forceQuerySelector, waitForResult } from '../../../common/utils/dom'
+} from '../../../shared/services/types'
+import { forceQuerySelector, waitForResult } from '../../../shared/utils/dom'
 import type { FillData } from '../dom'
 import type { CapitalizationType } from './capitalization'
 import { capitalize } from './capitalization'

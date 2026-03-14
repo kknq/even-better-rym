@@ -1,14 +1,14 @@
 import { render } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
 
-import { equals, uniqueBy } from '~/common/utils/array'
+import { equals, uniqueBy } from '~/shared/utils/array'
 import {
   forceQuerySelector,
   waitForElement,
   waitForResult,
-} from '~/common/utils/dom'
-import { pipe } from '~/common/utils/pipe'
-import { ifDefined, isDefined } from '~/common/utils/types'
+} from '~/shared/utils/dom'
+import { pipe } from '~/shared/utils/pipe'
+import { ifDefined, isDefined } from '~/shared/utils/types'
 
 import { selectShortcut } from '../utils/page-functions'
 

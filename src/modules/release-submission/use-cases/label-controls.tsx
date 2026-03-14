@@ -1,7 +1,7 @@
 import { render } from 'preact'
 import { useCallback } from 'preact/hooks'
 
-import { waitForElement } from '~/common/utils/dom'
+import { waitForElement } from '~/shared/utils/dom'
 
 import { goInfobox } from '../utils/page-functions'
 

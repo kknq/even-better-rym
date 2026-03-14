@@ -1,5 +1,5 @@
-import { pipe } from '../../../common/utils/pipe'
-import { regexIndexOf, regexLastIndexOf } from '../../../common/utils/string'
+import { pipe } from '../../../shared/utils/pipe'
+import { regexIndexOf, regexLastIndexOf } from '../../../shared/utils/string'
 
 export type TokenType = 'word' | 'romanNumeral' | 'whitespace' | 'punctuation'
 

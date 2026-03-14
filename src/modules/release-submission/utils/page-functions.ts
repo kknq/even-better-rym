@@ -1,4 +1,4 @@
-import { runScript } from '../../../common/utils/dom'
+import { runScript } from '../../../shared/utils/dom'
 
 export const selectShortcut = (
   type: string,

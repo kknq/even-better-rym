@@ -1,20 +1,20 @@
-import { h } from 'preact'
+import { Fragment, h } from 'preact'
 import { useEffect, useState } from 'preact/hooks'
 
-import { ServiceLinkForm } from '../../common/components/service-link-form'
-import { useReleaseInfo } from '../../common/hooks/use-release-info'
-import { RESOLVABLES } from '../../common/services'
-import type { ResolveData } from '../../common/services/types'
-import { download } from '../../common/utils/download'
-import type { OneShot } from '../../common/utils/one-shot'
+import { ServiceLinkForm } from '../../shared/components/service-link-form'
+import { RESOLVABLES } from '../../shared/services'
+import type { ResolveData } from '../../shared/services/types'
+import { useReleaseInfo } from '../../shared/use-release-info'
+import { download } from '../../shared/utils/download'
+import type { OneShot } from '../../shared/utils/one-shot'
 import {
   complete,
   failed,
   fold,
   initial,
   loading,
-} from '../../common/utils/one-shot'
-import { pipe } from '../../common/utils/pipe'
+} from '../../shared/utils/one-shot'
+import { pipe } from '../../shared/utils/pipe'
 
 export function CoverArtDownloader() {
   const { info, fetchInfo } = useReleaseInfo()
@@ -31,7 +31,7 @@ export function CoverArtDownloader() {
           const sourceInput = document.getElementById(
             'source',
           ) as HTMLTextAreaElement | null
-          if (sourceInput && sourceInput.value.length === 0)
+          if (sourceInput !== null && sourceInput.value.length === 0)
             sourceInput.value = url
         }
 

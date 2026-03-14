@@ -1,6 +1,7 @@
-import { pages, runPage } from '~/common/pages'
+import { runPage } from '~/shared/page-settings'
+import { pages } from '~/shared/pages'
 
-import { injectCollectionFilterButtons } from '.'
+import { injectCollectionFilterButtons } from './app'
 
 const isUserCollection = document.location.pathname.startsWith(
   pages.userCollection,

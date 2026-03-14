@@ -1,9 +1,10 @@
 import browser from 'webextension-polyfill'
 
-import { getPageEnabled, globalPageKeys, pages } from '../../common/pages'
-import type { PageKey } from '../../common/pages'
-import type { BackgroundResponse } from '../../common/utils/messaging/codec'
-import { isBackgroundRequest } from '../../common/utils/messaging/codec'
+import { getPageEnabled } from '../../shared/page-settings'
+import type { PageKey } from '../../shared/pages'
+import { globalPageKeys, pages } from '../../shared/pages'
+import type { BackgroundResponse } from '../../shared/utils/messaging'
+import { isBackgroundRequest } from '../../shared/utils/messaging'
 import { download } from './download'
 import { backgroundFetch } from './fetch'
 import { script } from './script'
@@ -65,4 +66,3 @@ browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
     }
   }
 })
-

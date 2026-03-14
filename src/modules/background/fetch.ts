@@ -1,7 +1,4 @@
-import type {
-  FetchRequest,
-  FetchResponse,
-} from '../../common/utils/messaging/codec'
+import type { FetchRequest, FetchResponse } from '../../shared/utils/messaging'
 
 export const backgroundFetch = async ({
   id,

@@ -1,6 +1,7 @@
-import { pages, runPage } from '~/common/pages'
+import { runPage } from '~/shared/page-settings'
+import { pages } from '~/shared/pages'
 
-import { main } from '.'
+import { main } from './app'
 
 void runPage(pages.releaseSubmission, () => {
   void main()

@@ -1,15 +1,11 @@
-import type { JSX } from 'preact'
+import type { CSSProperties } from 'preact'
 import { h } from 'preact'
 import { useEffect, useState } from 'preact/hooks'
 import browser from 'webextension-polyfill'
 
-import type { PageKey } from '../../common/pages'
-import {
-  getPageEnabled,
-  pageLabels,
-  pages,
-  setPageEnabled,
-} from '../../common/pages'
+import { getPageEnabled, setPageEnabled } from '../../shared/page-settings'
+import type { PageKey } from '../../shared/pages'
+import { pageLabels, pages } from '../../shared/pages'
 
 type FeatureState = Record<PageKey, boolean>
 
@@ -102,7 +98,7 @@ const styles = {
     fontSize: 13,
     color: '#212121',
     background: '#fff',
-  } satisfies JSX.CSSProperties,
+  } satisfies CSSProperties,
 
   header: {
     display: 'flex',
@@ -111,18 +107,18 @@ const styles = {
     padding: '10px 14px',
     borderBottom: '1px solid #e0e0e0',
     background: '#f5f5f5',
-  } satisfies JSX.CSSProperties,
+  } satisfies CSSProperties,
 
   title: {
     fontWeight: 700,
     fontSize: 14,
-  } satisfies JSX.CSSProperties,
+  } satisfies CSSProperties,
 
   list: {
     display: 'flex',
     flexDirection: 'column',
     padding: '4px 0',
-  } satisfies JSX.CSSProperties,
+  } satisfies CSSProperties,
 
   row: {
     display: 'flex',
@@ -131,18 +127,18 @@ const styles = {
     padding: '8px 14px',
     cursor: 'pointer',
     borderBottom: '1px solid #f0f0f0',
-  } satisfies JSX.CSSProperties,
+  } satisfies CSSProperties,
 
   label: {
     flex: 1,
     paddingRight: 12,
     lineHeight: 1.4,
-  } satisfies JSX.CSSProperties,
+  } satisfies CSSProperties,
 
   loading: {
     padding: '16px 14px',
     color: '#9e9e9e',
-  } satisfies JSX.CSSProperties,
+  } satisfies CSSProperties,
 
   toggle: {
     position: 'relative',
@@ -154,7 +150,7 @@ const styles = {
     cursor: 'pointer',
     padding: 0,
     transition: 'background 0.2s',
-  } satisfies JSX.CSSProperties,
+  } satisfies CSSProperties,
 
   thumb: {
     position: 'absolute',
@@ -167,7 +163,5 @@ const styles = {
     boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
     transition: 'transform 0.2s',
     display: 'block',
-  } satisfies JSX.CSSProperties,
+  } satisfies CSSProperties,
 }
-
-

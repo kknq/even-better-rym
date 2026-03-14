@@ -1,9 +1,9 @@
 import { render } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
 
-import type { ReleaseDate, ResolveData } from '~/common/services/types'
-import { datesEqual, dateToString } from '~/common/utils/datetime'
-import { waitForElement } from '~/common/utils/dom'
+import type { ReleaseDate, ResolveData } from '~/shared/services/types'
+import { datesEqual, dateToString } from '~/shared/utils/datetime'
+import { waitForElement } from '~/shared/utils/dom'
 
 import type { FillData } from '../dom'
 import { fillDate } from '../utils/fillers'
