@@ -115,6 +115,8 @@ VITE_TIDAL_SECRET=
 VITE_YOUTUBE_KEY=
 ```
 
+Discogs also has an auth block, but it seems to work without any keys
+
 ### Manifest Version
 
 The extension supports both Manifest V2 and V3. Set the `MANIFEST_VERSION` environment variable to switch between them (defaults to V3):
