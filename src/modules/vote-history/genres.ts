@@ -1,4 +1,5 @@
-import { pages, runPage } from '~/common/pages'
+import { runPage } from '~/shared/page-settings'
+import { pages } from '~/shared/pages'
 
 import addGenreDropdown from './use-cases/add-genre-dropdown'
 import fixPaginationParameters from './use-cases/fix-pagination-parameters'

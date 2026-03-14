@@ -1,4 +1,4 @@
-import { waitForDocumentReady } from '~/common/utils/dom'
+import { waitForDocumentReady } from '~/shared/utils/dom'
 
 export default async function fixPaginationParameters(): Promise<void> {
   await waitForDocumentReady()

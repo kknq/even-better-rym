@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'preact/hooks'
 
-import { SEARCHABLES } from '~/common/services'
-import type { ServiceId } from '~/common/services/types'
+import { SEARCHABLES } from '~/shared/services'
+import type { ServiceId } from '~/shared/services/types'
 import {
   runScript,
   waitForDocumentReady,
   waitForElement,
-} from '~/common/utils/dom'
+} from '~/shared/utils/dom'
 
-import type { OneShot } from '../../common/utils/one-shot'
+import type { OneShot } from '../../shared/utils/one-shot'
 import {
   complete,
   failed,
   initial,
   isInitial,
   loading,
-} from '../../common/utils/one-shot'
+} from '../../shared/utils/one-shot'
 
 export type PageDataState = OneShot<Error, PageData>
 
@@ -191,7 +191,7 @@ function getFullLink(service: string, linkData: LinkData) {
       const data = linkData as AppleMusicLinkData
       return `https://geo.music.apple.com/${data.loc}/${
         data.album ? 'album' : 'video'
-      }/${data.album ? data.album : data.video}/${data.media_id}`
+      }/${data.album ?? data.video}/${data.media_id}`
     }
 
     case 'soundcloud': {
@@ -251,4 +251,4 @@ type BandcampLinkData = { url: string }
 type YoutubeLinkData = { media_id: string }
 type QobuzLinkData = { media_id: string }
 type DeezerLinkData = { media_id: string }
-type TidalLinkData = {  media_id: string }
+type TidalLinkData = { media_id: string }

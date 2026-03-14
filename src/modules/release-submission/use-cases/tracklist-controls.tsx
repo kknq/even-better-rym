@@ -1,4 +1,4 @@
-import { forceQuerySelector, waitForElement } from '~/common/utils/dom'
+import { forceQuerySelector, waitForElement } from '~/shared/utils/dom'
 
 export default async function injectTracklistControls() {
   const clearAll = await waitForElement('a#clearAll')

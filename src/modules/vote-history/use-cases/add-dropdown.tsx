@@ -1,6 +1,6 @@
 import { h, render } from 'preact'
 
-import { waitForElement } from '~/common/utils/dom'
+import { waitForElement } from '~/shared/utils/dom'
 
 export default async function addDropdown(
   label: string,

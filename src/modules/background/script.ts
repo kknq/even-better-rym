@@ -3,7 +3,7 @@ import browser from 'webextension-polyfill'
 import type {
   ScriptRequest,
   ScriptResponse,
-} from '../../common/utils/messaging/codec'
+} from '../../shared/utils/messaging'
 
 export const script = async (
   { id, data }: ScriptRequest,

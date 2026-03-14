@@ -5,3 +5,4 @@ profiles/
 .env
 brym.zip
 .eslintcache
+scripts/output/

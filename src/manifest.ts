@@ -1,35 +1,35 @@
 import pkg from '../package.json'
 
 const hostsArray = [
-    'https://rateyourmusic.com/*',
-    'https://open.spotify.com/*',
-    'https://accounts.spotify.com/*',
-    'https://api.spotify.com/*',
-    'https://music.apple.com/*',
-    'https://*.music.apple.com/*',
-    'https://itunes.apple.com/*',
-    'https://bandcamp.com/*',
-    'https://*.bandcamp.com/*',
-    'https://*.bcbits.com/*',
-    'https://beatport.com/*',
-    'https://deezer.com/*',
-    'https://api.deezer.com/*',
-    'https://discogs.com/*',
-    'https://*.discogs.com/*',
-    'https://melon.com/*',
-    'https://qobuz.com/*',
-    'https://*.qobuz.com/*',
-    'https://soundcloud.com/*',
-    'https://api-v2.soundcloud.com/*',
-    'https://tidal.com/*',
-    'https://auth.tidal.com/*',
-    'https://openapi.tidal.com/*',
-    'https://youtube.com/*',
-    'https://*.youtube.com/*',
-    'https://youtu.be/*',
-    'https://youtube.googleapis.com/*',
-    'https://www.googleapis.com/*',
-  ]
+  'https://rateyourmusic.com/*',
+  'https://open.spotify.com/*',
+  'https://accounts.spotify.com/*',
+  'https://api.spotify.com/*',
+  'https://music.apple.com/*',
+  'https://*.music.apple.com/*',
+  'https://itunes.apple.com/*',
+  'https://bandcamp.com/*',
+  'https://*.bandcamp.com/*',
+  'https://*.bcbits.com/*',
+  'https://beatport.com/*',
+  'https://deezer.com/*',
+  'https://api.deezer.com/*',
+  'https://discogs.com/*',
+  'https://*.discogs.com/*',
+  'https://melon.com/*',
+  'https://qobuz.com/*',
+  'https://*.qobuz.com/*',
+  'https://soundcloud.com/*',
+  'https://api-v2.soundcloud.com/*',
+  'https://tidal.com/*',
+  'https://auth.tidal.com/*',
+  'https://openapi.tidal.com/*',
+  'https://youtube.com/*',
+  'https://*.youtube.com/*',
+  'https://youtu.be/*',
+  'https://youtube.googleapis.com/*',
+  'https://www.googleapis.com/*',
+]
 
 const sharedManifest = {
   content_scripts: [
@@ -98,7 +98,7 @@ const sharedManifest = {
     'tabs',
     'scripting',
     'activeTab',
-  ] as chrome.runtime.ManifestPermissions[]
+  ] as chrome.runtime.ManifestPermissions[],
 } satisfies Partial<chrome.runtime.ManifestBase>
 
 const browserAction = {
@@ -121,7 +121,7 @@ const ManifestV3 = {
   background: {
     service_worker: 'src/modules/background/index.ts',
   },
-  host_permissions: hostsArray
+  host_permissions: hostsArray,
 }
 
 export function getManifest(
@@ -143,10 +143,10 @@ export function getManifest(
         gecko: {
           id: '{ccc663fe-bdb6-4bf1-a2fa-0c55849e29ad}',
           data_collection_permissions: {
-            required: ["none"]
-          }
-        }
-      }
+            required: ['none'],
+          },
+        },
+      },
     }
   }
 
