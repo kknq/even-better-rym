@@ -53,6 +53,7 @@ export type ReleaseDate = {
   month?: number
   day?: number
 }
+
 export type ReleaseType =
   | 'album'
   | 'compilation'
@@ -63,7 +64,8 @@ export type ReleaseType =
   | 'dj mix'
   | 'bootleg'
   | 'video'
-export type ReleaseFormat =
+
+  export type ReleaseFormat =
   | 'digital file'
   | 'lossless digital'
   | 'blu-ray'
@@ -94,7 +96,8 @@ export type ReleaseFormat =
   | 'reel-to-reel'
   | 'vhs'
   | 'phonograph cylinder'
-export type DiscSize =
+
+  export type DiscSize =
   | '16'
   | '12'
   | '11'
@@ -107,7 +110,8 @@ export type DiscSize =
   | '4'
   | '3'
   | 'non-standard'
-export type ReleaseAttribute =
+
+  export type ReleaseAttribute =
   | 'abridged'
   | 'bonus cd'
   | 'bonus dvd'
@@ -184,13 +188,16 @@ export type ReleaseAttribute =
   | 'songs inspired by'
   | 'television soundtrack'
   | 'video game soundtrack'
-export type ReleaseLabel = { name?: string; catno?: string }
+
+  export type ReleaseLabel = { name?: string; catno?: string }
+
 export type Track = {
   position?: string
   title?: string
   duration?: string
   header?: boolean
 }
+
 export type ResolveData = {
   url?: string
   title?: string
