@@ -8,7 +8,7 @@ import { parseMarkup } from '../../shared/utils/markup'
 let headerArray: Element[]
 let currentPreferences: FormData
 
-const BUTTON_CLASSES = 'btn btn_small flat_btn'
+const BUTTON_CLASSES = 'btn btn_small blue_btn'
 const COMMON_STYLE =
   'vertical-align:middle; position:relative; margin-right:1em;'
 const OTHER_STYLE = COMMON_STYLE + 'top:75%; transform:translateY(-50%)'
