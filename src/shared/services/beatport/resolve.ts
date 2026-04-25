@@ -1,4 +1,4 @@
-import { stringToDate } from '../../utils/datetime'
+import { secondsToString, stringToDate } from '../../utils/datetime'
 import { fetch } from '../../utils/fetch'
 import { getReleaseType } from '../../utils/music'
 import { isDefined } from '../../utils/types'
@@ -65,7 +65,7 @@ const getDate = (nextData: BeatportNextData) => {
   return !dateString ? undefined : stringToDate(dateString)
 }
 
-const getTracks = (nextData: BeatportNextData) => {
+const getTracks = (nextData: BeatportNextData, releaseArtists: string[]) => {
   const queries = nextData?.props?.pageProps?.dehydratedState?.queries ?? []
   const tracksQuery = queries.find(
     (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'tracks',
@@ -76,7 +76,7 @@ const getTracks = (nextData: BeatportNextData) => {
   return tracks.map((track, index) => {
     const position = (index + 1).toString()
 
-    let title = track.name ?? ''
+    let title = track.name.replace(/\s*feat\..*$/i, '') ?? ''
 
     if (track.mix_name && track.mix_name.toLowerCase() !== 'original mix') {
       title += ` (${track.mix_name})`
@@ -91,17 +91,17 @@ const getTracks = (nextData: BeatportNextData) => {
     }
 
     const trackArtists = track.artists ?? []
-    if (trackArtists.length > 0) {
+    if (
+      trackArtists.map((artist) => artist.name).join(', ') !=
+      releaseArtists.join(', ')
+    ) {
       const artistNames = trackArtists.map((artist) => artist.name).join(', ')
       title = `${artistNames} - ${title}`
     }
 
     let duration: string | undefined
     if (track.length_ms) {
-      const totalSeconds = Math.floor(track.length_ms / 1000)
-      const minutes = Math.floor(totalSeconds / 60)
-      const seconds = totalSeconds % 60
-      duration = `${minutes}:${seconds.toString().padStart(2, '0')}`
+      duration = secondsToString(track.length_ms / 1000)
     }
 
     return { position, title, duration }
@@ -137,7 +137,7 @@ export const resolve: ResolveFunction = async (url) => {
   const title = getTitle(nextData)
   const artists = getArtists(nextData)
   const date = getDate(nextData)
-  const tracks = getTracks(nextData)
+  const tracks = getTracks(nextData, artists)
   const type = getReleaseType(tracks.length)
   const coverArt = getCoverArt(nextData)
   const label = getLabel(nextData)
