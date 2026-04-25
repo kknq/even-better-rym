@@ -257,7 +257,7 @@ export type Release = {
       catno: string
     },
   ]
-  released?: string,
+  released?: string
   country?: string
 }
 

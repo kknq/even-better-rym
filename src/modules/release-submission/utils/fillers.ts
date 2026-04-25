@@ -222,7 +222,8 @@ function fillSource(url: string) {
 }
 
 function fillCountries(countries: string[]) {
-  forceQuerySelector<HTMLTextAreaElement>(document)('#countries').value = countries.join(', ')
+  forceQuerySelector<HTMLTextAreaElement>(document)('#countries').value =
+    countries.join(', ')
 }
 
 const TYPE_IDS: Record<ReleaseType, string> = {

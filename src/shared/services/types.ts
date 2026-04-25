@@ -65,7 +65,7 @@ export type ReleaseType =
   | 'bootleg'
   | 'video'
 
-  export type ReleaseFormat =
+export type ReleaseFormat =
   | 'digital file'
   | 'lossless digital'
   | 'blu-ray'
@@ -97,7 +97,7 @@ export type ReleaseType =
   | 'vhs'
   | 'phonograph cylinder'
 
-  export type DiscSize =
+export type DiscSize =
   | '16'
   | '12'
   | '11'
@@ -111,7 +111,7 @@ export type ReleaseType =
   | '3'
   | 'non-standard'
 
-  export type ReleaseAttribute =
+export type ReleaseAttribute =
   | 'abridged'
   | 'bonus cd'
   | 'bonus dvd'
@@ -189,7 +189,7 @@ export type ReleaseType =
   | 'television soundtrack'
   | 'video game soundtrack'
 
-  export type ReleaseLabel = { name?: string; catno?: string }
+export type ReleaseLabel = { name?: string; catno?: string }
 
 export type Track = {
   position?: string
@@ -210,6 +210,6 @@ export type ResolveData = {
   format?: ReleaseFormat
   discSize?: DiscSize
   attributes?: ReleaseAttribute[]
-  tracks?: Track[],
+  tracks?: Track[]
   countries?: string[]
 }
