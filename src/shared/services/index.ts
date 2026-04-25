@@ -3,6 +3,7 @@ import { Bandcamp } from './bandcamp'
 import { Beatport } from './beatport'
 import { Deezer } from './deezer'
 import { Discogs } from './discogs'
+import { LiveMixtapes } from './livemixtapes'
 import { Melon } from './melon'
 import { Qobuz } from './qobuz'
 import { Soundcloud } from './soundcloud'
@@ -24,6 +25,7 @@ export const SERVICES: Service[] = [
   Deezer,
   Qobuz,
   Tidal,
+  LiveMixtapes,
 ]
 
 export const SEARCHABLES: (Service & Searchable)[] =

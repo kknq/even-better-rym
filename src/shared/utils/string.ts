@@ -37,3 +37,14 @@ export const regexLastIndexOf = (
 export const htmlDecode = (input: string) =>
   new DOMParser().parseFromString(input, 'text/html').documentElement
     .textContent
+
+export const arrayToArtists = (artists: string[]): string => {
+  if (artists.length === 1) {
+    return artists[0]
+  } else if (artists.length === 2) {
+    return artists.join(' & ')
+  } else {
+    const lastArtist = artists.pop()
+    return `${artists.join(', ')} & ${lastArtist}`
+  }
+}
