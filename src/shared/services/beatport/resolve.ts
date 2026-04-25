@@ -1,4 +1,4 @@
-import { stringToDate } from '../../utils/datetime'
+import { secondsToString, stringToDate } from '../../utils/datetime'
 import { fetch } from '../../utils/fetch'
 import { getReleaseType } from '../../utils/music'
 import { isDefined } from '../../utils/types'
@@ -76,7 +76,7 @@ const getTracks = (nextData: BeatportNextData, releaseArtists: string[]) => {
   return tracks.map((track, index) => {
     const position = (index + 1).toString()
 
-    let title = track.name ?? ''
+    let title = track.name.replace(/\s*feat\..*$/i, "") ?? ''
 
     if (track.mix_name && track.mix_name.toLowerCase() !== 'original mix') {
       title += ` (${track.mix_name})`
@@ -98,10 +98,7 @@ const getTracks = (nextData: BeatportNextData, releaseArtists: string[]) => {
 
     let duration: string | undefined
     if (track.length_ms) {
-      const totalSeconds = Math.floor(track.length_ms / 1000)
-      const minutes = Math.floor(totalSeconds / 60)
-      const seconds = totalSeconds % 60
-      duration = `${minutes}:${seconds.toString().padStart(2, '0')}`
+      duration = secondsToString(track.length_ms / 1000)
     }
 
     return { position, title, duration }
