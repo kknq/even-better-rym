@@ -65,7 +65,7 @@ const getDate = (nextData: BeatportNextData) => {
   return !dateString ? undefined : stringToDate(dateString)
 }
 
-const getTracks = (nextData: BeatportNextData) => {
+const getTracks = (nextData: BeatportNextData, releaseArtists: string[]) => {
   const queries = nextData?.props?.pageProps?.dehydratedState?.queries ?? []
   const tracksQuery = queries.find(
     (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'tracks',
@@ -91,7 +91,7 @@ const getTracks = (nextData: BeatportNextData) => {
     }
 
     const trackArtists = track.artists ?? []
-    if (trackArtists.length > 0) {
+    if (trackArtists.map((artist) => artist.name).join(', ') != releaseArtists.join(', ')) {
       const artistNames = trackArtists.map((artist) => artist.name).join(', ')
       title = `${artistNames} - ${title}`
     }
@@ -137,7 +137,7 @@ export const resolve: ResolveFunction = async (url) => {
   const title = getTitle(nextData)
   const artists = getArtists(nextData)
   const date = getDate(nextData)
-  const tracks = getTracks(nextData)
+  const tracks = getTracks(nextData, artists)
   const type = getReleaseType(tracks.length)
   const coverArt = getCoverArt(nextData)
   const label = getLabel(nextData)
