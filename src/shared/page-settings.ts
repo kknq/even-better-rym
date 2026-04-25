@@ -1,15 +1,17 @@
 import * as storage from './utils/storage'
 
-export const getPageEnabled = async (page: string): Promise<boolean> =>
-  (await storage.get<boolean>(`pages.${page}`)) ?? true
+import type { PageKey } from './pages'
+
+export const getPageEnabled = async (key: PageKey): Promise<boolean> =>
+  (await storage.get<boolean>(`pages.${key}`)) ?? true
 
 export const setPageEnabled = async (
-  page: string,
+  key: PageKey,
   enabled: boolean,
-): Promise<void> => storage.set(`pages.${page}`, enabled)
+): Promise<void> => storage.set(`pages.${key}`, enabled)
 
-export const runPage = async (page: string, callback: () => unknown) => {
-  const enabled = await getPageEnabled(page)
+export const runPage = async (key: PageKey, callback: () => unknown) => {
+  const enabled = await getPageEnabled(key)
   if (!enabled) return
 
   callback()

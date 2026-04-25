@@ -58,6 +58,11 @@ const sharedManifest = {
       run_at: 'document_start',
     },
     {
+      js: ['src/modules/descriptor-links/main.ts'],
+      matches: ['*://*.rateyourmusic.com/release/*'],
+      run_at: 'document_start',
+    },
+    {
       js: ['src/modules/stream-links/main.ts'],
       matches: ['*://*.rateyourmusic.com/release/*'],
       run_at: 'document_start',

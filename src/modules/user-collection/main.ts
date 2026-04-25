@@ -7,8 +7,8 @@ const isUserCollection = document.location.pathname.startsWith(
   pages.userCollection,
 )
 
-const page = isUserCollection ? pages.userCollection : pages.filmCollection
+const pageKey = isUserCollection ? 'userCollection' : 'filmCollection'
 
-void runPage(page, () => {
+void runPage(pageKey, () => {
   void injectCollectionFilterButtons()
 })

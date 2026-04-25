@@ -2,6 +2,6 @@ import { runPage } from '~/shared/page-settings'
 
 import { main } from './app'
 
-void runPage('releaseSubmission', () => {
+void runPage('descriptorLinks', () => {
   void main()
 })

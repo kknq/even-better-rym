@@ -41,7 +41,7 @@ Injects a "Download Cover Art" panel on the cover art upload page. Paste a URL f
 
 ---
 
-### Media Links Submission Helpe
+### Media Links Submission Helper
 
 On the media link submission form, adds a service selector and a "Convert to Embed" button below the URL input. Detects the service from the pasted URL, fetches the correct embed code for that service, and replaces the URL in the input with the embed code - saving you from having to look it up manually.
 
@@ -200,6 +200,7 @@ src/
       beatport/
       deezer/
       discogs/
+      livemixtapes/
       melon/
       qobuz/
       soundcloud/

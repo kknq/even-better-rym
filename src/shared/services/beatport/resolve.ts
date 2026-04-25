@@ -5,7 +5,6 @@ import { isDefined } from '../../utils/types'
 import type { ReleaseLabel, ResolveFunction } from '../types'
 import type { BeatportNextData } from './codec'
 
-// Helper function to extract and parse JSON data from Next.js script tag
 const extractNextData = (document_: Document): BeatportNextData => {
   const scriptElement = document_.querySelector('#__NEXT_DATA__')
   if (!scriptElement?.textContent) {
