@@ -390,6 +390,24 @@ const parseFormatText = (data: ResolveData, format: Format) => {
   }
 }
 
+const parseCountries = (countries: string) => {
+  const countriesArray = countries.split(/,|&/).map((item) => item.trim())
+
+  return countriesArray
+    .map((country) => {
+      if (country.toLowerCase() === 'uk') {
+        return 'United Kingdom'
+      } else if (
+        country.toLowerCase() === 'usa' ||
+        country.toLowerCase() === 'us'
+      ) {
+        return 'United States'
+      }
+      return country
+    })
+    .sort()
+}
+
 const resolveRelease = async (id: string): Promise<ResolveData> => {
   const response = JSON.parse(
     await fetch({
@@ -421,6 +439,9 @@ const resolveRelease = async (id: string): Promise<ResolveData> => {
     .filter((url) => url.length > 0)
   const label: ReleaseLabel = response.labels[0]
   if (label.catno === 'none') label.catno = undefined
+  const countries = response.country
+    ? parseCountries(response.country)
+    : undefined
 
   const data: ResolveData = {
     url,
@@ -431,6 +452,7 @@ const resolveRelease = async (id: string): Promise<ResolveData> => {
     tracks,
     coverArt,
     label,
+    countries,
   }
 
   const format = response.formats[0]

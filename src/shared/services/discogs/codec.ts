@@ -258,6 +258,7 @@ export type Release = {
     },
   ]
   released?: string
+  country?: string
 }
 
 export type Master = { main_release: number }
