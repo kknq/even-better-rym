@@ -76,7 +76,7 @@ const getTracks = (nextData: BeatportNextData, releaseArtists: string[]) => {
   return tracks.map((track, index) => {
     const position = (index + 1).toString()
 
-    let title = track.name.replace(/\s*feat\..*$/i, "") ?? ''
+    let title = track.name.replace(/\s*feat\..*$/i, '') ?? ''
 
     if (track.mix_name && track.mix_name.toLowerCase() !== 'original mix') {
       title += ` (${track.mix_name})`
@@ -91,7 +91,10 @@ const getTracks = (nextData: BeatportNextData, releaseArtists: string[]) => {
     }
 
     const trackArtists = track.artists ?? []
-    if (trackArtists.map((artist) => artist.name).join(', ') != releaseArtists.join(', ')) {
+    if (
+      trackArtists.map((artist) => artist.name).join(', ') !=
+      releaseArtists.join(', ')
+    ) {
       const artistNames = trackArtists.map((artist) => artist.name).join(', ')
       title = `${artistNames} - ${title}`
     }
