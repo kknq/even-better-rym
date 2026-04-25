@@ -210,5 +210,6 @@ export type ResolveData = {
   format?: ReleaseFormat
   discSize?: DiscSize
   attributes?: ReleaseAttribute[]
-  tracks?: Track[]
+  tracks?: Track[],
+  countries?: string[]
 }

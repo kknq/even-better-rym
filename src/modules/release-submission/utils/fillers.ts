@@ -26,6 +26,7 @@ export async function fill(
     tracks,
     url,
     label,
+    countries,
   }: ResolveData,
   options: ReleaseOptions,
 ): Promise<void> {
@@ -67,6 +68,10 @@ export async function fill(
 
   if (url !== undefined) {
     fillSource(url)
+  }
+
+  if (countries != null && options.fillFields.countries) {
+    fillCountries(countries)
   }
 }
 
@@ -214,6 +219,10 @@ function fillTracks(tracks: Track[], capitalization: CapitalizationType) {
 
 function fillSource(url: string) {
   forceQuerySelector<HTMLTextAreaElement>(document)('#notes').value = url
+}
+
+function fillCountries(countries: string[]) {
+  forceQuerySelector<HTMLTextAreaElement>(document)('#countries').value = countries.join(', ')
 }
 
 const TYPE_IDS: Record<ReleaseType, string> = {

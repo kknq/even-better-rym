@@ -257,7 +257,8 @@ export type Release = {
       catno: string
     },
   ]
-  released?: string
+  released?: string,
+  country?: string
 }
 
 export type Master = { main_release: number }

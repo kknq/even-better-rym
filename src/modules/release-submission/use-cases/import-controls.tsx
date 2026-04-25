@@ -194,6 +194,7 @@ const FIELDS_MAP: Record<FillField, string> = {
   label: 'Label',
   attributes: 'Issue Attributes',
   tracks: 'Tracklist',
+  countries: 'Countries Issued',
 }
 
 const DEFAULT_FORM_OPTIONS: ImportOptions = {
