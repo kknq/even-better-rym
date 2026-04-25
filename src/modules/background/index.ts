@@ -50,19 +50,25 @@ const setTabIcon = (tabId: number, enabled: boolean) => {
 }
 
 browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
+  if (!tab.url) return
+  const url = new URL(tab.url)
+  if (!url.hostname.endsWith('rateyourmusic.com')) return
+
   const pageEntries = (Object.entries(pages) as [PageKey, string][]).filter(
     ([key]) => !globalPageKeys.has(key),
   )
-  for (const [, pageUrl] of pageEntries) {
-    if (!tab.url) continue
-    const url = new URL(tab.url)
-    if (
-      url.hostname.endsWith('rateyourmusic.com') &&
-      url.pathname.startsWith(pageUrl)
-    ) {
-      void getPageEnabled(pageUrl).then((enabled) => setTabIcon(id, enabled))
+
+  const matchingKeys = pageEntries
+    .filter(([, pageUrl]) => url.pathname.startsWith(pageUrl))
+    .map(([key]) => key)
+
+  if (matchingKeys.length === 0) return
+
+  void Promise.all(matchingKeys.map((key) => getPageEnabled(key))).then(
+    (results) => {
+      const enabled = results.some(Boolean)
+      setTabIcon(id, enabled)
       void browser.action.enable(id)
-      return
-    }
-  }
+    },
+  )
 })

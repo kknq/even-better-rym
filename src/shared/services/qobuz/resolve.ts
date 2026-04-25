@@ -9,7 +9,7 @@ import { isDefined } from '../../utils/types'
 const attributes: ReleaseAttribute[] = ['downloadable', 'streaming']
 
 const getArtists = (document_: Document) => {
-  return [...document.querySelectorAll('li.album-meta__item')]
+  return [...document_.querySelectorAll('li.album-meta__item')]
     .filter((li) => li.textContent.includes('Main artists:'))
     .flatMap((li) => [...li.querySelectorAll('a')])
     .map((element) => element.getAttribute('title')?.trim())
@@ -33,7 +33,7 @@ const getLabel = (document_: Document) => {
     ?.textContent?.trim()
 }
 
-const gerReleaseData = (document_: Document) => {
+const getReleaseData = (document_: Document) => {
   const releaseScript = document_.querySelectorAll<HTMLScriptElement>(
     'script[type="application/ld+json"]',
   )[1]
@@ -61,10 +61,10 @@ const getTracks = (document_: Document) => {
   )
 }
 
-const normalizeDuration = (exctractedDuration: string | undefined) => {
-  if (exctractedDuration === undefined) return exctractedDuration
+const normalizeDuration = (extractedDuration: string | undefined) => {
+  if (extractedDuration === undefined) return extractedDuration
 
-  const parts = exctractedDuration.split(':').map((n) => parseInt(n, 10))
+  const parts = extractedDuration.split(':').map((n) => parseInt(n, 10))
 
   const [h, m, s] = parts
   return h === 0
@@ -76,7 +76,7 @@ export const resolve: ResolveFunction = async (url) => {
   const usUrl = url.replace(/(?<=qobuz\.com\/)[a-z]{2}-[a-z]{2}/, 'us-en')
   const response = await fetch({ url: usUrl })
   const document_ = new DOMParser().parseFromString(response, 'text/html')
-  const releaseData = gerReleaseData(document_)
+  const releaseData = getReleaseData(document_)
 
   const title = releaseData.name
   const artists = getArtists(document_)

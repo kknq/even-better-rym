@@ -4,7 +4,7 @@ export type LiveMixtapesNextData = {
       dehydratedState?: { queries?: LiveMixtapeQuery[] }
       initialMixtape?: {
         data?: LiveMixtapeData
-        included?: 
+        included?: LiveMixtapeIncluded
       }
     }
   }
