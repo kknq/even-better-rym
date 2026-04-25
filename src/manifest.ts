@@ -26,6 +26,8 @@ const hostsArray = [
   'https://youtu.be/*',
   'https://youtube.googleapis.com/*',
   'https://www.googleapis.com/*',
+  'https://*.livemixtapes.com/*',
+  'https://livemixtapes.com/*',
 ]
 
 const sharedManifest = {

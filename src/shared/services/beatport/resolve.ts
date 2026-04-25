@@ -3,39 +3,7 @@ import { fetch } from '../../utils/fetch'
 import { getReleaseType } from '../../utils/music'
 import { isDefined } from '../../utils/types'
 import type { ReleaseLabel, ResolveFunction } from '../types'
-
-type BeatportArtist = {
-  name: string
-}
-
-type BeatportTrack = {
-  name: string
-  mix_name?: string
-  remixers?: BeatportArtist[]
-  artists?: BeatportArtist[]
-  length_ms?: number
-}
-
-type BeatportQuery = {
-  queryKey: unknown[]
-  state: { data?: { results?: BeatportTrack[] } }
-}
-
-type BeatportNextData = {
-  props?: {
-    pageProps?: {
-      release?: {
-        name: string
-        artists: BeatportArtist[]
-        publish_date: string
-        image: { uri: string }
-        catalog_number: string
-        label: { name: string }
-      }
-      dehydratedState?: { queries?: BeatportQuery[] }
-    }
-  }
-}
+import type { BeatportNextData } from './codec'
 
 // Helper function to extract and parse JSON data from Next.js script tag
 const extractNextData = (document_: Document): BeatportNextData => {
@@ -73,39 +41,41 @@ const getTracks = (nextData: BeatportNextData, releaseArtists: string[]) => {
 
   const tracks = tracksQuery?.state?.data?.results ?? []
 
-  return tracks.map((track, index) => {
-    const position = (index + 1).toString()
+  return tracks
+    .map((track, index) => {
+      const position = (tracks.length - index).toString()
 
-    let title = track.name.replace(/\s*feat\..*$/i, '') ?? ''
+      let title = track.name.replace(/\s*feat\..*$/i, '') ?? ''
 
-    if (track.mix_name && track.mix_name.toLowerCase() !== 'original mix') {
-      title += ` (${track.mix_name})`
-    }
-
-    const remixers = track.remixers ?? []
-    if (remixers.length > 0) {
-      const remixerNames = remixers.map((remixer) => remixer.name).join(', ')
-      if (!title.includes('(')) {
-        title += ` (${remixerNames} Remix)`
+      if (track.mix_name && track.mix_name.toLowerCase() !== 'original mix') {
+        title += ` (${track.mix_name})`
       }
-    }
 
-    const trackArtists = track.artists ?? []
-    if (
-      trackArtists.map((artist) => artist.name).join(', ') !=
-      releaseArtists.join(', ')
-    ) {
-      const artistNames = trackArtists.map((artist) => artist.name).join(', ')
-      title = `${artistNames} - ${title}`
-    }
+      const remixers = track.remixers ?? []
+      if (remixers.length > 0) {
+        const remixerNames = remixers.map((remixer) => remixer.name).join(', ')
+        if (!title.includes('(')) {
+          title += ` (${remixerNames} Remix)`
+        }
+      }
 
-    let duration: string | undefined
-    if (track.length_ms) {
-      duration = secondsToString(track.length_ms / 1000)
-    }
+      const trackArtists = track.artists ?? []
+      if (
+        trackArtists.map((artist) => artist.name).join(', ') !=
+        releaseArtists.join(', ')
+      ) {
+        const artistNames = trackArtists.map((artist) => artist.name).join(', ')
+        title = `${artistNames} - ${title}`
+      }
 
-    return { position, title, duration }
-  })
+      let duration: string | undefined
+      if (track.length_ms) {
+        duration = secondsToString(track.length_ms / 1000)
+      }
+
+      return { position, title, duration }
+    })
+    .reverse()
 }
 
 const getCoverArt = (nextData: BeatportNextData) => {

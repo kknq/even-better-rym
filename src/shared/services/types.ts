@@ -12,6 +12,7 @@ export const SERVICE_IDS = [
   'qobuz',
   'tidal',
   'deezer',
+  'livemixtapes',
 ] as const
 
 export type ServiceId = (typeof SERVICE_IDS)[number]
