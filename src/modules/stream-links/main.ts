@@ -2,6 +2,6 @@ import { runPage } from '~/shared/page-settings'
 
 import { main } from './app'
 
-void runPage('streamLinks', () => {
-  void main()
+await runPage('streamLinks', async () => {
+  await main()
 })

@@ -1,6 +1,7 @@
+import path from 'node:path'
+
 import preact from '@preact/preset-vite'
 import webExtension from '@samrum/vite-plugin-web-extension'
-import path from 'path'
 import { defineConfig, loadEnv } from 'vite'
 
 import { getManifest } from './src/manifest'

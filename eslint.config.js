@@ -5,10 +5,14 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
-  prettier,
+  {
+    extends: [
+      eslint.configs.recommended,
+      ...tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.stylisticTypeChecked,
+      prettier,
+    ],
+  },
   {
     languageOptions: {
       ecmaVersion: 2020,

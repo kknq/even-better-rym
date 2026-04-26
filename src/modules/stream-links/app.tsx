@@ -1,6 +1,7 @@
 import { h, render } from 'preact'
 
-import { waitForElement } from '../../shared/utils/dom'
+import { waitForElement } from '~/shared/utils/dom'
+
 import { StreamLinks } from './stream-links'
 
 export const main = async () => {

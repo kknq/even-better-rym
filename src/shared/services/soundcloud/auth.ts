@@ -1,5 +1,5 @@
-import { fetch } from '../../utils/fetch'
-import { isDefined } from '../../utils/types'
+import { fetch } from '~/shared/utils/fetch'
+import { isDefined } from '~/shared/utils/types'
 
 const getScriptUrls = async () => {
   const response = await fetch({ url: 'https://soundcloud.com' })

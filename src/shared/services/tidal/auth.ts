@@ -1,4 +1,5 @@
-import { fetch } from '../../utils/fetch'
+import { fetch } from '~/shared/utils/fetch'
+
 import type { TokenResponse } from './codecs'
 
 const client_id = import.meta.env.VITE_TIDAL_ID as string

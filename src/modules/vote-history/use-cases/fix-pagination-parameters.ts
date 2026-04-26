@@ -3,7 +3,7 @@ import { waitForDocumentReady } from '~/shared/utils/dom'
 export default async function fixPaginationParameters(): Promise<void> {
   await waitForDocumentReady()
 
-  const parameters = new URLSearchParams(window.location.search)
+  const parameters = new URLSearchParams(globalThis.location.search)
   const show = Number.parseInt(parameters.get('show') ?? '100')
   const start = Number.parseInt(parameters.get('start') ?? '0')
 
@@ -15,7 +15,7 @@ export default async function fixPaginationParameters(): Promise<void> {
     parameters.set('show', show.toString())
     parameters.set('start', ((pageNumber - 1) * show).toString())
 
-    node.href = window.location.pathname + '?' + parameters.toString()
+    node.href = globalThis.location.pathname + '?' + parameters.toString()
   }
 
   for (const node of document.querySelectorAll<HTMLAnchorElement>(
@@ -24,7 +24,7 @@ export default async function fixPaginationParameters(): Promise<void> {
     parameters.set('show', show.toString())
     parameters.set('start', (start - show).toString())
 
-    node.href = window.location.pathname + '?' + parameters.toString()
+    node.href = globalThis.location.pathname + '?' + parameters.toString()
   }
 
   for (const node of document.querySelectorAll<HTMLAnchorElement>(
@@ -33,6 +33,6 @@ export default async function fixPaginationParameters(): Promise<void> {
     parameters.set('show', show.toString())
     parameters.set('start', (start + show).toString())
 
-    node.href = window.location.pathname + '?' + parameters.toString()
+    node.href = globalThis.location.pathname + '?' + parameters.toString()
   }
 }

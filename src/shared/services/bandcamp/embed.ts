@@ -1,4 +1,5 @@
-import { fetch } from '../../utils/fetch'
+import { fetch } from '~/shared/utils/fetch'
+
 import type { EmbedFunction } from '../types'
 
 export const embed: EmbedFunction = async (url) => {

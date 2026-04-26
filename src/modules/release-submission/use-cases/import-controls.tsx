@@ -78,9 +78,9 @@ function getFilename({ title, artists }: ResolveData) {
 
 function ImportOptionsForm({
   onOptionsUpdate,
-}: {
+}: Readonly<{
   onOptionsUpdate?: (options: ImportOptions) => void
-}) {
+}>) {
   const [options, setOptions_] = useState(DEFAULT_FORM_OPTIONS)
 
   const setOptions = (newOptions: ImportOptions) => {

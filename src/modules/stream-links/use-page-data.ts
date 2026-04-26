@@ -7,15 +7,14 @@ import {
   waitForDocumentReady,
   waitForElement,
 } from '~/shared/utils/dom'
-
-import type { OneShot } from '../../shared/utils/one-shot'
+import type { OneShot } from '~/shared/utils/one-shot'
 import {
   complete,
   failed,
   initial,
   isInitial,
   loading,
-} from '../../shared/utils/one-shot'
+} from '~/shared/utils/one-shot'
 
 export type PageDataState = OneShot<Error, PageData>
 
@@ -108,7 +107,7 @@ const EMPTY_LINKS = Object.fromEntries(
 const getStreamingPreferences = async (): Promise<
   StreamingPreferences | undefined
 > => {
-  return new Promise((resolve) => {
+  const promise = new Promise<StreamingPreferences>((resolve) => {
     const listener = (e: Event) => {
       const streamingPreferences =
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -119,13 +118,15 @@ const getStreamingPreferences = async (): Promise<
       resolve(streamingPreferences)
     }
     document.addEventListener('StreamingPreferencesEvent', listener)
-
-    void runScript(`
-      const streamingPreferences = window.streamingPreferences;
-      const __event = new CustomEvent('StreamingPreferencesEvent', { detail: { streamingPreferences } });
-      document.dispatchEvent(__event);
-    `)
   })
+
+  await runScript(`
+    const streamingPreferences = window.streamingPreferences;
+    const __event = new CustomEvent('StreamingPreferencesEvent', { detail: { streamingPreferences } });
+    document.dispatchEvent(__event);
+  `)
+
+  return promise
 }
 
 type PageLinksData = Record<

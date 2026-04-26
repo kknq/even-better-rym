@@ -2,6 +2,6 @@ import { runPage } from '~/shared/page-settings'
 
 import { main } from './app'
 
-void runPage('releaseSubmission', () => {
-  void main()
+await runPage('releaseSubmission', async () => {
+  await main()
 })

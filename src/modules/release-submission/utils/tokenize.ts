@@ -1,13 +1,10 @@
-import { pipe } from '../../../shared/utils/pipe'
-import { regexIndexOf, regexLastIndexOf } from '../../../shared/utils/string'
+import { pipe } from '~/shared/utils/pipe'
+import { regexIndexOf, regexLastIndexOf } from '~/shared/utils/string'
 
 export type TokenType = 'word' | 'romanNumeral' | 'whitespace' | 'punctuation'
 
 const parsers: [TokenType, RegExp][] = [
-  [
-    'romanNumeral',
-    /(?!mi)(?=[cdilmvx])m*(c[dm]|d?c*)(x[cl]|l?x*)(i[vx]|v?i*)(?=\s|$|\)|]|}|"|”|-|:)/i,
-  ],
+  ['romanNumeral', /(?!mi)m*(?:c[dm]|d?c*)(?:x[cl]|l?x*)(?:i[vx]|v?i*)\b/i],
   ['word', /[^\s"()/[\]{}“”-]+/],
   ['whitespace', /\s+/],
   ['punctuation', /[^\s\w]/],

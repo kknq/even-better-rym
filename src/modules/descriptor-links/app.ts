@@ -18,7 +18,7 @@ export async function main() {
     const content = meta.getAttribute('content')
     if (!content) return
 
-    const cleaned = content.replace(/^\s+/, '').replace(/\s+/g, '-')
+    const cleaned = content.replace(/^\s+/, '').replaceAll(/\s+/g, '-')
     const url = `https://rateyourmusic.com/charts/top/album/all-time/d:${cleaned}`
 
     const link = document.createElement('a')

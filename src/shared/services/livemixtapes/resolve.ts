@@ -1,8 +1,9 @@
-import type { ReleaseAttribute, ResolveFunction } from '../types'
-import { fetch } from '../../utils/fetch'
-import { LiveMixtapesNextData, LiveMixtapeTrack } from './codec'
 import { secondsToString, stringToDate } from '~/shared/utils/datetime'
+import { fetch } from '~/shared/utils/fetch'
 import { arrayToArtists } from '~/shared/utils/string'
+
+import type { ReleaseAttribute, ResolveFunction } from '../types'
+import type { LiveMixtapesNextData } from './codec'
 
 const attributes: ReleaseAttribute[] = ['downloadable', 'streaming']
 
@@ -30,22 +31,21 @@ const getTracks = (
   releaseArtists: string[],
 ) => {
   const tracks =
-    (nextData?.props?.pageProps?.initialMixtape?.included
-      ?.tracks as LiveMixtapeTrack[]) ?? []
+    nextData?.props?.pageProps?.initialMixtape?.included?.tracks ?? []
 
   return tracks.map((track, index) => {
     const position = (index + 1).toString()
 
     let title =
       track.title
-        .replace(/\s*\(feat\.[^)]*\)/gi, '')
-        .replace(/\s*\[prod\.[^\]]*\]/gi, '')
-        .replace(/\s{2,}/g, ' ')
+        .replaceAll(/\s*\(feat\.[^)]*\)/gi, '')
+        .replaceAll(/\s*\[prod\.[^\]]*\]/gi, '')
+        .replaceAll(/\s{2,}/g, ' ')
         .trim() ?? ''
 
-    let trackArtists = track.artist ?? ''
+    const trackArtists = track.artist ?? ''
 
-    if (trackArtists != arrayToArtists(releaseArtists)) {
+    if (trackArtists !== arrayToArtists(releaseArtists)) {
       title = `${trackArtists.replace(/\s*feat\..*$/i, '')} - ${title}`
     }
 

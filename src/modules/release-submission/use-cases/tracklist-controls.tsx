@@ -13,7 +13,7 @@ export default async function injectTracklistControls() {
   lengthClear.addEventListener('click', () => {
     const advancedInputContainer = forceQuerySelector(document)('#tracks_adv')
     const isAdvanced =
-      window.getComputedStyle(advancedInputContainer).display !== 'none'
+      globalThis.getComputedStyle(advancedInputContainer).display !== 'none'
 
     const advancedInput =
       forceQuerySelector<HTMLTextAreaElement>(document)('#track_advanced')

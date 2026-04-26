@@ -35,10 +35,10 @@ export const waitForCallback = <T>(callback: () => T | undefined): Promise<T> =>
   new Promise((resolve, reject) => {
     if (isDocumentReady()) {
       const result = callback()
-      if (result !== undefined) {
-        resolve(result)
-      } else {
+      if (result === undefined) {
         reject(new Error('Callback never resolved'))
+      } else {
+        resolve(result)
       }
     } else {
       new MutationObserver((_m, observer) => {
@@ -85,8 +85,8 @@ export const waitForResult = (
       const firstResult =
         iframe.contentDocument?.querySelector<HTMLDivElement>('div.result')
 
-      if (firstResult != null) resolve(firstResult)
-      else resolve(undefined)
+      if (firstResult === null) resolve(undefined)
+      else resolve(firstResult)
 
       iframe.removeEventListener('load', listener)
     }

@@ -17,7 +17,7 @@ export const FilterButton: FunctionComponent<{
 }
 
 function makeUrl(base: string, modifier: string) {
-  const path = window.location.pathname.split('/')
+  const path = globalThis.location.pathname.split('/')
   const collectionIndex = path.findIndex(
     (element) =>
       element.toLowerCase() === 'collection' ||
@@ -37,7 +37,7 @@ function makeUrl(base: string, modifier: string) {
 }
 
 function filterApplied(modifier: string) {
-  const path = window.location.pathname.split('/')
+  const path = globalThis.location.pathname.split('/')
   const collectionIndex = path.findIndex(
     (element) =>
       element.toLowerCase() === 'collection' ||

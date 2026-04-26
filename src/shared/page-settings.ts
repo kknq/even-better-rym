@@ -1,6 +1,5 @@
-import * as storage from './utils/storage'
-
 import type { PageKey } from './pages'
+import * as storage from './utils/storage'
 
 export const getPageEnabled = async (key: PageKey): Promise<boolean> =>
   (await storage.get<boolean>(`pages.${key}`)) ?? true

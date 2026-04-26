@@ -1,20 +1,20 @@
 import { Fragment, h } from 'preact'
 import { useEffect, useState } from 'preact/hooks'
 
-import { ServiceLinkForm } from '../../shared/components/service-link-form'
-import { RESOLVABLES } from '../../shared/services'
-import type { ResolveData } from '../../shared/services/types'
-import { useReleaseInfo } from '../../shared/use-release-info'
-import { download } from '../../shared/utils/download'
-import type { OneShot } from '../../shared/utils/one-shot'
+import { ServiceLinkForm } from '~/shared/components/service-link-form'
+import { RESOLVABLES } from '~/shared/services'
+import type { ResolveData } from '~/shared/services/types'
+import { useReleaseInfo } from '~/shared/use-release-info'
+import { download } from '~/shared/utils/download'
+import type { OneShot } from '~/shared/utils/one-shot'
 import {
   complete,
   failed,
   fold,
   initial,
   loading,
-} from '../../shared/utils/one-shot'
-import { pipe } from '../../shared/utils/pipe'
+} from '~/shared/utils/one-shot'
+import { pipe } from '~/shared/utils/pipe'
 
 export function CoverArtDownloader() {
   const { info, fetchInfo } = useReleaseInfo()

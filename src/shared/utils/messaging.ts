@@ -76,8 +76,6 @@ export const sendBackgroundMessage = <
         resolve(response as Response)
         browser.runtime.onMessage.removeListener(onResponse)
       }
-
-      return
     }
 
     browser.runtime.onMessage.addListener(onResponse)

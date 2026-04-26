@@ -7,6 +7,6 @@ async function main() {
   await Promise.all([fixPaginationParameters(), addDescriptorDropdown()])
 }
 
-void runPage('voteHistoryDescriptors', () => {
-  void main()
+await runPage('voteHistoryDescriptors', async () => {
+  await main()
 })

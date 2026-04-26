@@ -1,54 +1,38 @@
-import { h } from 'preact'
-import { useCallback, useState } from 'preact/hooks'
+import { useEffect } from 'preact/hooks'
 
-import { Failed } from '../../shared/components/failed'
-import { Loader } from '../../shared/components/loader'
-import type { Searchable, Service } from '../../shared/services/types'
-import { isComplete, isFailed, isLoading } from '../../shared/utils/one-shot'
+import { Failed } from '~/shared/components/failed'
+import { Loader } from '~/shared/components/loader'
+import type { Searchable, Service } from '~/shared/services/types'
+import { isComplete, isFailed, isLoading } from '~/shared/utils/one-shot'
+
 import type { StreamLinkState } from './stream-link'
 
 export function StreamLinkIcon({
   service,
   state,
-}: {
+}: Readonly<{
   service: Service & Searchable
   state: StreamLinkState
-}) {
-  const [isHovered, setIsHovered] = useState(false)
+}>) {
+  useEffect(() => {
+    const style = document.createElement('style')
+    style.textContent = hoverCss
+    document.head.appendChild(style)
+    return () => style.remove()
+  }, [])
 
-  const renderIcon = useCallback(() => {
+  const renderIcon = () => {
     if (isComplete(state) && state.data._tag === 'exists') {
-      return service.icon({
-        style: {
-          ...iconStyle,
-          ...(isHovered ? fullHoverStyle : fullStyle),
-        },
-      })
+      return service.icon({ style: { ...iconStyle, ...fullStyle } })
     }
-
     if (isComplete(state) && state.data._tag === 'found') {
-      return service.foundIcon({
-        style: {
-          ...iconStyle,
-          ...(isHovered ? fullHoverStyle : fullStyle),
-        },
-      })
+      return service.foundIcon({ style: { ...iconStyle, ...fullStyle } })
     }
-
-    return service.notFoundIcon({
-      style: {
-        ...iconStyle,
-        ...emptyStyle,
-      },
-    })
-  }, [service, state, isHovered])
+    return service.notFoundIcon({ style: { ...iconStyle, ...emptyStyle } })
+  }
 
   return (
-    <div
-      style={{ position: 'relative' }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className='stream-link-icon' style={{ position: 'relative' }}>
       {renderIcon()}
       {isLoading(state) && <Loader style={statusIconStyle} />}
       {isFailed(state) && (
@@ -58,6 +42,8 @@ export function StreamLinkIcon({
   )
 }
 
+const hoverCss = `.stream-link-icon:hover svg { opacity: 1 !important; }`
+
 const iconStyle = {
   color: 'var(--mono-3)',
   transition: 'opacity 0.2s',
@@ -65,10 +51,6 @@ const iconStyle = {
 
 const fullStyle = {
   opacity: 0.8,
-}
-
-const fullHoverStyle = {
-  opacity: 1,
 }
 
 const emptyStyle = {

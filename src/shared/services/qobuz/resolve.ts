@@ -1,10 +1,11 @@
-import { ReleaseData } from './codec'
+import { asArray } from '~/shared/utils/array'
+import { stringToDate } from '~/shared/utils/datetime'
+import { fetch } from '~/shared/utils/fetch'
+import { getReleaseType } from '~/shared/utils/music'
+import { isDefined } from '~/shared/utils/types'
+
 import type { ReleaseAttribute, ResolveFunction } from '../types'
-import { fetch } from '../../utils/fetch'
-import { stringToDate } from '../../utils/datetime'
-import { getReleaseType } from '../../utils/music'
-import { asArray } from '../../utils/array'
-import { isDefined } from '../../utils/types'
+import type { ReleaseData } from './codec'
 
 const attributes: ReleaseAttribute[] = ['downloadable', 'streaming']
 
@@ -64,7 +65,7 @@ const getTracks = (document_: Document) => {
 const normalizeDuration = (extractedDuration: string | undefined) => {
   if (extractedDuration === undefined) return extractedDuration
 
-  const parts = extractedDuration.split(':').map((n) => parseInt(n, 10))
+  const parts = extractedDuration.split(':').map((n) => Number.parseInt(n, 10))
 
   const [h, m, s] = parts
   return h === 0

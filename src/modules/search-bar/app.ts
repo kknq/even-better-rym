@@ -1,5 +1,5 @@
-import { forceQuerySelector, waitForElement } from '../../shared/utils/dom'
-import { parseMarkup } from '../../shared/utils/markup'
+import { forceQuerySelector, waitForElement } from '~/shared/utils/dom'
+import { parseMarkup } from '~/shared/utils/markup'
 
 export async function main() {
   const searchBar: HTMLInputElement = await waitForElement(
@@ -27,7 +27,8 @@ const SEARCH_REGEX =
   /^\[(Artist|Album|Genre|Label|List|Rating|Venue|Concert|Bug)\d*]$/g
 
 function shortcutHandler(event: Event) {
-  if (event.type == 'keydown' && (event as KeyboardEvent).key != 'Enter') return
+  if (event.type === 'keydown' && (event as KeyboardEvent).key !== 'Enter')
+    return
 
   const searchBar = forceQuerySelector<HTMLInputElement>(document)(
     '#ui_search_input_main_search',
@@ -35,12 +36,14 @@ function shortcutHandler(event: Event) {
 
   if (SEARCH_REGEX.test(searchBar.value)) {
     void parseMarkup(searchBar.value).then((value) => {
-      window.location.href = (value.firstElementChild as HTMLLinkElement).href
+      globalThis.location.href = (
+        value.firstElementChild as HTMLLinkElement
+      ).href
     })
   } else {
-    if (event.type == 'keydown' && keyHandler != null)
+    if (event.type === 'keydown' && keyHandler !== null)
       keyHandler.call(searchBar, event as KeyboardEvent)
-    if (event.type == 'click' && clickHandler != null)
+    if (event.type === 'click' && clickHandler !== null)
       clickHandler.call(
         forceQuerySelector<HTMLElement>(document)(
           '#ui_search_icon_main_search',

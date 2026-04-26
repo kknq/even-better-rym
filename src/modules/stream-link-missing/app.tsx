@@ -1,5 +1,6 @@
-import { waitForDocumentReady } from '../../shared/utils/dom'
-import { isDefined } from '../../shared/utils/types'
+import { waitForDocumentReady } from '~/shared/utils/dom'
+import { isDefined } from '~/shared/utils/types'
+
 import { getDisplayType, setDisplayType } from './settings'
 import type { DisplayType, Row, State, StreamLinkName } from './types'
 import {
@@ -54,7 +55,7 @@ export async function main() {
   let state = await initializeState()
   const applyStateHash = (state: State) => {
     const hash = filtersToQueryString(state.filters)
-    window.location.hash = hash
+    globalThis.location.hash = hash
 
     for (const node of document.querySelectorAll<HTMLAnchorElement>(
       'a.navlinknum, a.navlinkprev, a.navlinknext',
@@ -172,7 +173,7 @@ async function initializeState(): Promise<State> {
   return {
     rows,
     displayType,
-    filters: queryStringToFilters(window.location.hash.slice(1)),
+    filters: queryStringToFilters(globalThis.location.hash.slice(1)),
   }
 }
 
@@ -213,14 +214,12 @@ function makeSelector(
 
   const selectedNames: Set<StreamLinkName> = initialState
 
-  const toggleSelected = (streamLinkName: StreamLinkName) => {
-    const isSelected = selectedNames.has(streamLinkName)
-    if (isSelected) {
-      selectedNames.delete(streamLinkName)
-    } else {
-      selectedNames.add(streamLinkName)
-    }
-    return !isSelected
+  const selectName = (streamLinkName: StreamLinkName) => {
+    selectedNames.add(streamLinkName)
+  }
+
+  const deselectName = (streamLinkName: StreamLinkName) => {
+    selectedNames.delete(streamLinkName)
   }
 
   for (const streamLinkName of streamLinkNames) {
@@ -229,17 +228,26 @@ function makeSelector(
     const innerSpan = document.createElement('span')
     innerSpan.className = `ui_media_link_btn ui_media_link_btn_${streamLinkName}`
     streamLinkButton.append(innerSpan)
-    const renderSelected = (selected: boolean) => {
-      if (selected) {
-        streamLinkButton.classList.add('selected')
-      } else {
-        streamLinkButton.classList.remove('selected')
-      }
+    const markSelected = () => {
+      streamLinkButton.classList.add('selected')
     }
-    renderSelected(selectedNames.has(streamLinkName))
+    const markDeselected = () => {
+      streamLinkButton.classList.remove('selected')
+    }
+    if (selectedNames.has(streamLinkName)) {
+      markSelected()
+    } else {
+      markDeselected()
+    }
     streamLinkButton.addEventListener('click', () => {
-      const selected = toggleSelected(streamLinkName)
-      renderSelected(selected)
+      const isSelected = selectedNames.has(streamLinkName)
+      if (isSelected) {
+        deselectName(streamLinkName)
+        markDeselected()
+      } else {
+        selectName(streamLinkName)
+        markSelected()
+      }
       onChange(selectedNames)
     })
     div.append(streamLinkButton)

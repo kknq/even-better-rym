@@ -1,4 +1,5 @@
-import { withCache } from '../../utils/cache'
+import { withCache } from '~/shared/utils/cache'
+
 import type { Resolvable, Service } from '../types'
 import DiscogsIcon from './icon'
 import { regex } from './regex'

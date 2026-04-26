@@ -1,9 +1,10 @@
 import getArtistTitle from 'get-artist-title'
 
-import { secondsToString, stringToDate } from '../../utils/datetime'
-import { fetch } from '../../utils/fetch'
-import type { FetchRequest } from '../../utils/messaging'
-import { getReleaseType } from '../../utils/music'
+import { secondsToString, stringToDate } from '~/shared/utils/datetime'
+import { fetch } from '~/shared/utils/fetch'
+import type { FetchRequest } from '~/shared/utils/messaging'
+import { getReleaseType } from '~/shared/utils/music'
+
 import type { ResolveData, ResolveFunction, Track } from '../types'
 import { YOUTUBE_KEY } from './auth'
 import type { Playlist, PlaylistItems, Video } from './codecs'
@@ -13,7 +14,7 @@ const parseDuration = (durationString: string) => {
   const seconds = /PT(?:(\d*)H)?(?:(\d*)M)?(?:(\d*)S)?/
     .exec(durationString)
     ?.slice(1)
-    .map((v) => (!v ? 0 : Number.parseInt(v)))
+    .map((v) => (v ? Number.parseInt(v) : 0))
     .reverse()
     .reduce((accumulator, v, k) => accumulator + v * 60 ** k, 0)
   return seconds ? secondsToString(seconds) : undefined
@@ -147,7 +148,7 @@ const resolveVideo = async (id: string): Promise<ResolveData> => {
 }
 
 export const resolve: ResolveFunction = async (url) => {
-  if (regex.exec(url) == null) throw new Error('Invalid YouTube URL')
+  if (regex.exec(url) === null) throw new Error('Invalid YouTube URL')
 
   const parsedUrl = new URL(url)
   let videoId: string | undefined

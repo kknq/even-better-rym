@@ -17,8 +17,8 @@ export default async function addDropdown(
   )
 }
 
-function Dropdown({ label, queryParameter, items }: DropdownProps) {
-  const parameters = new URLSearchParams(window.location.search)
+function Dropdown({ label, queryParameter, items }: Readonly<DropdownProps>) {
+  const parameters = new URLSearchParams(globalThis.location.search)
 
   const handleChange = (event: Event) => {
     const value = (event.target as HTMLSelectElement).value
@@ -28,7 +28,7 @@ function Dropdown({ label, queryParameter, items }: DropdownProps) {
       parameters.set(queryParameter, value)
     }
     parameters.set('start', '0')
-    window.location.search = '?' + parameters.toString()
+    globalThis.location.search = '?' + parameters.toString()
   }
 
   return (

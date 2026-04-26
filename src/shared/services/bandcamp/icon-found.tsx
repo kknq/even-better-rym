@@ -1,7 +1,8 @@
 import type { SVGAttributes } from 'preact'
-import { h } from 'preact'
 
-export default function BandcampFoundIcon(props: SVGAttributes<SVGSVGElement>) {
+export default function BandcampFoundIcon(
+  props: Readonly<SVGAttributes<SVGSVGElement>>,
+) {
   return (
     <svg
       width='32'

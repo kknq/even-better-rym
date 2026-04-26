@@ -1,7 +1,9 @@
 import type { SVGAttributes } from 'preact'
 import { h } from 'preact'
 
-export default function InfoIcon(props: SVGAttributes<SVGSVGElement>) {
+export default function InfoIcon(
+  props: Readonly<SVGAttributes<SVGSVGElement>>,
+) {
   return (
     <svg
       fill='currentColor'

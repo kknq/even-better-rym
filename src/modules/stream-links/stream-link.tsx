@@ -1,9 +1,9 @@
 import { h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
 
-import type { Searchable, Service } from '../../shared/services/types'
-import { parseError } from '../../shared/utils/error'
-import type { OneShot } from '../../shared/utils/one-shot'
+import type { Searchable, Service } from '~/shared/services/types'
+import { parseError } from '~/shared/utils/error'
+import type { OneShot } from '~/shared/utils/one-shot'
 import {
   complete,
   failed,
@@ -12,7 +12,8 @@ import {
   isFailed,
   isLoading,
   loading,
-} from '../../shared/utils/one-shot'
+} from '~/shared/utils/one-shot'
+
 import { StreamLinkIcon } from './stream-link-icon'
 import type { PageDataState } from './use-page-data'
 
@@ -24,10 +25,10 @@ type StreamLinkCompleteState =
 export function StreamLink({
   service,
   pageData,
-}: {
+}: Readonly<{
   service: Service & Searchable
   pageData: PageDataState
-}) {
+}>) {
   const [state, setState] = useState<StreamLinkState>(initial)
 
   useEffect(() => {

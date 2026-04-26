@@ -7,71 +7,68 @@ import type {
   ReleaseType,
   ResolveData,
   Track,
-} from '../../../shared/services/types'
-import { forceQuerySelector, waitForResult } from '../../../shared/utils/dom'
+} from '~/shared/services/types'
+import {
+  forceQuerySelector,
+  runScript,
+  waitForResult,
+} from '~/shared/utils/dom'
+
 import type { FillData } from '../dom'
 import type { CapitalizationType } from './capitalization'
 import { capitalize } from './capitalization'
 import type { ReleaseOptions } from './types'
 
 export async function fill(
-  {
-    artists,
-    type,
-    date,
-    title,
-    format,
-    discSize,
-    attributes,
-    tracks,
-    url,
-    label,
-    countries,
-  }: ResolveData,
+  data: ResolveData,
   options: ReleaseOptions,
 ): Promise<void> {
-  if (artists != null && options.fillFields.artists) {
-    await fillArtists(artists)
-  }
+  await fillCoreFields(data, options)
+  await fillExtraFields(data, options)
+}
 
-  if (type != null && options.fillFields.type) {
-    fillType(type)
+async function fillCoreFields(
+  data: ResolveData,
+  options: ReleaseOptions,
+): Promise<void> {
+  if (data.artists != null && options.fillFields.artists) {
+    await fillArtists(data.artists)
   }
-
-  if (date != null && options.fillFields.date) {
-    fillDate(date)
+  if (data.type != null && options.fillFields.type) {
+    fillType(data.type)
   }
-
-  if (title != null && options.fillFields.title) {
-    fillTitle(title, options.capitalization)
+  if (data.date != null && options.fillFields.date) {
+    fillDate(data.date)
   }
-
-  if (format != null && options.fillFields.format) {
-    fillFormat(format)
+  if (data.title != null && options.fillFields.title) {
+    fillTitle(data.title, options.capitalization)
   }
-
-  if (discSize != null && options.fillFields.discSize) {
-    fillDiscSize(discSize)
+  if (data.format != null && options.fillFields.format) {
+    fillFormat(data.format)
   }
+}
 
-  if (label != null && options.fillFields.label) {
-    fillLabel(label)
+async function fillExtraFields(
+  data: ResolveData,
+  options: ReleaseOptions,
+): Promise<void> {
+  if (data.discSize != null && options.fillFields.discSize) {
+    fillDiscSize(data.discSize)
   }
-
-  if (attributes != null && options.fillFields.attributes) {
-    fillAttributes(attributes)
+  if (data.label != null && options.fillFields.label) {
+    fillLabel(data.label)
   }
-
-  if (tracks != null && options.fillFields.tracks) {
-    fillTracks(tracks, options.capitalization)
+  if (data.attributes != null && options.fillFields.attributes) {
+    fillAttributes(data.attributes)
   }
-
-  if (url !== undefined) {
-    fillSource(url)
+  if (data.tracks != null && options.fillFields.tracks) {
+    await fillTracks(data.tracks, options.capitalization)
   }
-
-  if (countries != null && options.fillFields.countries) {
-    fillCountries(countries)
+  if (data.url !== undefined) {
+    fillSource(data.url)
+  }
+  if (data.countries != null && options.fillFields.countries) {
+    fillCountries(data.countries)
   }
 }
 
@@ -81,7 +78,7 @@ async function fillArtists(artists: string[]) {
     forceQuerySelector<HTMLInputElement>(document)('#cat_va').click()
   } else {
     // Regular release
-    if (document.querySelector('.sortable_filed_under_performer') != null)
+    if (document.querySelector('.sortable_filed_under_performer') !== null)
       return
 
     for (const artist of artists) await fillArtist(artist)
@@ -189,7 +186,7 @@ function fillAttribute(attribute: ReleaseAttribute) {
   ).checked = true
 }
 
-function fillTracks(tracks: Track[], capitalization: CapitalizationType) {
+async function fillTracks(tracks: Track[], capitalization: CapitalizationType) {
   const tracksString = tracks
     .map((track, index) => {
       const position = track.position ?? index + 1
@@ -211,10 +208,12 @@ function fillTracks(tracks: Track[], capitalization: CapitalizationType) {
     })
     .join('\n')
 
-  forceQuerySelector<HTMLAnchorElement>(document)('#goAdvancedBtn').click()
+  // Use runScript (page world) to click the javascript: href buttons — calling
+  // .click() directly in a content script is blocked by CSP.
+  await runScript(`document.querySelector('#goAdvancedBtn').click()`)
   forceQuerySelector<HTMLTextAreaElement>(document)('#track_advanced').value =
     tracksString
-  forceQuerySelector<HTMLAnchorElement>(document)('#goSimpleBtn').click()
+  await runScript(`document.querySelector('#goSimpleBtn').click()`)
 }
 
 function fillSource(url: string) {

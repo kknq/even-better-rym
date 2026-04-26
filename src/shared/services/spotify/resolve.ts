@@ -1,7 +1,8 @@
-import { asArray } from '../../utils/array'
-import { secondsToString } from '../../utils/datetime'
-import { fetch } from '../../utils/fetch'
-import { getReleaseType } from '../../utils/music'
+import { asArray } from '~/shared/utils/array'
+import { secondsToString } from '~/shared/utils/datetime'
+import { fetch } from '~/shared/utils/fetch'
+import { getReleaseType } from '~/shared/utils/music'
+
 import type { ReleaseDate, ResolveData, ResolveFunction, Track } from '../types'
 import { requestToken } from './auth'
 import type {
@@ -87,7 +88,9 @@ const getCoverArt = async (
   data: AlbumObject | TrackObject,
 ): Promise<string | undefined> => {
   const images = isAlbumObject(data) ? data.images : data.album.images
-  const best = images.sort((a, b) => b.width * b.height - a.width * a.height)[0]
+  const best = images.toSorted(
+    (a, b) => b.width * b.height - a.width * a.height,
+  )[0]
   if (!best?.url) return undefined
 
   const match = /([a-z0-9]{12})([a-z0-9]{4})([a-z0-9]{24})$/.exec(best.url)
@@ -116,8 +119,6 @@ const resolveAlbum = async (
       headers: { Authorization: `Bearer ${token}` },
     }),
   ) as AlbumObject
-
-  console.log({ response })
 
   const url = response.external_urls.spotify
   const title = response.name

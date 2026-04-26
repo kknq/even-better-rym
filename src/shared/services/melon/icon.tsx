@@ -1,7 +1,8 @@
 import type { SVGAttributes } from 'preact'
-import { h } from 'preact'
 
-export default function MelonIcon(props: SVGAttributes<SVGSVGElement>) {
+export default function MelonIcon(
+  props: Readonly<SVGAttributes<SVGSVGElement>>,
+) {
   return (
     <svg
       viewBox='0 0 32 32'

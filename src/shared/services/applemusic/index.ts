@@ -1,4 +1,5 @@
-import { withCache } from '../../utils/cache'
+import { withCache } from '~/shared/utils/cache'
+
 import type { Resolvable, Searchable, Service } from '../types'
 import AppleMusicIcon from './icon'
 import AppleMusicFoundIcon from './icon-found'

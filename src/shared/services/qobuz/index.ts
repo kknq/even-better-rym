@@ -1,4 +1,5 @@
-import { withCache } from '../../utils/cache'
+import { withCache } from '~/shared/utils/cache'
+
 import type { Resolvable, Searchable, Service } from '../types'
 import QobuzIcon from './icon'
 import QobuzFoundIcon from './icon-found'

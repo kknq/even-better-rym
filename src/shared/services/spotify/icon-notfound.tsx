@@ -2,7 +2,7 @@ import type { SVGAttributes } from 'preact'
 import { h } from 'preact'
 
 export default function SpotifyNotFoundIcon(
-  props: SVGAttributes<SVGSVGElement>,
+  props: Readonly<SVGAttributes<SVGSVGElement>>,
 ) {
   return (
     <svg

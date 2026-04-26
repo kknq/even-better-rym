@@ -8,7 +8,7 @@ import {
   waitForResult,
 } from '~/shared/utils/dom'
 import { pipe } from '~/shared/utils/pipe'
-import { ifDefined, isDefined } from '~/shared/utils/types'
+import { isDefined } from '~/shared/utils/types'
 
 import { selectShortcut } from '../utils/page-functions'
 
@@ -17,6 +17,31 @@ export default async function injectCreditsControls() {
   const unknownArtistDiv = document.createElement('div')
   credits.after(unknownArtistDiv)
   render(<Credits />, unknownArtistDiv)
+}
+
+function parseIntOrUndefined(value: string): number | undefined {
+  const n = Number.parseInt(value)
+  return Number.isNaN(n) ? undefined : n
+}
+
+function parseArtistIdFromInput(result: Element): number | undefined {
+  const value = result.querySelector<HTMLInputElement>('input')?.value
+  if (!value) return undefined
+  const match = /\[Artist(\d+)]/.exec(value)
+  if (!match?.[1]) return undefined
+  return parseIntOrUndefined(match[1])
+}
+
+function parseArtistNode(result: Element): Artist | undefined {
+  const artistLink = result.querySelector<HTMLAnchorElement>('a.artist')
+  if (artistLink === null) return undefined
+
+  const name = artistLink.text
+  const idFromTitle = parseIntOrUndefined(artistLink.title.slice(7, -1))
+  const id = idFromTitle ?? parseArtistIdFromInput(result)
+  if (id === undefined) return undefined
+
+  return { id, name }
 }
 
 function Credits() {
@@ -32,34 +57,7 @@ function Credits() {
           '.sortable_filed_under .filed_under_artist',
         ),
         (nodeList) => [...nodeList],
-        (nodes) =>
-          nodes
-            .map((result) => {
-              const artistLink =
-                result.querySelector<HTMLAnchorElement>('a.artist')
-              if (artistLink === null) return
-
-              const name = artistLink.text
-
-              const id =
-                pipe(Number.parseInt(artistLink.title.slice(7, -1)), (n) =>
-                  Number.isNaN(n) ? undefined : n,
-                ) ??
-                pipe(
-                  result.querySelector<HTMLInputElement>('input')?.value,
-                  ifDefined((value) =>
-                    pipe(/\[Artist(\d+)]/.exec(value), (match) => match?.[1]),
-                  ),
-                  ifDefined((id) =>
-                    pipe(Number.parseInt(id), (n) =>
-                      Number.isNaN(n) ? undefined : n,
-                    ),
-                  ),
-                )
-              if (id === undefined) return undefined
-              return { id, name }
-            })
-            .filter(isDefined),
+        (nodes) => nodes.map(parseArtistNode).filter(isDefined),
         uniqueBy((artist) => artist.id),
       )
 

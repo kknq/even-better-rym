@@ -1,4 +1,5 @@
-import { withCache } from '../../utils/cache'
+import { withCache } from '~/shared/utils/cache'
+
 import type { Embeddable, Resolvable, Searchable, Service } from '../types'
 import { embed } from './embed'
 import BandcampIcon from './icon'

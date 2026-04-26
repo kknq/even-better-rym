@@ -1,4 +1,5 @@
-import { fetch } from '../../utils/fetch'
+import { fetch } from '~/shared/utils/fetch'
+
 import type { SearchFunction } from '../types'
 import { requestToken } from './auth'
 import type { SearchObject } from './codecs'

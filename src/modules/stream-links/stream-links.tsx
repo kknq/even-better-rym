@@ -1,7 +1,8 @@
 import { h } from 'preact'
 import { useEffect } from 'preact/hooks'
 
-import { SEARCHABLES } from '../../shared/services'
+import { SEARCHABLES } from '~/shared/services'
+
 import { StreamLink } from './stream-link'
 import { usePageData } from './use-page-data'
 
@@ -18,7 +19,7 @@ export function StreamLinks() {
     document.head.appendChild(style)
 
     return () => {
-      document.head.removeChild(style)
+      style.remove()
     }
   }, [])
 

@@ -1,10 +1,11 @@
 import browser from 'webextension-polyfill'
 
-import { getPageEnabled } from '../../shared/page-settings'
-import type { PageKey } from '../../shared/pages'
-import { globalPageKeys, pages } from '../../shared/pages'
-import type { BackgroundResponse } from '../../shared/utils/messaging'
-import { isBackgroundRequest } from '../../shared/utils/messaging'
+import { getPageEnabled } from '~/shared/page-settings'
+import type { PageKey } from '~/shared/pages'
+import { globalPageKeys, pages } from '~/shared/pages'
+import type { BackgroundResponse } from '~/shared/utils/messaging'
+import { isBackgroundRequest } from '~/shared/utils/messaging'
+
 import { download } from './download'
 import { backgroundFetch } from './fetch'
 import { script } from './script'

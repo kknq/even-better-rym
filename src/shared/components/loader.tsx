@@ -1,5 +1,4 @@
 import type { CSSProperties, SVGAttributes } from 'preact'
-import { h } from 'preact'
 import { useEffect } from 'preact/hooks'
 
 import LoaderIcon from '../icons/loader'
@@ -17,7 +16,7 @@ export function Loader({
     document.head.appendChild(style)
 
     return () => {
-      document.head.removeChild(style)
+      style.remove()
     }
   }, [])
 

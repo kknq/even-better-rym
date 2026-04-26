@@ -1,6 +1,7 @@
 import { runPage } from '~/shared/page-settings'
 
 import { main } from './app'
-void runPage('userPage', () => {
-  void main()
+
+await runPage('userPage', async () => {
+  await main()
 })

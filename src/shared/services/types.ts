@@ -1,4 +1,4 @@
-import type { FunctionComponent, JSX } from 'preact'
+import type { FunctionComponent, SVGAttributes } from 'preact'
 
 export const SERVICE_IDS = [
   'applemusic',
@@ -22,7 +22,7 @@ export type Service = {
   icon: Icon
   regex: RegExp
 }
-export type Icon = FunctionComponent<JSX.SVGAttributes<SVGSVGElement>>
+export type Icon = FunctionComponent<SVGAttributes<SVGSVGElement>>
 
 export type SearchFunction = (metadata: {
   artist: string

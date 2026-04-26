@@ -1,6 +1,7 @@
-import { h, render } from 'preact'
+import { render } from 'preact'
 
-import { waitForElement } from '../../shared/utils/dom'
+import { waitForElement } from '~/shared/utils/dom'
+
 import { CoverArtDownloader } from './cover-art-downloader'
 
 export async function injectCoverArtDownloader() {
