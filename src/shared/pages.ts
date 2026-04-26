@@ -12,6 +12,8 @@ export const pages = {
 	voteHistoryDescriptors: "/rdescriptor/vote_history",
 	streamLinkMissing: "/misc/media_link_you_know",
 	searchBar: "/",
+	filmChartGenreLinks: "/charts/",
+	filmGenreChartButton: "/film_genre/",
 } as const;
 
 export type PageKey = keyof typeof pages;
@@ -30,6 +32,8 @@ export const pageLabels: Record<PageKey, string> = {
 	voteHistoryDescriptors: "Enhancements for Descriptor Vote History",
 	streamLinkMissing: 'Filtering in "Media Link You Know" List',
 	searchBar: "Search Bar Shortcuts",
+	filmChartGenreLinks: "Film Chart Genre Links",
+	filmGenreChartButton: "Film Genre Chart Button",
 };
 
 export const pageGroupLabels: Partial<Record<string, string>> = {
@@ -44,6 +48,8 @@ export const pageGroupLabels: Partial<Record<string, string>> = {
 	"/rdescriptor/vote_history": "Descriptor Vote History",
 	"/misc/media_link_you_know": "Media Link You Know",
 	"/": "Global",
+	"/charts/": "Film Charts",
+	"/film_genre/": "Film Genre",
 };
 
 export const pageHints: Record<PageKey, string> = {
@@ -58,10 +64,8 @@ export const pageHints: Record<PageKey, string> = {
 	coverArt: "Adds download controls to the cover art upload page.",
 	streamLinkSubmission:
 		"Assists with converting Soundcloud and Bandcamp links to embed codes on the media link submission page.",
-	userCollection:
-		"Adds filters to your music collection page.",
-	filmCollection:
-		"Adds filters to your film collection page.",
+	userCollection: "Adds filters to your music collection page.",
+	filmCollection: "Adds filters to your film collection page.",
 	userPage: "Adds edit buttons for favorite artists and other comments.",
 	voteHistoryGenres:
 		"Adds a searchable genre selector dropdown to the genre vote history page.",
@@ -69,8 +73,11 @@ export const pageHints: Record<PageKey, string> = {
 		"Adds a searchable descriptor selector dropdown to the descriptor vote history page.",
 	streamLinkMissing:
 		'Adds filtering controls to the "Media Link You Know" submission list.',
-	searchBar:
-		"Adds shortcuts to the site-wide search bar.",
+	searchBar: "Adds shortcuts to the site-wide search bar.",
+	filmChartGenreLinks:
+		"On film chart pages, redirects genre links to their corresponding film genre pages.",
+	filmGenreChartButton:
+		"On film genre pages, adds a button to open the top chart filtered by that genre.",
 };
 
 // Page keys whose features are global and should not affect the toolbar icon

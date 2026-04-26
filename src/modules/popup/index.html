@@ -7,10 +7,21 @@
     <style>
       .ebr-hint {
         display: none;
+        position: fixed;
+        left: 50%;
+        top: 10px;
+        transform: translateX(-50%);
         font-size: 11px;
         color: #888;
         line-height: 1.4;
-        margin-top: 3px;
+        background: #fff;
+        padding: 6px 10px;
+        border-radius: 4px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        white-space: normal;
+        max-width: 300px;
+        text-align: center;
       }
       label:hover .ebr-hint {
         display: block;
