@@ -116,6 +116,16 @@ Intercepts the main RYM search bar. If your search query matches the RYM markup 
 
 ---
 
+### Hide Ratings If Unrated
+
+Hides community ratings (averages, rankings, track scores) on release, artist, chart, and other pages when you haven't rated the release yourself. Ratings are replaced with invisible placeholders so the page layout is preserved. A "Show Ratings" toggle button is injected into the page to reveal everything on demand.
+
+- **Release pages** (`/release/*`, `/film/*`) — If you have not rated the release, all rating elements are hidden and a "Show Ratings" button appears in the action row. If you have already rated it, ratings are shown normally.
+- **Artist / filmography pages** (`/artist/*`, `/films/*`) — Per-release averages are hidden only for releases you haven't rated; already-rated releases keep their scores visible. A "Show / Hide Ratings" section is added to the artist info sidebar. The feature re-applies automatically when lazy-loaded discography pages are fetched.
+- **Charts, homepage, and other pages** — Ratings are hidden globally and a small floating toggle button is shown in the bottom-right corner.
+
+---
+
 ## Development
 
 ### Prerequisites
@@ -238,6 +248,7 @@ src/
     cover-art/
     descriptor-links/
     film-genre/
+    hide-ratings/
     release-submission/
     search-bar/
     stream-link-missing/

@@ -14,6 +14,7 @@ export const pages = {
 	searchBar: "/",
 	filmChartGenreLinks: "/charts/",
 	filmGenreChartButton: "/film_genre/",
+	hideRatings: "/",
 } as const;
 
 export type PageKey = keyof typeof pages;
@@ -34,6 +35,7 @@ export const pageLabels: Record<PageKey, string> = {
 	searchBar: "Search Bar Shortcuts",
 	filmChartGenreLinks: "Film Chart Genre Links",
 	filmGenreChartButton: "Film Genre Chart Button",
+	hideRatings: "Hide Ratings If Unrated",
 };
 
 export const pageGroupLabels: Partial<Record<string, string>> = {
@@ -78,7 +80,9 @@ export const pageHints: Record<PageKey, string> = {
 		"On film chart pages, redirects genre links to their corresponding film genre pages.",
 	filmGenreChartButton:
 		"On film genre pages, adds a button to open the top chart filtered by that genre.",
+	hideRatings:
+		"Hides community ratings on release, artist, and chart pages when you haven't rated them yourself. A toggle button lets you reveal them on demand.",
 };
 
 // Page keys whose features are global and should not affect the toolbar icon
-export const globalPageKeys = new Set<PageKey>(["searchBar"]);
+export const globalPageKeys = new Set<PageKey>(["searchBar", "hideRatings"]);

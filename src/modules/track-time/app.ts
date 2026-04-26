@@ -18,7 +18,10 @@ function convertAll() {
 	convertElements(".tracklist_duration", convertDuration);
 }
 
-function convertElements(selector: string, convert: (text: string) => string | null) {
+function convertElements(
+	selector: string,
+	convert: (text: string) => string | null,
+) {
 	for (const el of document.querySelectorAll<HTMLElement>(selector)) {
 		const text = el.textContent;
 		if (!text) continue;
