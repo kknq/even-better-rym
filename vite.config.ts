@@ -11,6 +11,9 @@ export default defineConfig(({ mode }) => {
 	const env = loadEnv(mode, process.cwd(), "");
 
 	return {
+		build: {
+			target: ["chrome89", "firefox89"]
+		},
 		plugins: [
 			preact(),
 			webExtension({
