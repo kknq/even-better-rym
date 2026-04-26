@@ -1,1 +1,1 @@
-export const regex = /(https?:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+/
+export const regex = /(https?:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+/;

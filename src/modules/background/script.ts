@@ -1,23 +1,23 @@
-import browser from 'webextension-polyfill'
+import browser from "webextension-polyfill";
 
-import type { ScriptRequest, ScriptResponse } from '~/shared/utils/messaging'
+import type { ScriptRequest, ScriptResponse } from "~/shared/utils/messaging";
 
 export const script = async (
-  { id, data }: ScriptRequest,
-  tabId: number,
+	{ id, data }: ScriptRequest,
+	tabId: number,
 ): Promise<ScriptResponse> => {
-  await browser.scripting.executeScript({
-    target: { tabId },
-    // @ts-expect-error - this is a valid injection world
-    world: 'MAIN',
-    func: (injectedScript: string) => {
-      const element = document.createElement('script')
-      element.textContent = injectedScript
-      document.head.append(element)
-      element.remove()
-    },
-    args: [data.script],
-  })
+	await browser.scripting.executeScript({
+		target: { tabId },
+		// @ts-expect-error - this is a valid injection world
+		world: "MAIN",
+		func: (injectedScript: string) => {
+			const element = document.createElement("script");
+			element.textContent = injectedScript;
+			document.head.append(element);
+			element.remove();
+		},
+		args: [data.script],
+	});
 
-  return { id, type: 'script' }
-}
+	return { id, type: "script" };
+};

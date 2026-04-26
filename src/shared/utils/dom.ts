@@ -1,94 +1,94 @@
-import type { ScriptRequest, ScriptResponse } from './messaging'
-import { sendBackgroundMessage } from './messaging'
+import type { ScriptRequest, ScriptResponse } from "./messaging";
+import { sendBackgroundMessage } from "./messaging";
 
 export const isDocumentReady = (): boolean =>
-  document.readyState === 'complete' || document.readyState === 'interactive'
+	document.readyState === "complete" || document.readyState === "interactive";
 
 export const waitForDocumentReady = (): Promise<void> =>
-  new Promise((resolve) => {
-    if (isDocumentReady()) return resolve()
-    const listener = () => {
-      resolve()
-      document.removeEventListener('DOMContentLoaded', listener)
-    }
-    document.addEventListener('DOMContentLoaded', listener)
-  })
+	new Promise((resolve) => {
+		if (isDocumentReady()) return resolve();
+		const listener = () => {
+			resolve();
+			document.removeEventListener("DOMContentLoaded", listener);
+		};
+		document.addEventListener("DOMContentLoaded", listener);
+	});
 
 export const waitForElement = <E extends Element>(query: string): Promise<E> =>
-  waitForCallback(() => {
-    if (query.startsWith('//') || query.startsWith('(')) {
-      const result = document.evaluate(
-        query,
-        document,
-        null,
-        XPathResult.FIRST_ORDERED_NODE_TYPE,
-        null,
-      ).singleNodeValue as E | null
+	waitForCallback(() => {
+		if (query.startsWith("//") || query.startsWith("(")) {
+			const result = document.evaluate(
+				query,
+				document,
+				null,
+				XPathResult.FIRST_ORDERED_NODE_TYPE,
+				null,
+			).singleNodeValue as E | null;
 
-      return result ?? undefined
-    }
+			return result ?? undefined;
+		}
 
-    return document.querySelector<E>(query) ?? undefined
-  })
+		return document.querySelector<E>(query) ?? undefined;
+	});
 
 export const waitForCallback = <T>(callback: () => T | undefined): Promise<T> =>
-  new Promise((resolve, reject) => {
-    if (isDocumentReady()) {
-      const result = callback()
-      if (result === undefined) {
-        reject(new Error('Callback never resolved'))
-      } else {
-        resolve(result)
-      }
-    } else {
-      new MutationObserver((_m, observer) => {
-        if (!document.body) return
+	new Promise((resolve, reject) => {
+		if (isDocumentReady()) {
+			const result = callback();
+			if (result === undefined) {
+				reject(new Error("Callback never resolved"));
+			} else {
+				resolve(result);
+			}
+		} else {
+			new MutationObserver((_m, observer) => {
+				if (!document.body) return;
 
-        const result = callback()
-        if (result !== undefined) {
-          resolve(result)
-          observer.disconnect()
-        }
+				const result = callback();
+				if (result !== undefined) {
+					resolve(result);
+					observer.disconnect();
+				}
 
-        // Document is fully loaded and we didn't find what we were looking for
-        if (isDocumentReady()) {
-          reject(new Error('Callback never resolved'))
-          observer.disconnect()
-        }
-      }).observe(document, {
-        childList: true,
-        subtree: true,
-      })
-    }
-  })
+				// Document is fully loaded and we didn't find what we were looking for
+				if (isDocumentReady()) {
+					reject(new Error("Callback never resolved"));
+					observer.disconnect();
+				}
+			}).observe(document, {
+				childList: true,
+				subtree: true,
+			});
+		}
+	});
 
 export const forceQuerySelector =
-  <E extends Element = Element>(node: ParentNode) =>
-  (query: string): E => {
-    const element = node.querySelector<E>(query)
-    if (!element) throw new Error(`Could not find element: ${query}`)
-    return element
-  }
+	<E extends Element = Element>(node: ParentNode) =>
+	(query: string): E => {
+		const element = node.querySelector<E>(query);
+		if (!element) throw new Error(`Could not find element: ${query}`);
+		return element;
+	};
 
 export const runScript = async (script: string) => {
-  await sendBackgroundMessage<ScriptRequest, ScriptResponse>({
-    type: 'script',
-    data: { script },
-  })
-}
+	await sendBackgroundMessage<ScriptRequest, ScriptResponse>({
+		type: "script",
+		data: { script },
+	});
+};
 
 export const waitForResult = (
-  iframe: HTMLIFrameElement,
+	iframe: HTMLIFrameElement,
 ): Promise<HTMLDivElement | undefined> =>
-  new Promise((resolve) => {
-    const listener = () => {
-      const firstResult =
-        iframe.contentDocument?.querySelector<HTMLDivElement>('div.result')
+	new Promise((resolve) => {
+		const listener = () => {
+			const firstResult =
+				iframe.contentDocument?.querySelector<HTMLDivElement>("div.result");
 
-      if (firstResult === null) resolve(undefined)
-      else resolve(firstResult)
+			if (firstResult === null) resolve(undefined);
+			else resolve(firstResult);
 
-      iframe.removeEventListener('load', listener)
-    }
-    iframe.addEventListener('load', listener)
-  })
+			iframe.removeEventListener("load", listener);
+		};
+		iframe.addEventListener("load", listener);
+	});

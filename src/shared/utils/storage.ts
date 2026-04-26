@@ -1,15 +1,15 @@
-import browser from 'webextension-polyfill'
+import browser from "webextension-polyfill";
 
 export const get = async <T>(key: string): Promise<T | undefined> => {
-  const response = await browser.storage.local.get(key)
-  return response[key] as T
-}
+	const response = await browser.storage.local.get(key);
+	return response[key] as T;
+};
 
 export const getAll = (): Promise<Record<string, unknown>> =>
-  browser.storage.local.get()
+	browser.storage.local.get();
 
 export const set = <T>(key: string, value: T): Promise<void> =>
-  browser.storage.local.set({ [key]: value })
+	browser.storage.local.set({ [key]: value });
 
 export const remove = (key: string): Promise<void> =>
-  browser.storage.local.remove(key)
+	browser.storage.local.remove(key);

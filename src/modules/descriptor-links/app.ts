@@ -1,41 +1,48 @@
-import { waitForElement } from '~/shared/utils/dom'
+import { waitForElement } from "~/shared/utils/dom";
+
+const BASE_URL = "https://rateyourmusic.com/charts/top/album/all-time/d:";
+
+const STYLE = `
+  .ebr-descriptor-link {
+    font-size: .9em;
+    line-height: 1.4;
+    text-decoration: underline var(--mono-b);
+    color: var(--mono-6);
+  }
+  .ebr-descriptor-wrapper + .ebr-descriptor-wrapper::before {
+    content: ', ';
+    color: var(--mono-6);
+  }
+`;
 
 export async function main() {
-  const row = await waitForElement<HTMLTableRowElement>(
-    'tr.release_descriptors',
-  )
+	const row = await waitForElement<HTMLTableRowElement>(
+		"tr.release_descriptors",
+	);
 
-  const priSpan = row.querySelector<HTMLSpanElement>(
-    'span.release_pri_descriptors',
-  )
-  if (priSpan) {
-    priSpan.style.display = 'none'
-  }
+	row
+		.querySelector<HTMLSpanElement>("span.release_pri_descriptors")
+		?.style.setProperty("display", "none");
 
-  const metas = row.querySelectorAll<HTMLMetaElement>('meta')
+	const style = document.createElement("style");
+	style.textContent = STYLE;
+	document.head.appendChild(style);
 
-  metas.forEach((meta, i) => {
-    const content = meta.getAttribute('content')
-    if (!content) return
+	row.querySelectorAll<HTMLMetaElement>("meta").forEach((meta) => {
+		const content = meta.getAttribute("content");
+		if (!content) return;
 
-    const cleaned = content.replace(/^\s+/, '').replaceAll(/\s+/g, '-')
-    const url = `https://rateyourmusic.com/charts/top/album/all-time/d:${cleaned}`
+		const slug = content.trim().replaceAll(/\s+/g, "-");
 
-    const link = document.createElement('a')
-    link.href = url
-    link.textContent = content
-    link.style.fontSize = '.9em'
-    link.style.lineHeight = '1.4'
-    link.style.textDecoration = 'underline var(--mono-b)'
-    link.style.color = 'var(--mono-6)'
+		const link = document.createElement("a");
+		link.href = `${BASE_URL}${slug}`;
+		link.textContent = content;
+		link.className = "ebr-descriptor-link";
 
-    const wrapper = document.createElement('span')
-    wrapper.appendChild(link)
-    if (i < metas.length - 1) {
-      wrapper.appendChild(document.createTextNode(', '))
-      wrapper.style.color = 'var(--mono-6)'
-    }
+		const wrapper = document.createElement("span");
+		wrapper.className = "ebr-descriptor-wrapper";
+		wrapper.appendChild(link);
 
-    meta.replaceWith(wrapper)
-  })
+		meta.replaceWith(wrapper);
+	});
 }

@@ -1,15 +1,15 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from "vitest";
 
-import { convertAppleMusicDuration } from './resolve'
+import { convertAppleMusicDuration } from "./convert";
 
-describe('convertAppleMusicDuration', () => {
-  const cases = [
-    ['PT3M14S', '3:14'],
-    ['PT3M', '3:00'],
-    ['PT14S', '0:14'],
-  ]
+describe("convertAppleMusicDuration", () => {
+	const cases = [
+		["PT3M14S", "3:14"],
+		["PT3M", "3:00"],
+		["PT14S", "0:14"],
+	];
 
-  test.each(cases)('converts %s to %s', (input, output) => {
-    expect(convertAppleMusicDuration(input)).toEqual(output)
-  })
-})
+	test.each(cases)("converts %s to %s", (input, output) => {
+		expect(convertAppleMusicDuration(input)).toEqual(output);
+	});
+});

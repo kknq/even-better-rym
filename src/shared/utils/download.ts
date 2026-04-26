@@ -1,16 +1,16 @@
-import type { DownloadRequest, DownloadResponse } from './messaging'
-import { sendBackgroundMessage } from './messaging'
+import type { DownloadRequest, DownloadResponse } from "./messaging";
+import { sendBackgroundMessage } from "./messaging";
 
 export const download = async (
-  data: DownloadRequest['data'],
+	data: DownloadRequest["data"],
 ): Promise<number> => {
-  const response = await sendBackgroundMessage<
-    DownloadRequest,
-    DownloadResponse
-  >({
-    type: 'download',
-    data,
-  })
+	const response = await sendBackgroundMessage<
+		DownloadRequest,
+		DownloadResponse
+	>({
+		type: "download",
+		data,
+	});
 
-  return response.data.id
-}
+	return response.data.id;
+};

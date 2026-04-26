@@ -6,7 +6,7 @@ Most of the credit goes to [jgchk](https://github.com/jgchk) and all the beautif
 
 ## Features
 
-All features can be individually enabled or disabled from the extension popup.
+All features can be individually enabled or disabled from the extension popup. Hovering over a feature row in the popup shows a short description of what that feature does.
 
 ---
 
@@ -44,6 +44,12 @@ Injects a "Download Cover Art" panel on the cover art upload page. Paste a URL f
 ### Descriptor Links on Release Pages
 
 On every release page, replaces the plain-text descriptors in the descriptor row with links. Each descriptor becomes a clickable link to the RYM top-charts page filtered to that descriptor, making it easy to explore similar releases.
+
+---
+
+### Track Time Conversion on Release Pages
+
+If the total tracklist length shown at the bottom of a release page exceeds one hour, the displayed time is reformatted from `MM:SS` to `H:MM:SS`.
 
 ---
 
@@ -184,8 +190,8 @@ This will result in files being updated and as a bonus the entire list will also
 ### Other commands
 
 ```sh
-npm run lint     # Type-check, ESLint, and Prettier check
-npm run format   # Auto-format with Prettier
+npm run lint     # biome check (format + lint), tsc --noEmit, and ESLint (type-aware TS rules)
+npm run format   # Auto-format with Biome
 npm test         # Run unit tests with Vitest
 ```
 

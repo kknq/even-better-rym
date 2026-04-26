@@ -1,17 +1,17 @@
-import { withCache } from '~/shared/utils/cache'
+import { withCache } from "~/shared/utils/cache";
 
-import type { Searchable, Service } from '../types'
-import DeezerIcon from './icon'
-import DeezerFoundIcon from './icon-found'
-import DeezerNotFoundIcon from './icon-notfound'
-import { search } from './search'
+import type { Searchable, Service } from "../types";
+import DeezerIcon from "./icon";
+import DeezerFoundIcon from "./icon-found";
+import DeezerNotFoundIcon from "./icon-notfound";
+import { search } from "./search";
 
 export const Deezer: Service & Searchable = {
-  id: 'deezer',
-  name: 'Deezer',
-  regex: /https?:\/\/www.deezer\.com\/album\/.*/,
-  icon: DeezerIcon,
-  foundIcon: DeezerFoundIcon,
-  notFoundIcon: DeezerNotFoundIcon,
-  search: withCache('deezer-search', search),
-}
+	id: "deezer",
+	name: "Deezer",
+	regex: /https?:\/\/www.deezer\.com\/album\/.*/,
+	icon: DeezerIcon,
+	foundIcon: DeezerFoundIcon,
+	notFoundIcon: DeezerNotFoundIcon,
+	search: withCache("deezer-search", search),
+};
