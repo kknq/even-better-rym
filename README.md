@@ -25,7 +25,7 @@ On every release page, a row of streaming service icons is injected below the re
 
 Injects a "Step 0: Import" panel at the top of the release submission form. Paste a URL from any supported service and the form fields are filled in automatically. Includes the following sub-features:
 
-- **Import** - Fetches release metadata (title, artist, tracklist, date, label, catalog number, credits) from a streaming service URL and auto-fills the submission form. Optionally downloads cover art at the same time.
+- **Import** - Fetches release metadata (title, artist, tracklist, date, label, catalog number, credits) from a streaming service URL and autofills the submission form. Optionally downloads cover art at the same time.
 - **File Under Performer Controls** - Adds a "+ [unknown artist]" button in the "Filed under performer" section for releases with no known performing artist.
 - **Release Date Controls** - After an import, shows one-click buttons to fill in the release date and/or publish date retrieved from the imported data.
 - **Label Controls** - Fixes a small existing bug with the Clear button and adds a "+ (No Label)" button that sets the label to the standard RYM "no label" entry and fills the catalog number with `n/a`.
@@ -44,6 +44,15 @@ Injects a "Download Cover Art" panel on the cover art upload page. Paste a URL f
 ### Descriptor Links on Release Pages
 
 On every release page, replaces the plain-text descriptors in the descriptor row with links. Each descriptor becomes a clickable link to the RYM top-charts page filtered to that descriptor, making it easy to explore similar releases.
+
+---
+
+### Film Genre Navigation Enhancements
+
+Two separate toggles covering two related pages:
+
+- **Film Chart Genre Links** — On film chart pages (`/charts/*/film/*`), rewrites every `a.genre` link to point to the corresponding `/film_genre/` page instead of the default genre description page.
+- **Film Genre Chart Button** — On film genre pages (`/film_genre/*`), injects a "View genre chart" button into the page that links directly to the RYM chart page filtered to that genre.
 
 ---
 
@@ -103,7 +112,7 @@ Enhances the "media links you know" page (used for reporting releases that are m
 
 ### Search Bar Shortcuts
 
-Intercepts the main RYM search bar. If your search query matches the RYM markup shortcut format `[Type123]` - e.g. `[Artist67]`, `[Album42]`, `[Genre]` - pressing Enter or clicking the Search button will parse the markup and redirect you **directly to that entity's page** instead of showing search results. Supported types: `Artist`, `Album`, `Genre`, `Label`, `List`, `Rating`, `Venue`, `Concert`, `Bug`. If the query does not match the pattern, the default search behaviour is used unchanged.
+Intercepts the main RYM search bar. If your search query matches the RYM markup shortcut format `[Type123]` - e.g. `[Artist67]`, `[Album42]`, `[Genre]` - pressing Enter or clicking the Search button will parse the markup and redirect you **directly to that entity's page** instead of showing search results. Supported types: `Artist`, `Album`, `Genre`, `Label`, `List`, `Rating`, `Venue`, `Concert`, `Bug`. If the query does not match the pattern, the default search behavior is used unchanged.
 
 ---
 
@@ -228,6 +237,7 @@ src/
     popup/                 # Extension popup (feature toggle UI)
     cover-art/
     descriptor-links/
+    film-genre/
     release-submission/
     search-bar/
     stream-link-missing/
