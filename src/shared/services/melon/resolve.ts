@@ -1,8 +1,9 @@
-import { asArray } from '../../utils/array'
-import { stringToDate } from '../../utils/datetime'
-import { fetch } from '../../utils/fetch'
-import { getReleaseType } from '../../utils/music'
-import { isDefined } from '../../utils/types'
+import { asArray } from '~/shared/utils/array'
+import { stringToDate } from '~/shared/utils/datetime'
+import { fetch } from '~/shared/utils/fetch'
+import { getReleaseType } from '~/shared/utils/music'
+import { isDefined } from '~/shared/utils/types'
+
 import type { ResolveFunction } from '../types'
 
 const getTitle = (document_: Document) => {
@@ -21,7 +22,7 @@ const getDate = (document_: Document) => {
     document_.querySelectorAll('.section_info .meta dd').item(0)?.textContent ??
     undefined
 
-  return !dateString ? undefined : stringToDate(dateString)
+  return dateString ? stringToDate(dateString) : undefined
 }
 
 const getTracks = (document_: Document) =>

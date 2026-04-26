@@ -9,6 +9,6 @@ const isUserCollection = document.location.pathname.startsWith(
 
 const pageKey = isUserCollection ? 'userCollection' : 'filmCollection'
 
-void runPage(pageKey, () => {
-  void injectCollectionFilterButtons()
+await runPage(pageKey, async () => {
+  await injectCollectionFilterButtons()
 })

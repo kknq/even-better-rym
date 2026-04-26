@@ -5,7 +5,7 @@ import { useEffect, useState } from 'preact/hooks'
 import { getMatchingService } from '../services'
 import type { Service } from '../services/types'
 import type { OneShot } from '../utils/one-shot'
-import { fold, isFailed } from '../utils/one-shot'
+import { fold } from '../utils/one-shot'
 import { pipe } from '../utils/pipe'
 import { Complete } from './complete'
 import { Failed } from './failed'
@@ -19,18 +19,12 @@ export function ServiceLinkForm<E extends Error, T, S extends Service>({
   submitText = 'Submit',
   children,
 }: {
-  data: OneShot<E, T>
-  services: S[]
-  onSubmit: (url: string, service: S) => void | Promise<void>
-  submitText?: string
-  children?: VNode
+  readonly data: OneShot<E, T>
+  readonly services: S[]
+  readonly onSubmit: (url: string, service: S) => void | Promise<void>
+  readonly submitText?: string
+  readonly children?: VNode
 }): VNode {
-  useEffect(() => {
-    if (isFailed(data)) {
-      console.error(data.error)
-    }
-  }, [data])
-
   return (
     <div
       style={{
@@ -65,10 +59,10 @@ function ServiceLinkInput<S extends Service>({
   onSubmit,
   children,
 }: {
-  services: S[]
-  submitText: string
-  onSubmit: (url: string, service: S) => void
-  children?: VNode
+  readonly services: S[]
+  readonly submitText: string
+  readonly onSubmit: (url: string, service: S) => void
+  readonly children?: VNode
 }): VNode {
   const [url, setUrl] = useState('')
   const [selectedService, setSelectedService] = useState<S | undefined>(
@@ -95,10 +89,10 @@ function ServiceLinkInput<S extends Service>({
       }}
       onSubmit={(event) => {
         event.preventDefault()
-        if (selectedService !== undefined) {
-          onSubmit(url, selectedService)
-        } else {
+        if (selectedService === undefined) {
           setShowMissingServiceError(true)
+        } else {
+          onSubmit(url, selectedService)
         }
       }}
     >

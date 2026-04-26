@@ -1,7 +1,9 @@
 import type { SVGAttributes } from 'preact'
 import { h } from 'preact'
 
-export default function LiveMixtapesIcon(props: SVGAttributes<SVGSVGElement>) {
+export default function LiveMixtapesIcon(
+  props: Readonly<SVGAttributes<SVGSVGElement>>,
+) {
   return (
     <svg
       width='32'

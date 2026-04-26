@@ -1,7 +1,9 @@
 import type { SVGAttributes } from 'preact'
 import { h } from 'preact'
 
-export default function AppleMusicIcon(props: SVGAttributes<SVGSVGElement>) {
+export default function AppleMusicIcon(
+  props: Readonly<SVGAttributes<SVGSVGElement>>,
+) {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'

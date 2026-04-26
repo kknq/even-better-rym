@@ -1,5 +1,4 @@
 import type { VNode } from 'preact'
-import { h } from 'preact'
 import { useState } from 'preact/hooks'
 
 import type { Service } from '../services/types'
@@ -8,11 +7,11 @@ export function ServiceSelector<S extends Service>({
   services,
   selected,
   onSelect,
-}: {
+}: Readonly<{
   services: S[]
   selected: S | undefined
   onSelect: (service: S) => void
-}): VNode {
+}>): VNode {
   return (
     <div
       style={{
@@ -37,12 +36,16 @@ function ServiceButton<S extends Service>({
   service,
   isSelected,
   onClick,
-}: {
+}: Readonly<{
   service: S
   isSelected: boolean
   onClick: () => void
-}) {
+}>) {
   const [isHovered, setHovered] = useState<boolean>(false)
+
+  const selectedOpacity = isHovered ? 1 : 0.8
+  const unselectedOpacity = isHovered ? 0.3 : 0.2
+  const opacity = isSelected ? selectedOpacity : unselectedOpacity
 
   return (
     <button
@@ -58,7 +61,7 @@ function ServiceButton<S extends Service>({
         border: 'none',
         outline: 'none',
         cursor: 'pointer',
-        opacity: isSelected ? (isHovered ? 1 : 0.8) : isHovered ? 0.3 : 0.2,
+        opacity,
         transition: 'opacity 0.2s',
       }}
       title={service.name}

@@ -4,9 +4,9 @@ import { FilterButton } from './filter-button'
 
 export function FilterButtons({
   showReleaseTypes,
-}: {
+}: Readonly<{
   showReleaseTypes: boolean
-}) {
+}>) {
   return (
     <div
       style={{

@@ -1,5 +1,6 @@
-import { findLastIndex } from '../../../shared/utils/array'
-import { pipe } from '../../../shared/utils/pipe'
+import { findLastIndex } from '~/shared/utils/array'
+import { pipe } from '~/shared/utils/pipe'
+
 import type { Phrase, Token } from './tokenize'
 import { tokenize } from './tokenize'
 
@@ -71,13 +72,11 @@ const capitalizePhrase =
     return capitalization === 'sentence-case'
       ? pipe(
           phrase
-            .map((token, index) =>
-              index === firstWordIndex
-                ? toTitleCase(token)
-                : token.type === 'romanNumeral'
-                  ? token.text.toUpperCase()
-                  : token.text.toLowerCase(),
-            )
+            .map((token, index) => {
+              if (index === firstWordIndex) return toTitleCase(token)
+              if (token.type === 'romanNumeral') return token.text.toUpperCase()
+              return token.text.toLowerCase()
+            })
             .join(''),
           formatMixText,
         )
@@ -85,9 +84,10 @@ const capitalizePhrase =
           phrase
             .map((token, index) => {
               if (index === firstWordIndex || index === lastWordIndex) {
-                return ENG_DO_NOT_CAPITALIZE_FORCE.has(token.text.toLowerCase())
-                  ? token.text.toLowerCase()
-                  : toTitleCase(token)
+                const isForced = ENG_DO_NOT_CAPITALIZE_FORCE.has(
+                  token.text.toLowerCase(),
+                )
+                return isForced ? token.text.toLowerCase() : toTitleCase(token)
               } else if (ENG_DO_NOT_CAPITALIZE.has(token.text.toLowerCase())) {
                 return token.text.toLowerCase()
               } else {

@@ -7,6 +7,6 @@ async function main() {
   await Promise.all([fixPaginationParameters(), addGenreDropdown()])
 }
 
-void runPage('voteHistoryGenres', () => {
-  void main()
+await runPage('voteHistoryGenres', async () => {
+  await main()
 })

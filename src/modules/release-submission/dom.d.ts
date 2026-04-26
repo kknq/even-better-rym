@@ -1,4 +1,4 @@
-import type { ResolveData } from '../../shared/services/types'
+import type { ResolveData } from '~/shared/services/types'
 
 type CustomEventMap = {
   importEvent: CustomEvent<ResolveData>

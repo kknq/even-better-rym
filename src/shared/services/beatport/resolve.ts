@@ -1,7 +1,8 @@
-import { secondsToString, stringToDate } from '../../utils/datetime'
-import { fetch } from '../../utils/fetch'
-import { getReleaseType } from '../../utils/music'
-import { isDefined } from '../../utils/types'
+import { secondsToString, stringToDate } from '~/shared/utils/datetime'
+import { fetch } from '~/shared/utils/fetch'
+import { getReleaseType } from '~/shared/utils/music'
+import { isDefined } from '~/shared/utils/types'
+
 import type { ReleaseLabel, ResolveFunction } from '../types'
 import type { BeatportNextData } from './codec'
 
@@ -29,7 +30,7 @@ const getArtists = (nextData: BeatportNextData) => {
 
 const getDate = (nextData: BeatportNextData) => {
   const dateString = nextData?.props?.pageProps?.release?.publish_date
-  return !dateString ? undefined : stringToDate(dateString)
+  return dateString ? stringToDate(dateString) : undefined
 }
 
 const getTracks = (nextData: BeatportNextData, releaseArtists: string[]) => {
@@ -60,7 +61,7 @@ const getTracks = (nextData: BeatportNextData, releaseArtists: string[]) => {
 
       const trackArtists = track.artists ?? []
       if (
-        trackArtists.map((artist) => artist.name).join(', ') !=
+        trackArtists.map((artist) => artist.name).join(', ') !==
         releaseArtists.join(', ')
       ) {
         const artistNames = trackArtists.map((artist) => artist.name).join(', ')

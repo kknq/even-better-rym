@@ -1,4 +1,5 @@
-import { fetch } from '../../utils/fetch'
+import { fetch } from '~/shared/utils/fetch'
+
 import type { SearchFunction } from '../types'
 
 export const search: SearchFunction = async ({ artist, title }) => {

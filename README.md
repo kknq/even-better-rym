@@ -41,6 +41,12 @@ Injects a "Download Cover Art" panel on the cover art upload page. Paste a URL f
 
 ---
 
+### Descriptor Links on Release Pages
+
+On every release page, replaces the plain-text descriptors in the descriptor row with links. Each descriptor becomes a clickable link to the RYM top-charts page filtered to that descriptor, making it easy to explore similar releases.
+
+---
+
 ### Media Links Submission Helper
 
 On the media link submission form, adds a service selector and a "Convert to Embed" button below the URL input. Detects the service from the pasted URL, fetches the correct embed code for that service, and replaces the URL in the input with the embed code - saving you from having to look it up manually.
@@ -215,6 +221,7 @@ src/
     background/            # Service worker (message routing, tab icon management)
     popup/                 # Extension popup (feature toggle UI)
     cover-art/
+    descriptor-links/
     release-submission/
     search-bar/
     stream-link-missing/
@@ -227,7 +234,7 @@ src/
 
 Each module follows the same pattern:
 
-- `main.ts` - entry point; imports `pages` from `~/shared/pages` and `runPage` from `~/shared/page-settings` to guard execution behind the feature toggle.
+- `main.ts` - entry point; uses top-level `await runPage('key', async () => { await fn() })` to guard execution behind the feature toggle. `runPage` is imported from `~/shared/page-settings`.
 - `app.ts` / `app.tsx` - the actual logic or root Preact component for the feature.
 
 Service icons are co-located with their service (`services/spotify/icon.tsx`, `icon-found.tsx`, `icon-notfound.tsx`) rather than in a flat shared icons directory. Only generic UI icons (check, loader, x, info) live in `shared/icons/`.

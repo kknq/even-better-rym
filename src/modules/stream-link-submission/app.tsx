@@ -1,6 +1,7 @@
-import { h, render } from 'preact'
+import { render } from 'preact'
 
-import { waitForElement } from '../../shared/utils/dom'
+import { waitForElement } from '~/shared/utils/dom'
+
 import { StreamLinkConverter } from './stream-link-converter'
 
 export async function injectStreamLinkConverter() {

@@ -1,6 +1,7 @@
 import { h, render } from 'preact'
 
-import { waitForElement } from '../../shared/utils/dom'
+import { waitForElement } from '~/shared/utils/dom'
+
 import { FilterButtons } from './filter-buttons'
 
 export async function injectCollectionFilterButtons() {
@@ -13,7 +14,7 @@ export async function injectCollectionFilterButtons() {
   app.id = 'even-better-rym'
   siblingElement.after(app)
 
-  const showReleaseTypes = !window.location.href.includes('film_collection')
+  const showReleaseTypes = !globalThis.location.href.includes('film_collection')
 
   render(<FilterButtons showReleaseTypes={showReleaseTypes} />, app)
 }

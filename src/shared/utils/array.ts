@@ -19,7 +19,7 @@ export const findLastIndex = <T>(
 }
 
 export const asArray = <T>(item: T | undefined): T[] | undefined =>
-  item !== undefined ? [item] : undefined
+  item === undefined ? undefined : [item]
 
 export const uniqueBy =
   <T, O>(function_: (item: T) => O) =>
@@ -29,10 +29,9 @@ export const uniqueBy =
 
     for (const item of items) {
       const appliedItem = function_(item)
-      if (!set.has(appliedItem)) {
-        set.add(appliedItem)
-        result.push(item)
-      }
+      if (set.has(appliedItem)) continue
+      set.add(appliedItem)
+      result.push(item)
     }
 
     return result

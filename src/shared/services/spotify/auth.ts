@@ -1,4 +1,5 @@
-import { fetch } from '../../utils/fetch'
+import { fetch } from '~/shared/utils/fetch'
+
 import type { TokenResponse } from './codecs'
 
 const client_id = import.meta.env.VITE_SPOTIFY_ID as string
@@ -11,7 +12,7 @@ export const requestToken = async (): Promise<TokenResponse> =>
       url: 'https://accounts.spotify.com/api/token',
       urlParameters: { grant_type: 'client_credentials' },
       headers: {
-        Authorization: `Basic ${btoa(`${client_id}:${client_secret}`)}`,
+        Authorization: `Basic ${btoa([client_id, client_secret].join(':'))}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     }),

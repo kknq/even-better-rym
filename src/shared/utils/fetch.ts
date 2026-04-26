@@ -48,8 +48,12 @@ export const fetchInPage = async (
      * which happens if the user’s preferences include emoji or accented
      * letters.  Wrap it to handle arbitrary Unicode.
      */
-    const unicodeBase64 = (str: string) =>
-      btoa(unescape(encodeURIComponent(str)))
+    const unicodeBase64 = (str: string) => {
+      const bytes = new TextEncoder().encode(str)
+      let binary = ''
+      for (const byte of bytes) binary += String.fromCodePoint(byte)
+      return btoa(binary)
+    }
     const serialized = unicodeBase64(JSON.stringify(data))
     void sendBackgroundMessage({
       type: 'script',

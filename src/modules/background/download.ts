@@ -1,11 +1,10 @@
 import browser from 'webextension-polyfill'
 
 import filenamify from '~/shared/utils/filenamify'
-
 import type {
   DownloadRequest,
   DownloadResponse,
-} from '../../shared/utils/messaging'
+} from '~/shared/utils/messaging'
 
 const mimeTypes: Record<string, string | undefined> = {
   'image/bmp': 'bmp',
@@ -34,12 +33,12 @@ export const download = async ({
       const mimeTypeExtension = mimeTypes[blob.type]
       const urlExtension = url.split('.').pop()
 
+      const urlExtensionPart =
+        urlExtension === undefined ? '' : `.${urlExtension}`
       const extension =
-        mimeTypeExtension !== undefined
-          ? `.${mimeTypeExtension}`
-          : urlExtension !== undefined
-            ? `.${urlExtension}`
-            : ''
+        mimeTypeExtension === undefined
+          ? urlExtensionPart
+          : `.${mimeTypeExtension}`
       const formattedFilename = filename.slice(0, 100 - extension.length)
       const filenameWithExtension = filenamify(
         `${formattedFilename}${extension}`,
@@ -50,8 +49,8 @@ export const download = async ({
         filename: filenameWithExtension,
       })
       return { id, type: 'download', data: { id: downloadId } }
-    } catch (error) {
-      console.error(error)
+    } catch {
+      // try next URL in the list
     }
   }
 

@@ -1,8 +1,9 @@
-import { asArray } from '../../utils/array'
-import { secondsToString, stringToDate } from '../../utils/datetime'
-import { fetch } from '../../utils/fetch'
-import { getReleaseType } from '../../utils/music'
-import { htmlDecode } from '../../utils/string'
+import { asArray } from '~/shared/utils/array'
+import { secondsToString, stringToDate } from '~/shared/utils/datetime'
+import { fetch } from '~/shared/utils/fetch'
+import { getReleaseType } from '~/shared/utils/music'
+import { htmlDecode } from '~/shared/utils/string'
+
 import type {
   ReleaseAttribute,
   ReleaseDate,

@@ -1,11 +1,12 @@
-import { asArray, chunkArray } from '../../utils/array'
+import { asArray, chunkArray } from '~/shared/utils/array'
 import {
   ONE_MINUTE_MS,
   secondsToString,
   stringToDate,
-} from '../../utils/datetime'
-import { fetch } from '../../utils/fetch'
-import { getReleaseType } from '../../utils/music'
+} from '~/shared/utils/datetime'
+import { fetch } from '~/shared/utils/fetch'
+import { getReleaseType } from '~/shared/utils/music'
+
 import type { ReleaseAttribute, ResolveFunction, Track } from '../types'
 import { requestToken } from './auth'
 import type { MusicObject, TrackObject } from './codecs'

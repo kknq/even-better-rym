@@ -1,9 +1,6 @@
 import browser from 'webextension-polyfill'
 
-import type {
-  ScriptRequest,
-  ScriptResponse,
-} from '../../shared/utils/messaging'
+import type { ScriptRequest, ScriptResponse } from '~/shared/utils/messaging'
 
 export const script = async (
   { id, data }: ScriptRequest,

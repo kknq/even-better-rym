@@ -12,7 +12,7 @@ export default async function injectFileUnderControls() {
   render(<UnknownArtist target='filedunder' />, unknownArtistDiv)
 }
 
-function UnknownArtist({ target }: { target: string }) {
+function UnknownArtist({ target }: Readonly<{ target: string }>) {
   const handleClick = useCallback(
     () => selectShortcut('a', 250714, '[unknown artist]', target),
     [target],

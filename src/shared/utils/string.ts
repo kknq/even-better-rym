@@ -14,11 +14,12 @@ export const regexLastIndexOf = (
 ): number => {
   regex = regex.global
     ? regex
-    : new RegExp(
-        regex.source,
-        'g' + (regex.ignoreCase ? 'i' : '') + (regex.multiline ? 'm' : ''),
-      )
-  if (typeof startpos == 'undefined') {
+    : (() => {
+        const ignoreCase = regex.ignoreCase ? 'i' : ''
+        const multiline = regex.multiline ? 'm' : ''
+        return new RegExp(regex.source, 'g' + ignoreCase + multiline)
+      })()
+  if (startpos === undefined) {
     startpos = string.length
   } else if (startpos < 0) {
     startpos = 0
@@ -27,7 +28,7 @@ export const regexLastIndexOf = (
   let lastIndexOf = -1
   let nextStop = 0
   let result
-  while ((result = regex.exec(stringToWorkWith)) != null) {
+  while ((result = regex.exec(stringToWorkWith)) !== null) {
     lastIndexOf = result.index
     regex.lastIndex = ++nextStop
   }

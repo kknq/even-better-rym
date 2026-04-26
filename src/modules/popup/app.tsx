@@ -3,9 +3,9 @@ import { h } from 'preact'
 import { useEffect, useState } from 'preact/hooks'
 import browser from 'webextension-polyfill'
 
-import { getPageEnabled, setPageEnabled } from '../../shared/page-settings'
-import type { PageKey } from '../../shared/pages'
-import { pageGroupLabels, pageLabels, pages } from '../../shared/pages'
+import { getPageEnabled, setPageEnabled } from '~/shared/page-settings'
+import type { PageKey } from '~/shared/pages'
+import { pageGroupLabels, pageLabels, pages } from '~/shared/pages'
 
 type FeatureState = Record<PageKey, boolean>
 

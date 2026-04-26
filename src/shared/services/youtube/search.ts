@@ -1,5 +1,6 @@
-import { fetch } from '../../utils/fetch'
-import { isDefined } from '../../utils/types'
+import { fetch } from '~/shared/utils/fetch'
+import { isDefined } from '~/shared/utils/types'
+
 import type { SearchFunction } from '../types'
 import type { SearchObject } from './codecs'
 

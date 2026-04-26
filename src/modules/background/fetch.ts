@@ -1,4 +1,4 @@
-import type { FetchRequest, FetchResponse } from '../../shared/utils/messaging'
+import type { FetchRequest, FetchResponse } from '~/shared/utils/messaging'
 
 export const backgroundFetch = async ({
   id,

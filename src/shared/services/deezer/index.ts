@@ -1,4 +1,5 @@
-import { withCache } from '../../utils/cache'
+import { withCache } from '~/shared/utils/cache'
+
 import type { Searchable, Service } from '../types'
 import DeezerIcon from './icon'
 import DeezerFoundIcon from './icon-found'

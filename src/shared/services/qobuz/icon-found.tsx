@@ -1,7 +1,8 @@
 import type { SVGAttributes } from 'preact'
-import { h } from 'preact'
 
-export default function QobuzFoundIcon(props: SVGAttributes<SVGSVGElement>) {
+export default function QobuzFoundIcon(
+  props: Readonly<SVGAttributes<SVGSVGElement>>,
+) {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'

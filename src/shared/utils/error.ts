@@ -1,6 +1,5 @@
-export const parseError = (error: unknown): Error =>
-  error instanceof Error
-    ? error
-    : typeof error === 'string'
-      ? new Error(error)
-      : new Error(String(error))
+export const parseError = (error: unknown): Error => {
+  if (error instanceof Error) return error
+  const message = typeof error === 'string' ? error : String(error)
+  return new Error(message)
+}

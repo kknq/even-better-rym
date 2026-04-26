@@ -1,4 +1,5 @@
-import { withCache } from '../../utils/cache'
+import { withCache } from '~/shared/utils/cache'
+
 import type { Searchable, Service } from '../types'
 import TidalIcon from './icon'
 import TidalFoundIcon from './icon-found'

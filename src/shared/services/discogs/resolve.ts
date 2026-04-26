@@ -1,7 +1,9 @@
-import { fetch } from '../../../shared/utils/fetch'
-import { getReleaseType } from '../../utils/music'
+import { fetch } from '~/shared/utils/fetch'
+import { getReleaseType } from '~/shared/utils/music'
+
 import type {
   DiscSize,
+  ReleaseAttribute,
   ReleaseDate,
   ReleaseLabel,
   ResolveData,
@@ -169,7 +171,22 @@ const parseFormatName = (data: ResolveData, format: Format) => {
   }
 }
 
+const RPM_ATTRIBUTE_MAP: Partial<Record<FormatDescription, ReleaseAttribute>> =
+  {
+    '16 ⅔ RPM': '16 rpm',
+    '33 ⅓ RPM': '33 rpm',
+    '45 RPM': '45 rpm',
+    '78 RPM': '78 rpm',
+    '80 RPM': '80 rpm',
+  }
+
 const parseFormatDescription = (data: ResolveData, desc: FormatDescription) => {
+  const rpmAttribute = RPM_ATTRIBUTE_MAP[desc]
+  if (rpmAttribute) {
+    data.attributes = [...(data.attributes ?? []), rpmAttribute]
+    return
+  }
+
   switch (desc) {
     case '16"':
     case '12"':
@@ -192,31 +209,16 @@ const parseFormatDescription = (data: ResolveData, desc: FormatDescription) => {
       data.discSize = 'non-standard'
       break
     }
-    case '16 ⅔ RPM': {
-      data.attributes = [...(data.attributes ?? []), '16 rpm']
-      break
-    }
-    case '33 ⅓ RPM': {
-      data.attributes = [...(data.attributes ?? []), '33 rpm']
-      break
-    }
-    case '45 RPM': {
-      data.attributes = [...(data.attributes ?? []), '45 rpm']
-      break
-    }
-    case '78 RPM': {
-      data.attributes = [...(data.attributes ?? []), '78 rpm']
-      break
-    }
-    case '80 RPM': {
-      data.attributes = [...(data.attributes ?? []), '80 rpm']
-      break
-    }
     case 'Single Sided': {
       data.attributes = [...(data.attributes ?? []), 'single-sided']
       break
     }
-    case 'Advance': {
+    case 'Advance':
+    case 'Promo':
+    case 'Transcription': {
+      // "transcription releases are releases given to a radio station for broadcast.
+      //  rym doesn't have a specific tag for this, but the promo tag is the same thing"
+      //      - via https://github.com/jgchk/better-rym/issues/141
       data.attributes = [...(data.attributes ?? []), 'promo']
       break
     }
@@ -275,31 +277,17 @@ const parseFormatDescription = (data: ResolveData, desc: FormatDescription) => {
       data.attributes = [...(data.attributes ?? []), 'picture disc']
       break
     }
-    case 'Promo': {
-      data.attributes = [...(data.attributes ?? []), 'promo']
-      break
-    }
     case 'Remastered': {
       data.attributes = [...(data.attributes ?? []), 'remastered']
       break
     }
-    case 'Test Pressing': {
+    case 'Test Pressing':
+    case 'White Label': {
       data.attributes = [...(data.attributes ?? []), 'test pressing']
-      break
-    }
-    case 'Transcription': {
-      // "transcription releases are releases given to a radio station for broadcast.
-      //  rym doesn't have a specific tag for this, but the promo tag is the same thing"
-      //      - via https://github.com/jgchk/better-rym/issues/141
-      data.attributes = [...(data.attributes ?? []), 'promo']
       break
     }
     case 'Unofficial Release': {
       data.type = 'bootleg'
-      break
-    }
-    case 'White Label': {
-      data.attributes = [...(data.attributes ?? []), 'test pressing']
       break
     }
     case 'Quadraphonic': {
@@ -391,7 +379,9 @@ const parseFormatText = (data: ResolveData, format: Format) => {
 }
 
 const parseCountries = (countries: string) => {
-  const countriesArray = countries.split(/,|&/).map((item) => item.trim())
+  const countriesArray = countries.split(/[,&]/).map((item) => item.trim())
+
+  if (countriesArray[0] === 'Worldwide') return undefined
 
   return countriesArray
     .map((country) => {
@@ -405,7 +395,7 @@ const parseCountries = (countries: string) => {
       }
       return country
     })
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
 }
 
 const resolveRelease = async (id: string): Promise<ResolveData> => {
@@ -426,7 +416,7 @@ const resolveRelease = async (id: string): Promise<ResolveData> => {
     // we do this by id instead of name ('Various' on discogs) to allow for artists named 'Various'
     artist.id === 194 ? 'Various Artists' : artist.name,
   )
-  const date = !response.released ? undefined : parseDate(response.released)
+  const date = response.released ? parseDate(response.released) : undefined
   const tracks = response.tracklist.map((track) => ({
     position: track.position.replace('-', '.').replace(/(CD|DVD)\D?/, ''), // CD1-1 -> 1.1
     title: track.title,

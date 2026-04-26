@@ -1,9 +1,9 @@
-import { h, render } from 'preact'
+import { render } from 'preact'
 
-import { Loader } from '../../shared/components/loader'
-import { forceQuerySelector, waitForElement } from '../../shared/utils/dom'
-import { fetchInPage } from '../../shared/utils/fetch'
-import { parseMarkup } from '../../shared/utils/markup'
+import { Loader } from '~/shared/components/loader'
+import { forceQuerySelector, waitForElement } from '~/shared/utils/dom'
+import { fetchInPage } from '~/shared/utils/fetch'
+import { parseMarkup } from '~/shared/utils/markup'
 
 let headerArray: Element[]
 let currentPreferences: FormData
@@ -36,26 +36,24 @@ const getCorrespondingContent = (alias: string) => {
 }
 
 const createEditButton = (alias: string, field: string) => {
-  const edit = document.createElement('a')
-  edit.href = 'javascript:void(0)'
+  const edit = document.createElement('button')
   edit.className = BUTTON_CLASSES
   edit.style.cssText = COMMON_STYLE + 'bottom:0.3em; font-size:.6em'
   edit.dataset.alias = alias
   edit.dataset.field = field
   edit.textContent = 'edit'
   getHeader(alias)?.prepend(edit)
-  forceQuerySelector<HTMLAnchorElement>(getHeader(alias))('a').addEventListener(
-    'click',
-    editClick,
-  )
+  forceQuerySelector<HTMLButtonElement>(getHeader(alias))(
+    'button',
+  ).addEventListener('click', editClick)
 }
 
 const editClick = (event: MouseEvent) => {
   const button = event.target as HTMLElement
   if (
-    button.style.display != 'none' &&
-    button.dataset.alias != null &&
-    button.dataset.field != null
+    button.style.display !== 'none' &&
+    button.dataset.alias !== undefined &&
+    button.dataset.field !== undefined
   ) {
     button.style.display = 'none'
 
@@ -81,8 +79,8 @@ const editClick = (event: MouseEvent) => {
     render(
       <div style='text-align:right; height:2em'>
         {options.map(([handler, text]) => (
-          <a
-            href='javascript:void(0)'
+          <button
+            type='button'
             className={BUTTON_CLASSES}
             style={OTHER_STYLE}
             onClick={handler}
@@ -91,7 +89,7 @@ const editClick = (event: MouseEvent) => {
             key={text}
           >
             {text}
-          </a>
+          </button>
         ))}
       </div>,
       contentButtons,
@@ -102,14 +100,14 @@ const editClick = (event: MouseEvent) => {
 }
 
 const saveClick = (event: MouseEvent) => {
-  const button = event.target as HTMLAnchorElement
+  const button = event.target as HTMLButtonElement
   if (
-    button.dataset.alias != null &&
-    button.dataset.field != null &&
-    button.style.cursor != 'default'
+    button.dataset.alias !== undefined &&
+    button.dataset.field !== undefined &&
+    button.style.cursor !== 'default'
   ) {
     const container = getCorrespondingContent(button.dataset.alias)
-    if (container.querySelector('svg[class*="loader"]') == null)
+    if (container.querySelector('svg[class*="loader"]') === null)
       lockAndLoad(button)
 
     currentPreferences.set(
@@ -125,12 +123,12 @@ const saveClick = (event: MouseEvent) => {
 }
 
 const previewClick = (event: MouseEvent) => {
-  const button = event.target as HTMLAnchorElement
-  if (button.dataset.alias != null && button.style.cursor != 'default') {
+  const button = event.target as HTMLButtonElement
+  if (button.dataset.alias !== undefined && button.style.cursor !== 'default') {
     const container = forceQuerySelector(
       getCorrespondingContent(button.dataset.alias),
     )('div')
-    if (container.querySelector('svg[class*="loader"]') == null)
+    if (container.querySelector('svg[class*="loader"]') === null)
       lockAndLoad(button)
 
     const existing = container.querySelector('.rendered_text')
@@ -152,15 +150,18 @@ const previewClick = (event: MouseEvent) => {
 }
 
 const cancelClick = (event: MouseEvent) => {
-  const button = event.target as HTMLAnchorElement
-  if (button.style.cursor != 'default') closeUpShop(button)
+  const button = event.target as HTMLButtonElement
+  if (button.style.cursor !== 'default') closeUpShop(button)
 }
 
-const closeUpShop = (button: HTMLAnchorElement) => {
-  if (button.dataset.alias != null && button.dataset.field != null) {
+const closeUpShop = (button: HTMLButtonElement) => {
+  if (
+    button.dataset.alias !== undefined &&
+    button.dataset.field !== undefined
+  ) {
     const container = getCorrespondingContent(button.dataset.alias)
     const field = button.dataset.field
-    if (container.querySelector('svg[class*="loader"]') == null)
+    if (container.querySelector('svg[class*="loader"]') === null)
       lockAndLoad(button)
 
     const rawValue = currentPreferences.get(field)
@@ -174,13 +175,13 @@ const closeUpShop = (button: HTMLAnchorElement) => {
       clear.className = 'clear'
       container.append(wrapper, clear)
       forceQuerySelector<HTMLElement>(document)(
-        `.bubble_header a[data-field=${field}]`,
+        `.bubble_header button[data-field=${field}]`,
       ).style.display = 'inline-block'
     })
   }
 }
 
-const lockAndLoad = (button: HTMLAnchorElement) => {
+const lockAndLoad = (button: HTMLButtonElement) => {
   if (!button.parentElement?.children)
     throw new Error('Unexpected null or undefined')
   for (const element of button.parentElement.children) {
@@ -199,7 +200,7 @@ const lockAndLoad = (button: HTMLAnchorElement) => {
   button.parentElement.prepend(loader)
 }
 
-const unlock = (button: HTMLAnchorElement) => {
+const unlock = (button: HTMLButtonElement) => {
   if (!button.parentElement?.children)
     throw new Error('Unexpected null or undefined')
 
@@ -244,7 +245,7 @@ export const main = async () => {
       )('#mediumForm'),
     )
 
-    if (currentPreferences.get('fav_music') != '') {
+    if (currentPreferences.get('fav_music') !== '') {
       createEditButton(
         htmlOrder
           .querySelector('li#fav_artists')
@@ -254,7 +255,7 @@ export const main = async () => {
       )
     }
 
-    if (currentPreferences.get('comments') != '') {
+    if (currentPreferences.get('comments') !== '') {
       createEditButton(
         htmlOrder
           .querySelector('li#other_comments')

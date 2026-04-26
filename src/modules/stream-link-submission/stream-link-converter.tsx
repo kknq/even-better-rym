@@ -1,13 +1,13 @@
 import { h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
 
-import { Complete } from '../../shared/components/complete'
-import { Failed } from '../../shared/components/failed'
-import { Loader } from '../../shared/components/loader'
-import { ServiceSelector } from '../../shared/components/service-selector'
-import { EMBEDDABLES, getMatchingService } from '../../shared/services'
-import type { Embeddable, Service } from '../../shared/services/types'
-import type { OneShot } from '../../shared/utils/one-shot'
+import { Complete } from '~/shared/components/complete'
+import { Failed } from '~/shared/components/failed'
+import { Loader } from '~/shared/components/loader'
+import { ServiceSelector } from '~/shared/components/service-selector'
+import { EMBEDDABLES, getMatchingService } from '~/shared/services'
+import type { Embeddable, Service } from '~/shared/services/types'
+import type { OneShot } from '~/shared/utils/one-shot'
 import {
   complete,
   failed,
@@ -15,11 +15,14 @@ import {
   initial,
   isComplete,
   loading,
-} from '../../shared/utils/one-shot'
-import { pipe } from '../../shared/utils/pipe'
+} from '~/shared/utils/one-shot'
+import { pipe } from '~/shared/utils/pipe'
+
 import { useControlledInput } from './use-controlled-input'
 
-export function StreamLinkConverter({ input }: { input: HTMLInputElement }) {
+export function StreamLinkConverter({
+  input,
+}: Readonly<{ input: HTMLInputElement }>) {
   const [url, setUrl] = useControlledInput(input)
 
   const [service, setService] = useState<(Service & Embeddable) | undefined>(

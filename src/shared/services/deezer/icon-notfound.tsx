@@ -1,8 +1,7 @@
 import type { SVGAttributes } from 'preact'
-import { h } from 'preact'
 
 export default function DeezerNotFoundIcon(
-  props: SVGAttributes<SVGSVGElement>,
+  props: Readonly<SVGAttributes<SVGSVGElement>>,
 ) {
   return (
     <svg

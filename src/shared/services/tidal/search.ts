@@ -1,4 +1,5 @@
-import { fetch } from '../../utils/fetch'
+import { fetch } from '~/shared/utils/fetch'
+
 import type { SearchFunction } from '../types'
 import { requestToken } from './auth'
 
@@ -35,7 +36,6 @@ export const search: SearchFunction = async ({ artist, title }) => {
   })
 
   if (!response || response === '') {
-    console.error('[Tidal] Empty response received')
     return undefined
   }
 
@@ -44,11 +44,8 @@ export const search: SearchFunction = async ({ artist, title }) => {
 
   if (albums && albums.length > 0) {
     const albumId = albums[0].id
-    const url = `https://tidal.com/browse/album/${albumId}`
-    console.log('[Tidal] Found album URL:', url)
-    return url
+    return `https://tidal.com/browse/album/${albumId}`
   }
 
-  console.log('[Tidal] No albums found')
   return undefined
 }
