@@ -1,13 +1,13 @@
-import type { FetchRequest, FetchResponse } from './messaging'
-import { sendBackgroundMessage } from './messaging'
+import type { FetchRequest, FetchResponse } from "./messaging";
+import { sendBackgroundMessage } from "./messaging";
 
-export const fetch = async (data: FetchRequest['data']): Promise<string> => {
-  const response = await sendBackgroundMessage<FetchRequest, FetchResponse>({
-    type: 'fetch',
-    data,
-  })
-  return response.data.body
-}
+export const fetch = async (data: FetchRequest["data"]): Promise<string> => {
+	const response = await sendBackgroundMessage<FetchRequest, FetchResponse>({
+		type: "fetch",
+		data,
+	});
+	return response.data.body;
+};
 
 /**
  * Perform a `fetch` from the page's main world instead of the background
@@ -18,48 +18,48 @@ export const fetch = async (data: FetchRequest['data']): Promise<string> => {
  * and posts the result back via `window.postMessage`.
  */
 export const fetchInPage = async (
-  data: FetchRequest['data'],
+	data: FetchRequest["data"],
 ): Promise<string> => {
-  const requestId = crypto.randomUUID()
+	const requestId = crypto.randomUUID();
 
-  return new Promise<string>((resolve) => {
-    const listener = (
-      event: MessageEvent<{ type: string; id: string; body: string }>,
-    ) => {
-      if (
-        event.source === window &&
-        event.data?.type === 'PAGE_FETCH_RESULT' &&
-        event.data.id === requestId
-      ) {
-        window.removeEventListener('message', listener)
-        resolve(event.data.body)
-      }
-    }
+	return new Promise<string>((resolve) => {
+		const listener = (
+			event: MessageEvent<{ type: string; id: string; body: string }>,
+		) => {
+			if (
+				event.source === window &&
+				event.data?.type === "PAGE_FETCH_RESULT" &&
+				event.data.id === requestId
+			) {
+				window.removeEventListener("message", listener);
+				resolve(event.data.body);
+			}
+		};
 
-    window.addEventListener('message', listener)
+		window.addEventListener("message", listener);
 
-    /**
-     * Serialize the request parameters so they survive injection;
-     * base64-encode the serialized object so that no characters can
-     * accidentally terminate the outer template string or introduce
-     * unbalanced parentheses when the script is injected into the page.
-     *
-     * Normal `btoa` throws when the string contains non-latin characters,
-     * which happens if the user’s preferences include emoji or accented
-     * letters.  Wrap it to handle arbitrary Unicode.
-     */
-    const unicodeBase64 = (str: string) => {
-      const bytes = new TextEncoder().encode(str)
-      let binary = ''
-      for (const byte of bytes) binary += String.fromCodePoint(byte)
-      return btoa(binary)
-    }
-    const serialized = unicodeBase64(JSON.stringify(data))
-    void sendBackgroundMessage({
-      type: 'script',
-      data: {
-        // the injected script runs in the page's main world
-        script: `;(async () => {
+		/**
+		 * Serialize the request parameters so they survive injection;
+		 * base64-encode the serialized object so that no characters can
+		 * accidentally terminate the outer template string or introduce
+		 * unbalanced parentheses when the script is injected into the page.
+		 *
+		 * Normal `btoa` throws when the string contains non-latin characters,
+		 * which happens if the user’s preferences include emoji or accented
+		 * letters.  Wrap it to handle arbitrary Unicode.
+		 */
+		const unicodeBase64 = (str: string) => {
+			const bytes = new TextEncoder().encode(str);
+			let binary = "";
+			for (const byte of bytes) binary += String.fromCodePoint(byte);
+			return btoa(binary);
+		};
+		const serialized = unicodeBase64(JSON.stringify(data));
+		void sendBackgroundMessage({
+			type: "script",
+			data: {
+				// the injected script runs in the page's main world
+				script: `;(async () => {
           try {
             // decode using the reverse of unicodeBase64()
             const req = JSON.parse(decodeURIComponent(escape(atob("${serialized}"))));
@@ -87,7 +87,7 @@ export const fetchInPage = async (
             }, '*');
           }
         })();`,
-      },
-    })
-  })
-}
+			},
+		});
+	});
+};

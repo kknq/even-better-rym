@@ -1,127 +1,129 @@
-import { secondsToString, stringToDate } from '~/shared/utils/datetime'
-import { fetch } from '~/shared/utils/fetch'
-import { getReleaseType } from '~/shared/utils/music'
-import { isDefined } from '~/shared/utils/types'
+import { secondsToString, stringToDate } from "~/shared/utils/datetime";
+import { fetch } from "~/shared/utils/fetch";
+import { getReleaseType } from "~/shared/utils/music";
+import { isDefined } from "~/shared/utils/types";
 
-import type { ReleaseLabel, ResolveFunction } from '../types'
-import type { BeatportNextData } from './codec'
+import type { ReleaseLabel, ResolveFunction } from "../types";
+import type { BeatportNextData } from "./codec";
 
 const extractNextData = (document_: Document): BeatportNextData => {
-  const scriptElement = document_.querySelector('#__NEXT_DATA__')
-  if (!scriptElement?.textContent) {
-    throw new Error('Could not find __NEXT_DATA__ script tag')
-  }
+	const scriptElement = document_.querySelector("#__NEXT_DATA__");
+	if (!scriptElement?.textContent) {
+		throw new Error("Could not find __NEXT_DATA__ script tag");
+	}
 
-  try {
-    return JSON.parse(scriptElement.textContent) as BeatportNextData
-  } catch {
-    throw new Error('Failed to parse __NEXT_DATA__ JSON')
-  }
-}
+	try {
+		return JSON.parse(scriptElement.textContent) as BeatportNextData;
+	} catch {
+		throw new Error("Failed to parse __NEXT_DATA__ JSON");
+	}
+};
 
 const getTitle = (nextData: BeatportNextData) => {
-  return nextData?.props?.pageProps?.release?.name
-}
+	return nextData?.props?.pageProps?.release?.name;
+};
 
 const getArtists = (nextData: BeatportNextData) => {
-  const artists = nextData?.props?.pageProps?.release?.artists ?? []
-  return artists.map((artist) => artist.name).filter(isDefined)
-}
+	const artists = nextData?.props?.pageProps?.release?.artists ?? [];
+	return artists.map((artist) => artist.name).filter(isDefined);
+};
 
 const getDate = (nextData: BeatportNextData) => {
-  const dateString = nextData?.props?.pageProps?.release?.publish_date
-  return dateString ? stringToDate(dateString) : undefined
-}
+	const dateString = nextData?.props?.pageProps?.release?.publish_date;
+	return dateString ? stringToDate(dateString) : undefined;
+};
 
 const getTracks = (nextData: BeatportNextData, releaseArtists: string[]) => {
-  const queries = nextData?.props?.pageProps?.dehydratedState?.queries ?? []
-  const tracksQuery = queries.find(
-    (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'tracks',
-  )
+	const queries = nextData?.props?.pageProps?.dehydratedState?.queries ?? [];
+	const tracksQuery = queries.find(
+		(query) => Array.isArray(query.queryKey) && query.queryKey[0] === "tracks",
+	);
 
-  const tracks = tracksQuery?.state?.data?.results ?? []
+	const tracks = tracksQuery?.state?.data?.results ?? [];
 
-  return tracks
-    .map((track, index) => {
-      const position = (tracks.length - index).toString()
+	return tracks
+		.map((track, index) => {
+			const position = (tracks.length - index).toString();
 
-      let title = track.name.replace(/\s*feat\..*$/i, '') ?? ''
+			let title = track.name.replace(/\s*feat\..*$/i, "") ?? "";
 
-      if (track.mix_name && track.mix_name.toLowerCase() !== 'original mix') {
-        title += ` (${track.mix_name})`
-      }
+			if (track.mix_name && track.mix_name.toLowerCase() !== "original mix") {
+				title += ` (${track.mix_name})`;
+			}
 
-      const remixers = track.remixers ?? []
-      if (remixers.length > 0) {
-        const remixerNames = remixers.map((remixer) => remixer.name).join(', ')
-        if (!title.includes('(')) {
-          title += ` (${remixerNames} Remix)`
-        }
-      }
+			const remixers = track.remixers ?? [];
+			if (remixers.length > 0) {
+				const remixerNames = remixers.map((remixer) => remixer.name).join(", ");
+				if (!title.includes("(")) {
+					title += ` (${remixerNames} Remix)`;
+				}
+			}
 
-      const trackArtists = track.artists ?? []
-      if (
-        trackArtists.map((artist) => artist.name).join(', ') !==
-        releaseArtists.join(', ')
-      ) {
-        const artistNames = trackArtists.map((artist) => artist.name).join(', ')
-        title = `${artistNames} - ${title}`
-      }
+			const trackArtists = track.artists ?? [];
+			if (
+				trackArtists.map((artist) => artist.name).join(", ") !==
+				releaseArtists.join(", ")
+			) {
+				const artistNames = trackArtists
+					.map((artist) => artist.name)
+					.join(", ");
+				title = `${artistNames} - ${title}`;
+			}
 
-      let duration: string | undefined
-      if (track.length_ms) {
-        duration = secondsToString(track.length_ms / 1000)
-      }
+			let duration: string | undefined;
+			if (track.length_ms) {
+				duration = secondsToString(track.length_ms / 1000);
+			}
 
-      return { position, title, duration }
-    })
-    .reverse()
-}
+			return { position, title, duration };
+		})
+		.reverse();
+};
 
 const getCoverArt = (nextData: BeatportNextData) => {
-  const image = nextData?.props?.pageProps?.release?.image
-  if (!image) return []
+	const image = nextData?.props?.pageProps?.release?.image;
+	if (!image) return [];
 
-  const maxSizeUrl = image.uri?.replace(/\/\d+x\d+\//, '/0x0/')
-  const originalUrl = image.uri
+	const maxSizeUrl = image.uri?.replace(/\/\d+x\d+\//, "/0x0/");
+	const originalUrl = image.uri;
 
-  return [maxSizeUrl, originalUrl].filter(isDefined)
-}
+	return [maxSizeUrl, originalUrl].filter(isDefined);
+};
 
 const getLabel = (nextData: BeatportNextData): ReleaseLabel => {
-  const release = nextData?.props?.pageProps?.release
+	const release = nextData?.props?.pageProps?.release;
 
-  return {
-    name: release?.label?.name,
-    catno: release?.catalog_number,
-  }
-}
+	return {
+		name: release?.label?.name,
+		catno: release?.catalog_number,
+	};
+};
 
 export const resolve: ResolveFunction = async (url) => {
-  const response = await fetch({ url })
-  const document_ = new DOMParser().parseFromString(response, 'text/html')
+	const response = await fetch({ url });
+	const document_ = new DOMParser().parseFromString(response, "text/html");
 
-  // Extract and parse the Next.js data
-  const nextData = extractNextData(document_)
+	// Extract and parse the Next.js data
+	const nextData = extractNextData(document_);
 
-  const title = getTitle(nextData)
-  const artists = getArtists(nextData)
-  const date = getDate(nextData)
-  const tracks = getTracks(nextData, artists)
-  const type = getReleaseType(tracks.length)
-  const coverArt = getCoverArt(nextData)
-  const label = getLabel(nextData)
+	const title = getTitle(nextData);
+	const artists = getArtists(nextData);
+	const date = getDate(nextData);
+	const tracks = getTracks(nextData, artists);
+	const type = getReleaseType(tracks.length);
+	const coverArt = getCoverArt(nextData);
+	const label = getLabel(nextData);
 
-  return {
-    url,
-    title,
-    artists,
-    date,
-    tracks,
-    type,
-    format: 'lossless digital',
-    attributes: ['downloadable', 'streaming'],
-    label,
-    coverArt,
-  }
-}
+	return {
+		url,
+		title,
+		artists,
+		date,
+		tracks,
+		type,
+		format: "lossless digital",
+		attributes: ["downloadable", "streaming"],
+		label,
+		coverArt,
+	};
+};

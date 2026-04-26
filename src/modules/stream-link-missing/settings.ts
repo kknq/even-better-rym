@@ -1,12 +1,12 @@
-import * as storage from '~/shared/utils/storage'
+import * as storage from "~/shared/utils/storage";
 
-import type { DisplayType } from './types'
+import type { DisplayType } from "./types";
 
-const displayTypeKey = 'brym.missingLinksDisplayType'
-export const defaultDisplayType = 'available'
+const displayTypeKey = "brym.missingLinksDisplayType";
+export const defaultDisplayType = "available";
 
 export const getDisplayType = async (): Promise<DisplayType> =>
-  (await storage.get(displayTypeKey)) ?? defaultDisplayType
+	(await storage.get(displayTypeKey)) ?? defaultDisplayType;
 
 export const setDisplayType = async (value: DisplayType): Promise<void> =>
-  storage.set(displayTypeKey, value)
+	storage.set(displayTypeKey, value);

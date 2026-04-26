@@ -1,15 +1,15 @@
-import { runScript } from '~/shared/utils/dom'
+import { runScript } from "~/shared/utils/dom";
 
 export const selectShortcut = (
-  type: string,
-  id: number,
-  name: string,
-  target: string,
+	type: string,
+	id: number,
+	name: string,
+	target: string,
 ): void =>
-  void runScript(
-    `selectShortcut(\`${type}\`, ${id}, \`${name}\`, \`${target}\`)`,
-  )
+	void runScript(
+		`selectShortcut(\`${type}\`, ${id}, \`${name}\`, \`${target}\`)`,
+	);
 
 // window.parent.goInfobox(897)
 export const goInfobox = (id: number): void =>
-  void runScript(`goInfobox(${id})`)
+	void runScript(`goInfobox(${id})`);

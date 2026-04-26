@@ -1,255 +1,255 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useState } from "preact/hooks";
 
-import { SEARCHABLES } from '~/shared/services'
-import type { ServiceId } from '~/shared/services/types'
+import { SEARCHABLES } from "~/shared/services";
+import type { ServiceId } from "~/shared/services/types";
 import {
-  runScript,
-  waitForDocumentReady,
-  waitForElement,
-} from '~/shared/utils/dom'
-import type { OneShot } from '~/shared/utils/one-shot'
+	runScript,
+	waitForDocumentReady,
+	waitForElement,
+} from "~/shared/utils/dom";
+import type { OneShot } from "~/shared/utils/one-shot";
 import {
-  complete,
-  failed,
-  initial,
-  isInitial,
-  loading,
-} from '~/shared/utils/one-shot'
+	complete,
+	failed,
+	initial,
+	isInitial,
+	loading,
+} from "~/shared/utils/one-shot";
 
-export type PageDataState = OneShot<Error, PageData>
+export type PageDataState = OneShot<Error, PageData>;
 
 export const usePageData = (): PageDataState => {
-  const [state, setState] = useState<PageDataState>(initial)
+	const [state, setState] = useState<PageDataState>(initial);
 
-  const fetch = async () => {
-    setState(loading)
+	const fetch = async () => {
+		setState(loading);
 
-    const nextState = await getPageData()
-      .then((data) => complete(data))
-      .catch((error) => failed(error))
+		const nextState = await getPageData()
+			.then((data) => complete(data))
+			.catch((error) => failed(error));
 
-    setState(nextState)
-  }
+		setState(nextState);
+	};
 
-  useEffect(() => {
-    if (isInitial(state)) {
-      void fetch()
-    }
-  }, [state])
+	useEffect(() => {
+		if (isInitial(state)) {
+			void fetch();
+		}
+	}, [state]);
 
-  return state
-}
+	return state;
+};
 
 type PageData = {
-  metadata: { artist: string; title: string }
-  links: Links
-}
+	metadata: { artist: string; title: string };
+	links: Links;
+};
 async function getPageData(): Promise<PageData> {
-  const [artist, title, links] = await Promise.all([
-    getArtist(),
-    getTitle(),
-    getLinks(),
-  ])
-  return { metadata: { artist, title }, links }
+	const [artist, title, links] = await Promise.all([
+		getArtist(),
+		getTitle(),
+		getLinks(),
+	]);
+	return { metadata: { artist, title }, links };
 }
 
 async function getArtist() {
-  const artistElement = await waitForElement<HTMLAnchorElement>('a.artist')
-  return artistElement.text
+	const artistElement = await waitForElement<HTMLAnchorElement>("a.artist");
+	return artistElement.text;
 }
 
 async function getTitle() {
-  const titleElement = await waitForElement<HTMLMetaElement>(
-    'meta[itemprop=name]',
-  )
-  return titleElement.content
+	const titleElement = await waitForElement<HTMLMetaElement>(
+		"meta[itemprop=name]",
+	);
+	return titleElement.content;
 }
 
 async function getLinks(): Promise<Links> {
-  await waitForDocumentReady()
+	await waitForDocumentReady();
 
-  const streamingPreferences = await getStreamingPreferences()
-  if (!streamingPreferences) return EMPTY_LINKS
+	const streamingPreferences = await getStreamingPreferences();
+	if (!streamingPreferences) return EMPTY_LINKS;
 
-  const element_ = document.querySelector<HTMLElement>(
-    '#media_link_button_container_top',
-  )
-  if (!element_) return EMPTY_LINKS
+	const element_ = document.querySelector<HTMLElement>(
+		"#media_link_button_container_top",
+	);
+	if (!element_) return EMPTY_LINKS;
 
-  const linksString = element_.dataset.links
-  if (!linksString) return EMPTY_LINKS
+	const linksString = element_.dataset.links;
+	if (!linksString) return EMPTY_LINKS;
 
-  const linksData = JSON.parse(linksString) as PageLinksData
+	const linksData = JSON.parse(linksString) as PageLinksData;
 
-  const links = Object.fromEntries(
-    Object.entries(linksData).map(([service, linkData]) => {
-      const r = getLinkData(service, linkData, streamingPreferences)
-      if (r) {
-        const link = getFullLink(service, r)
-        return [service, link]
-      }
+	const links = Object.fromEntries(
+		Object.entries(linksData).map(([service, linkData]) => {
+			const r = getLinkData(service, linkData, streamingPreferences);
+			if (r) {
+				const link = getFullLink(service, r);
+				return [service, link];
+			}
 
-      return [service, undefined]
-    }),
-  )
+			return [service, undefined];
+		}),
+	);
 
-  return Object.fromEntries(
-    SEARCHABLES.map(({ id }) => [id, links[id]]),
-  ) as Record<ServiceId, string | undefined>
+	return Object.fromEntries(
+		SEARCHABLES.map(({ id }) => [id, links[id]]),
+	) as Record<ServiceId, string | undefined>;
 }
 
-type Links = Record<ServiceId, string | undefined>
+type Links = Record<ServiceId, string | undefined>;
 
 const EMPTY_LINKS = Object.fromEntries(
-  SEARCHABLES.map(({ id }) => [id, undefined]),
-) as Record<ServiceId, string | undefined>
+	SEARCHABLES.map(({ id }) => [id, undefined]),
+) as Record<ServiceId, string | undefined>;
 
 const getStreamingPreferences = async (): Promise<
-  StreamingPreferences | undefined
+	StreamingPreferences | undefined
 > => {
-  const promise = new Promise<StreamingPreferences>((resolve) => {
-    const listener = (e: Event) => {
-      const streamingPreferences =
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        (e as CustomEvent).detail.streamingPreferences as StreamingPreferences
+	const promise = new Promise<StreamingPreferences>((resolve) => {
+		const listener = (e: Event) => {
+			const streamingPreferences =
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+				(e as CustomEvent).detail.streamingPreferences as StreamingPreferences;
 
-      document.removeEventListener('StreamingPreferencesEvent', listener)
+			document.removeEventListener("StreamingPreferencesEvent", listener);
 
-      resolve(streamingPreferences)
-    }
-    document.addEventListener('StreamingPreferencesEvent', listener)
-  })
+			resolve(streamingPreferences);
+		};
+		document.addEventListener("StreamingPreferencesEvent", listener);
+	});
 
-  await runScript(`
+	await runScript(`
     const streamingPreferences = window.streamingPreferences;
     const __event = new CustomEvent('StreamingPreferencesEvent', { detail: { streamingPreferences } });
     document.dispatchEvent(__event);
-  `)
+  `);
 
-  return promise
-}
+	return promise;
+};
 
 type PageLinksData = Record<
-  string,
-  Record<
-    string,
-    LinkData & {
-      default?: true
-      for?: string[]
-      not?: string[]
-      media_id: string
-    }
-  >
->
+	string,
+	Record<
+		string,
+		LinkData & {
+			default?: true;
+			for?: string[];
+			not?: string[];
+			media_id: string;
+		}
+	>
+>;
 
-type StreamingPreferences = { service_regions: Record<string, string> }
+type StreamingPreferences = { service_regions: Record<string, string> };
 
 function getLinkData(
-  service: string,
-  linkData: PageLinksData[string],
-  streamingPreferences: StreamingPreferences,
+	service: string,
+	linkData: PageLinksData[string],
+	streamingPreferences: StreamingPreferences,
 ): LinkData | null {
-  let bestLinkData = null
-  let bestMediaId = null
+	let bestLinkData = null;
+	let bestMediaId = null;
 
-  for (const [mediaId, index] of Object.entries(linkData)) {
-    if ('default' in index && index.default) {
-      bestLinkData = index
-      bestMediaId = mediaId
-    } else if (
-      index.for?.includes(streamingPreferences.service_regions[service])
-    ) {
-      index.media_id = mediaId
-      return index
-    }
-  }
+	for (const [mediaId, index] of Object.entries(linkData)) {
+		if ("default" in index && index.default) {
+			bestLinkData = index;
+			bestMediaId = mediaId;
+		} else if (
+			index.for?.includes(streamingPreferences.service_regions[service])
+		) {
+			index.media_id = mediaId;
+			return index;
+		}
+	}
 
-  if (bestLinkData) {
-    if (
-      bestLinkData.not?.includes(streamingPreferences.service_regions[service])
-    ) {
-      return null
-    }
+	if (bestLinkData) {
+		if (
+			bestLinkData.not?.includes(streamingPreferences.service_regions[service])
+		) {
+			return null;
+		}
 
-    if (bestMediaId !== null) {
-      bestLinkData.media_id = bestMediaId
-    }
+		if (bestMediaId !== null) {
+			bestLinkData.media_id = bestMediaId;
+		}
 
-    return bestLinkData
-  }
+		return bestLinkData;
+	}
 
-  return null
+	return null;
 }
 
 function getFullLink(service: string, linkData: LinkData) {
-  switch (service) {
-    case 'spotify': {
-      const data = linkData as SpotifyLinkData
-      return `https://open.spotify.com/${data.type}/${data.media_id}`
-    }
+	switch (service) {
+		case "spotify": {
+			const data = linkData as SpotifyLinkData;
+			return `https://open.spotify.com/${data.type}/${data.media_id}`;
+		}
 
-    case 'applemusic': {
-      const data = linkData as AppleMusicLinkData
-      return `https://geo.music.apple.com/${data.loc}/${
-        data.album ? 'album' : 'video'
-      }/${data.album ?? data.video}/${data.media_id}`
-    }
+		case "applemusic": {
+			const data = linkData as AppleMusicLinkData;
+			return `https://geo.music.apple.com/${data.loc}/${
+				data.album ? "album" : "video"
+			}/${data.album ?? data.video}/${data.media_id}`;
+		}
 
-    case 'soundcloud': {
-      const data = linkData as SoundcloudLinkData
-      return `https://${data.url}`
-    }
+		case "soundcloud": {
+			const data = linkData as SoundcloudLinkData;
+			return `https://${data.url}`;
+		}
 
-    case 'bandcamp': {
-      const data = linkData as BandcampLinkData
-      return `https://${data.url}`
-    }
+		case "bandcamp": {
+			const data = linkData as BandcampLinkData;
+			return `https://${data.url}`;
+		}
 
-    case 'youtube': {
-      const data = linkData as YoutubeLinkData
-      return `https://www.youtube.com/watch?v=${data.media_id}`
-    }
+		case "youtube": {
+			const data = linkData as YoutubeLinkData;
+			return `https://www.youtube.com/watch?v=${data.media_id}`;
+		}
 
-    case 'deezer': {
-      const data = linkData as DeezerLinkData
-      return `https://www.deezer.com/us/album/${data.media_id}`
-    }
+		case "deezer": {
+			const data = linkData as DeezerLinkData;
+			return `https://www.deezer.com/us/album/${data.media_id}`;
+		}
 
-    case 'qobuz': {
-      const data = linkData as QobuzLinkData
-      return `https://open.qobuz.com/album/${data.media_id}`
-    }
+		case "qobuz": {
+			const data = linkData as QobuzLinkData;
+			return `https://open.qobuz.com/album/${data.media_id}`;
+		}
 
-    case 'tidal': {
-      const data = linkData as TidalLinkData
-      return `https://tidal.com/album/${data.media_id}`
-    }
+		case "tidal": {
+			const data = linkData as TidalLinkData;
+			return `https://tidal.com/album/${data.media_id}`;
+		}
 
-    default:
-      throw new Error(`Cannot create links for service: ${service}`)
-  }
+		default:
+			throw new Error(`Cannot create links for service: ${service}`);
+	}
 }
 
 type LinkData =
-  | SpotifyLinkData
-  | AppleMusicLinkData
-  | SoundcloudLinkData
-  | BandcampLinkData
-  | YoutubeLinkData
-  | DeezerLinkData
-  | QobuzLinkData
-  | TidalLinkData
+	| SpotifyLinkData
+	| AppleMusicLinkData
+	| SoundcloudLinkData
+	| BandcampLinkData
+	| YoutubeLinkData
+	| DeezerLinkData
+	| QobuzLinkData
+	| TidalLinkData;
 
-type SpotifyLinkData = { type: string; media_id: string }
+type SpotifyLinkData = { type: string; media_id: string };
 type AppleMusicLinkData = {
-  album?: string
-  video?: string
-  loc: string
-  media_id: string
-}
-type SoundcloudLinkData = { url: string }
-type BandcampLinkData = { url: string }
-type YoutubeLinkData = { media_id: string }
-type QobuzLinkData = { media_id: string }
-type DeezerLinkData = { media_id: string }
-type TidalLinkData = { media_id: string }
+	album?: string;
+	video?: string;
+	loc: string;
+	media_id: string;
+};
+type SoundcloudLinkData = { url: string };
+type BandcampLinkData = { url: string };
+type YoutubeLinkData = { media_id: string };
+type QobuzLinkData = { media_id: string };
+type DeezerLinkData = { media_id: string };
+type TidalLinkData = { media_id: string };

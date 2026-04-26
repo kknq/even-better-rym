@@ -1,15 +1,15 @@
-import { render } from 'preact'
+import { render } from "preact";
 
-import { waitForElement } from '~/shared/utils/dom'
+import { waitForElement } from "~/shared/utils/dom";
 
-import { StreamLinkConverter } from './stream-link-converter'
+import { StreamLinkConverter } from "./stream-link-converter";
 
 export async function injectStreamLinkConverter() {
-  const input = await waitForElement<HTMLInputElement>('input#form_media_url')
+	const input = await waitForElement<HTMLInputElement>("input#form_media_url");
 
-  const app = document.createElement('div')
-  app.id = 'even-better-rym'
-  input.after(app)
+	const app = document.createElement("div");
+	app.id = "even-better-rym";
+	input.after(app);
 
-  render(<StreamLinkConverter input={input} />, app)
+	render(<StreamLinkConverter input={input} />, app);
 }

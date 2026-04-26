@@ -1,44 +1,44 @@
 export const chunkArray = <T>(array: T[], size: number): T[][] => {
-  const result: T[][] = []
-  for (let index = 0; index < array.length; index += size) {
-    const chunk = array.slice(index, index + size)
-    result.push(chunk)
-  }
-  return result
-}
+	const result: T[][] = [];
+	for (let index = 0; index < array.length; index += size) {
+		const chunk = array.slice(index, index + size);
+		result.push(chunk);
+	}
+	return result;
+};
 
 export const findLastIndex = <T>(
-  array: T[],
-  predicate: (value: T, index: number, object: T[]) => boolean,
+	array: T[],
+	predicate: (value: T, index: number, object: T[]) => boolean,
 ): number => {
-  let l = array.length
-  while (l--) {
-    if (predicate(array[l], l, array)) return l
-  }
-  return -1
-}
+	let l = array.length;
+	while (l--) {
+		if (predicate(array[l], l, array)) return l;
+	}
+	return -1;
+};
 
 export const asArray = <T>(item: T | undefined): T[] | undefined =>
-  item === undefined ? undefined : [item]
+	item === undefined ? undefined : [item];
 
 export const uniqueBy =
-  <T, O>(function_: (item: T) => O) =>
-  (items: T[]): T[] => {
-    const set = new Set()
-    const result = []
+	<T, O>(function_: (item: T) => O) =>
+	(items: T[]): T[] => {
+		const set = new Set();
+		const result = [];
 
-    for (const item of items) {
-      const appliedItem = function_(item)
-      if (set.has(appliedItem)) continue
-      set.add(appliedItem)
-      result.push(item)
-    }
+		for (const item of items) {
+			const appliedItem = function_(item);
+			if (set.has(appliedItem)) continue;
+			set.add(appliedItem);
+			result.push(item);
+		}
 
-    return result
-  }
+		return result;
+	};
 
 export const equals = <T>(a: T[], b: T[]): boolean =>
-  Array.isArray(a) &&
-  Array.isArray(b) &&
-  a.length === b.length &&
-  a.every((value, index) => JSON.stringify(value) === JSON.stringify(b[index]))
+	Array.isArray(a) &&
+	Array.isArray(b) &&
+	a.length === b.length &&
+	a.every((value, index) => JSON.stringify(value) === JSON.stringify(b[index]));

@@ -1,54 +1,51 @@
 {
-  "name": "even-better-rym",
-  "version": "1.2.0",
-  "displayName": "EvenBetterRYM",
-  "author": "kknq",
-  "description": "Improvements for RateYourMusic",
-  "type": "module",
-  "scripts": {
-    "build": "vite build",
-    "watch": "vite build --watch --mode development --minify false",
-    "dev": "vite",
-    "serve:firefox": "web-ext run --start-url \"https://rateyourmusic.com/release/album/the-collapsible-mammals/the-collapsible-mammals\"  --source-dir ./dist/",
-    "serve:chrome": "web-ext run -t chromium --start-url \"https://rateyourmusic.com/release/album/the-collapsible-mammals/the-collapsible-mammals\" --source-dir ./dist",
-    "zip": "rm brym.zip || true && cd dist && atool -a ../brym.zip *",
-    "test": "vitest",
-    "lint": "prettier --check . && tsc --noEmit && eslint .",
-    "format": "prettier --write .",
-    "refresh-genres": "python scripts/vote_history_refresh.py genre && npx prettier --write src/modules/vote-history/data/genres.ts",
-    "refresh-descriptors": "python scripts/vote_history_refresh.py descriptor && npx prettier --write src/modules/vote-history/data/descriptors.ts",
-    "refresh-all": "npm run refresh-genres && npm run refresh-descriptors"
-  },
-  "license": "GPL-3.0-or-later",
-  "dependencies": {
-    "get-artist-title": "^1.3.1",
-    "nanoid": "^5.1.6",
-    "preact": "^10.19.2",
-    "webextension-polyfill": "^0.12.0"
-  },
-  "overrides": {
-    "content-security-policy-parser": "^0.6.0",
-    "esbuild": "^0.25.0",
-    "vite": "^7.3.1"
-  },
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@preact/preset-vite": "^2.7.0",
-    "@samrum/vite-plugin-web-extension": "^5.1.1",
-    "@types/chrome": "^0.0.254",
-    "@types/webextension-polyfill": "^0.10.6",
-    "@typescript-eslint/parser": "^8.57.0",
-    "eslint": "^10.0.3",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-simple-import-sort": "^12.1.1",
-    "globals": "^17.4.0",
-    "postcss-nested": "^7.0.2",
-    "postcss-preset-env": "^11.2.0",
-    "prettier": "^3.3.3",
-    "typescript": "^5.2.2",
-    "typescript-eslint": "^8.57.0",
-    "vite": "^7.3.1",
-    "vitest": "^4.0.18",
-    "web-ext": "^10.1.0"
-  }
+	"name": "even-better-rym",
+	"version": "1.2.0",
+	"displayName": "EvenBetterRYM",
+	"author": "kknq",
+	"description": "Improvements for RateYourMusic",
+	"type": "module",
+	"scripts": {
+		"build": "vite build",
+		"watch": "vite build --watch --mode development --minify false",
+		"dev": "vite",
+		"serve:firefox": "web-ext run --start-url \"https://rateyourmusic.com/release/album/the-collapsible-mammals/the-collapsible-mammals\"  --source-dir ./dist/",
+		"serve:chrome": "web-ext run -t chromium --start-url \"https://rateyourmusic.com/release/album/the-collapsible-mammals/the-collapsible-mammals\" --source-dir ./dist",
+		"zip": "rm brym.zip || true && cd dist && atool -a ../brym.zip *",
+		"test": "vitest",
+		"lint": "biome check . && tsc --noEmit && eslint .",
+		"format": "biome format --write .",
+		"refresh-genres": "python scripts/vote_history_refresh.py genre && npx biome format --write src/modules/vote-history/data/genres.ts",
+		"refresh-descriptors": "python scripts/vote_history_refresh.py descriptor && npx biome format --write src/modules/vote-history/data/descriptors.ts",
+		"refresh-all": "npm run refresh-genres && npm run refresh-descriptors"
+	},
+	"license": "GPL-3.0-or-later",
+	"dependencies": {
+		"get-artist-title": "^1.3.1",
+		"nanoid": "^5.1.6",
+		"preact": "^10.19.2",
+		"webextension-polyfill": "^0.12.0"
+	},
+	"overrides": {
+		"content-security-policy-parser": "^0.6.0",
+		"esbuild": "^0.25.0",
+		"vite": "^7.3.1"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.13",
+		"@eslint/js": "^10.0.1",
+		"@preact/preset-vite": "^2.7.0",
+		"@samrum/vite-plugin-web-extension": "^5.1.1",
+		"@types/chrome": "^0.0.254",
+		"@types/webextension-polyfill": "^0.10.6",
+		"@typescript-eslint/parser": "^8.57.0",
+		"eslint": "^10.0.3",
+		"postcss-nested": "^7.0.2",
+		"postcss-preset-env": "^11.2.0",
+		"typescript": "^5.2.2",
+		"typescript-eslint": "^8.57.0",
+		"vite": "^7.3.1",
+		"vitest": "^4.0.18",
+		"web-ext": "^10.1.0"
+	}
 }

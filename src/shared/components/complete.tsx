@@ -1,21 +1,20 @@
-import type { SVGAttributes } from 'preact'
-import { h } from 'preact'
+import type { SVGAttributes } from "preact";
 
-import CheckIcon from '../icons/check'
+import CheckIcon from "../icons/check";
 
 export function Complete({
-  className,
-  ...properties
-}: Omit<SVGAttributes<SVGSVGElement>, 'className'> & {
-  className?: string
+	className,
+	...properties
+}: Omit<SVGAttributes<SVGSVGElement>, "className"> & {
+	className?: string;
 }) {
-  return (
-    <CheckIcon
-      className={className}
-      style={{
-        color: 'var(--gen-bg-darkgreen)',
-      }}
-      {...properties}
-    />
-  )
+	return (
+		<CheckIcon
+			className={className}
+			style={{
+				color: "var(--gen-bg-darkgreen)",
+			}}
+			{...properties}
+		/>
+	);
 }

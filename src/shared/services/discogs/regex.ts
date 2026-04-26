@@ -1,2 +1,2 @@
 export const regex =
-  /https?:\/\/(.*\.)?(discogs\.com)?(\/(.+))?\/(release|master)\/(\d+)/
+	/https?:\/\/(.*\.)?(discogs\.com)?(\/(.+))?\/(release|master)\/(\d+)/;

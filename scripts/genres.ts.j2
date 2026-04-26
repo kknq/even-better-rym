@@ -1,7 +1,7 @@
 export const genres = (
   [
 {% for id, name in entities -%}
-    [{{ id }}, '{{ name | replace("'", "\\'") }}']{% if not loop.last %},{% endif %}
+    [{{ id }}, "{{ name | replace("'", "\\'") }}"]{% if not loop.last %},{% endif %}
 {% endfor -%}
   ] as const
 ).map(([id, name]) => ({ id: id.toString(), name }))

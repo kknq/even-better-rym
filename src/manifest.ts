@@ -1,168 +1,173 @@
-import pkg from '../package.json'
+import pkg from "../package.json";
 
 const hostsArray = [
-  'https://rateyourmusic.com/*',
-  'https://*.spotify.com/*',
-  'https://*.apple.com/*',
-  'https://*.music.apple.com/*',
-  'https://bandcamp.com/*',
-  'https://*.bandcamp.com/*',
-  'https://*.bcbits.com/*',
-  'https://www.beatport.com/*',
-  'https://*.beatport.com/*',
-  'https://deezer.com/*',
-  'https://api.deezer.com/*',
-  'https://discogs.com/*',
-  'https://*.discogs.com/*',
-  'https://melon.com/*',
-  'https://qobuz.com/*',
-  'https://*.qobuz.com/*',
-  'https://soundcloud.com/*',
-  'https://api-v2.soundcloud.com/*',
-  'https://tidal.com/*',
-  'https://*.tidal.com/*',
-  'https://youtube.com/*',
-  'https://*.youtube.com/*',
-  'https://youtu.be/*',
-  'https://youtube.googleapis.com/*',
-  'https://www.googleapis.com/*',
-  'https://*.livemixtapes.com/*',
-  'https://livemixtapes.com/*',
-]
+	"https://rateyourmusic.com/*",
+	"https://*.spotify.com/*",
+	"https://*.apple.com/*",
+	"https://*.music.apple.com/*",
+	"https://bandcamp.com/*",
+	"https://*.bandcamp.com/*",
+	"https://*.bcbits.com/*",
+	"https://www.beatport.com/*",
+	"https://*.beatport.com/*",
+	"https://deezer.com/*",
+	"https://api.deezer.com/*",
+	"https://discogs.com/*",
+	"https://*.discogs.com/*",
+	"https://melon.com/*",
+	"https://qobuz.com/*",
+	"https://*.qobuz.com/*",
+	"https://soundcloud.com/*",
+	"https://api-v2.soundcloud.com/*",
+	"https://tidal.com/*",
+	"https://*.tidal.com/*",
+	"https://youtube.com/*",
+	"https://*.youtube.com/*",
+	"https://youtu.be/*",
+	"https://youtube.googleapis.com/*",
+	"https://www.googleapis.com/*",
+	"https://*.livemixtapes.com/*",
+	"https://livemixtapes.com/*",
+];
 
 const sharedManifest = {
-  content_scripts: [
-    {
-      js: ['src/modules/cover-art/main.ts'],
-      matches: ['*://*.rateyourmusic.com/images/upload*'],
-      run_at: 'document_start',
-    },
-    {
-      js: ['src/modules/release-submission/main.ts'],
-      matches: ['*://*.rateyourmusic.com/releases/ac*'],
-      run_at: 'document_start',
-    },
-    {
-      js: ['src/modules/search-bar/main.ts'],
-      matches: ['*://*.rateyourmusic.com/*'],
-      run_at: 'document_start',
-    },
-    {
-      js: ['src/modules/stream-link-missing/main.ts'],
-      matches: ['*://*.rateyourmusic.com/misc/media_link_you_know*'],
-      run_at: 'document_start',
-    },
-    {
-      js: ['src/modules/stream-link-submission/main.ts'],
-      matches: ['*://*.rateyourmusic.com/submit_media_link*'],
-      run_at: 'document_start',
-    },
-    {
-      js: ['src/modules/descriptor-links/main.ts'],
-      matches: ['*://*.rateyourmusic.com/release/*'],
-      run_at: 'document_start',
-    },
-    {
-      js: ['src/modules/stream-links/main.ts'],
-      matches: ['*://*.rateyourmusic.com/release/*'],
-      run_at: 'document_start',
-    },
-    {
-      js: ['src/modules/user-collection/main.ts'],
-      matches: [
-        '*://*.rateyourmusic.com/collection*',
-        '*://*.rateyourmusic.com/film_collection*',
-      ],
-      run_at: 'document_start',
-    },
-    {
-      js: ['src/modules/user-page/main.ts'],
-      matches: ['*://*.rateyourmusic.com/~*'],
-      run_at: 'document_start',
-    },
-    {
-      js: ['src/modules/vote-history/genres.ts'],
-      matches: ['*://*.rateyourmusic.com/rgenre/vote_history*'],
-      run_at: 'document_start',
-    },
-    {
-      js: ['src/modules/vote-history/descriptors.ts'],
-      matches: ['*://*.rateyourmusic.com/rdescriptor/vote_history*'],
-      run_at: 'document_start',
-    },
-  ],
-  icons: {
-    '16': 'icons/sonemic-16.png',
-    '48': 'icons/sonemic-48.png',
-    '128': 'icons/sonemic-128.png',
-  },
-  permissions: [
-    'storage',
-    'downloads',
-    'tabs',
-    'scripting',
-    'activeTab',
-  ] as chrome.runtime.ManifestPermissions[],
-} satisfies Partial<chrome.runtime.ManifestBase>
+	content_scripts: [
+		{
+			js: ["src/modules/cover-art/main.ts"],
+			matches: ["*://*.rateyourmusic.com/images/upload*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/release-submission/main.ts"],
+			matches: ["*://*.rateyourmusic.com/releases/ac*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/search-bar/main.ts"],
+			matches: ["*://*.rateyourmusic.com/*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/stream-link-missing/main.ts"],
+			matches: ["*://*.rateyourmusic.com/misc/media_link_you_know*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/stream-link-submission/main.ts"],
+			matches: ["*://*.rateyourmusic.com/submit_media_link*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/descriptor-links/main.ts"],
+			matches: ["*://*.rateyourmusic.com/release/*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/track-time/main.ts"],
+			matches: ["*://*.rateyourmusic.com/release/*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/stream-links/main.ts"],
+			matches: ["*://*.rateyourmusic.com/release/*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/user-collection/main.ts"],
+			matches: [
+				"*://*.rateyourmusic.com/collection*",
+				"*://*.rateyourmusic.com/film_collection*",
+			],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/user-page/main.ts"],
+			matches: ["*://*.rateyourmusic.com/~*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/vote-history/genres.ts"],
+			matches: ["*://*.rateyourmusic.com/rgenre/vote_history*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/vote-history/descriptors.ts"],
+			matches: ["*://*.rateyourmusic.com/rdescriptor/vote_history*"],
+			run_at: "document_start",
+		},
+	],
+	icons: {
+		"16": "icons/sonemic-16.png",
+		"48": "icons/sonemic-48.png",
+		"128": "icons/sonemic-128.png",
+	},
+	permissions: [
+		"storage",
+		"downloads",
+		"tabs",
+		"scripting",
+		"activeTab",
+	] as chrome.runtime.ManifestPermissions[],
+} satisfies Partial<chrome.runtime.ManifestBase>;
 
 const browserAction = {
-  default_title: 'EvenBetterRYM',
-  default_popup: 'src/modules/popup/index.html',
-}
+	default_title: "EvenBetterRYM",
+	default_popup: "src/modules/popup/index.html",
+};
 
 const ManifestV2 = {
-  ...sharedManifest,
-  background: {
-    scripts: ['src/modules/background/index.ts'],
-  },
-  browser_action: browserAction,
-  permissions: [...sharedManifest.permissions, ...hostsArray],
-}
+	...sharedManifest,
+	background: {
+		scripts: ["src/modules/background/index.ts"],
+	},
+	browser_action: browserAction,
+	permissions: [...sharedManifest.permissions, ...hostsArray],
+};
 
 const ManifestV3 = {
-  ...sharedManifest,
-  action: browserAction,
-  background: {
-    service_worker: 'src/modules/background/index.ts',
-  },
-  host_permissions: hostsArray,
-}
+	...sharedManifest,
+	action: browserAction,
+	background: {
+		service_worker: "src/modules/background/index.ts",
+	},
+	host_permissions: hostsArray,
+};
 
 export function getManifest(
-  manifestVersion: number,
+	manifestVersion: number,
 ): chrome.runtime.ManifestV2 | chrome.runtime.ManifestV3 {
-  const manifest = {
-    author: pkg.author,
-    description: pkg.description,
-    name: pkg.displayName ?? pkg.name,
-    version: pkg.version,
-  }
+	const manifest = {
+		author: pkg.author,
+		description: pkg.description,
+		name: pkg.displayName ?? pkg.name,
+		version: pkg.version,
+	};
 
-  if (manifestVersion === 2) {
-    return {
-      ...manifest,
-      ...ManifestV2,
-      manifest_version: manifestVersion,
-      browser_specific_settings: {
-        gecko: {
-          id: '{ccc663fe-bdb6-4bf1-a2fa-0c55849e29ad}',
-          data_collection_permissions: {
-            required: ['none'],
-          },
-        },
-      },
-    }
-  }
+	if (manifestVersion === 2) {
+		return {
+			...manifest,
+			...ManifestV2,
+			manifest_version: manifestVersion,
+			browser_specific_settings: {
+				gecko: {
+					id: "{ccc663fe-bdb6-4bf1-a2fa-0c55849e29ad}",
+					data_collection_permissions: {
+						required: ["none"],
+					},
+				},
+			},
+		};
+	}
 
-  if (manifestVersion === 3) {
-    return {
-      ...manifest,
-      ...ManifestV3,
-      manifest_version: manifestVersion,
-    }
-  }
+	if (manifestVersion === 3) {
+		return {
+			...manifest,
+			...ManifestV3,
+			manifest_version: manifestVersion,
+		};
+	}
 
-  throw new Error(
-    `Missing manifest definition for manifestVersion ${manifestVersion}`,
-  )
+	throw new Error(
+		`Missing manifest definition for manifestVersion ${manifestVersion}`,
+	);
 }

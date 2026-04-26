@@ -1,14 +1,14 @@
-import { runPage } from '~/shared/page-settings'
-import { pages } from '~/shared/pages'
+import { runPage } from "~/shared/page-settings";
+import { pages } from "~/shared/pages";
 
-import { injectCollectionFilterButtons } from './app'
+import { injectCollectionFilterButtons } from "./app";
 
 const isUserCollection = document.location.pathname.startsWith(
-  pages.userCollection,
-)
+	pages.userCollection,
+);
 
-const pageKey = isUserCollection ? 'userCollection' : 'filmCollection'
+const pageKey = isUserCollection ? "userCollection" : "filmCollection";
 
 await runPage(pageKey, async () => {
-  await injectCollectionFilterButtons()
-})
+	await injectCollectionFilterButtons();
+});

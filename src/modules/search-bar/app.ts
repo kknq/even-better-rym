@@ -1,54 +1,54 @@
-import { forceQuerySelector, waitForElement } from '~/shared/utils/dom'
-import { parseMarkup } from '~/shared/utils/markup'
+import { forceQuerySelector, waitForElement } from "~/shared/utils/dom";
+import { parseMarkup } from "~/shared/utils/markup";
 
 export async function main() {
-  const searchBar: HTMLInputElement = await waitForElement(
-    '#ui_search_input_main_search',
-  )
-  const searchButton = forceQuerySelector<HTMLElement>(document)(
-    '#ui_search_icon_main_search',
-  )
+	const searchBar: HTMLInputElement = await waitForElement(
+		"#ui_search_input_main_search",
+	);
+	const searchButton = forceQuerySelector<HTMLElement>(document)(
+		"#ui_search_icon_main_search",
+	);
 
-  keyHandler = searchBar.onkeydown
-  clickHandler = searchButton.onclick
+	keyHandler = searchBar.onkeydown;
+	clickHandler = searchButton.onclick;
 
-  searchBar.onkeydown = shortcutHandler
-  searchButton.onclick = shortcutHandler
+	searchBar.onkeydown = shortcutHandler;
+	searchButton.onclick = shortcutHandler;
 }
 
 let keyHandler:
-  | ((this: GlobalEventHandlers, event: KeyboardEvent) => unknown)
-  | null
+	| ((this: GlobalEventHandlers, event: KeyboardEvent) => unknown)
+	| null;
 let clickHandler:
-  | ((this: GlobalEventHandlers, event: PointerEvent) => unknown)
-  | null
+	| ((this: GlobalEventHandlers, event: PointerEvent) => unknown)
+	| null;
 
 const SEARCH_REGEX =
-  /^\[(Artist|Album|Genre|Label|List|Rating|Venue|Concert|Bug)\d*]$/g
+	/^\[(Artist|Album|Genre|Label|List|Rating|Venue|Concert|Bug)\d*]$/g;
 
 function shortcutHandler(event: Event) {
-  if (event.type === 'keydown' && (event as KeyboardEvent).key !== 'Enter')
-    return
+	if (event.type === "keydown" && (event as KeyboardEvent).key !== "Enter")
+		return;
 
-  const searchBar = forceQuerySelector<HTMLInputElement>(document)(
-    '#ui_search_input_main_search',
-  )
+	const searchBar = forceQuerySelector<HTMLInputElement>(document)(
+		"#ui_search_input_main_search",
+	);
 
-  if (SEARCH_REGEX.test(searchBar.value)) {
-    void parseMarkup(searchBar.value).then((value) => {
-      globalThis.location.href = (
-        value.firstElementChild as HTMLLinkElement
-      ).href
-    })
-  } else {
-    if (event.type === 'keydown' && keyHandler !== null)
-      keyHandler.call(searchBar, event as KeyboardEvent)
-    if (event.type === 'click' && clickHandler !== null)
-      clickHandler.call(
-        forceQuerySelector<HTMLElement>(document)(
-          '#ui_search_icon_main_search',
-        ),
-        event as PointerEvent,
-      )
-  }
+	if (SEARCH_REGEX.test(searchBar.value)) {
+		void parseMarkup(searchBar.value).then((value) => {
+			globalThis.location.href = (
+				value.firstElementChild as HTMLLinkElement
+			).href;
+		});
+	} else {
+		if (event.type === "keydown" && keyHandler !== null)
+			keyHandler.call(searchBar, event as KeyboardEvent);
+		if (event.type === "click" && clickHandler !== null)
+			clickHandler.call(
+				forceQuerySelector<HTMLElement>(document)(
+					"#ui_search_icon_main_search",
+				),
+				event as PointerEvent,
+			);
+	}
 }

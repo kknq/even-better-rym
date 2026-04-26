@@ -1,6 +1,6 @@
-import { descriptors } from '../data/descriptors'
-import addDropdown from './add-dropdown'
+import { descriptors } from "../data/descriptors";
+import addDropdown from "./add-dropdown";
 
 export default async function addDescriptorDropdown() {
-  await addDropdown('Descriptor', 'descriptor', descriptors)
+	await addDropdown("Descriptor", "descriptor", descriptors);
 }

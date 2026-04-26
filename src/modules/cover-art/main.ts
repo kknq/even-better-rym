@@ -1,7 +1,7 @@
-import { runPage } from '~/shared/page-settings'
+import { runPage } from "~/shared/page-settings";
 
-import { injectCoverArtDownloader } from './app'
+import { injectCoverArtDownloader } from "./app";
 
-await runPage('coverArt', async () => {
-  await injectCoverArtDownloader()
-})
+await runPage("coverArt", async () => {
+	await injectCoverArtDownloader();
+});

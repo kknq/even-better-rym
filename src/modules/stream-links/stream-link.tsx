@@ -1,79 +1,78 @@
-import { h } from 'preact'
-import { useCallback, useEffect, useState } from 'preact/hooks'
+import { useCallback, useEffect, useState } from "preact/hooks";
 
-import type { Searchable, Service } from '~/shared/services/types'
-import { parseError } from '~/shared/utils/error'
-import type { OneShot } from '~/shared/utils/one-shot'
+import type { Searchable, Service } from "~/shared/services/types";
+import { parseError } from "~/shared/utils/error";
+import type { OneShot } from "~/shared/utils/one-shot";
 import {
-  complete,
-  failed,
-  initial,
-  isComplete,
-  isFailed,
-  isLoading,
-  loading,
-} from '~/shared/utils/one-shot'
+	complete,
+	failed,
+	initial,
+	isComplete,
+	isFailed,
+	isLoading,
+	loading,
+} from "~/shared/utils/one-shot";
 
-import { StreamLinkIcon } from './stream-link-icon'
-import type { PageDataState } from './use-page-data'
+import { StreamLinkIcon } from "./stream-link-icon";
+import type { PageDataState } from "./use-page-data";
 
-export type StreamLinkState = OneShot<Error, StreamLinkCompleteState>
+export type StreamLinkState = OneShot<Error, StreamLinkCompleteState>;
 type StreamLinkCompleteState =
-  | { _tag: 'exists' | 'found'; url: string }
-  | { _tag: 'not-found' }
+	| { _tag: "exists" | "found"; url: string }
+	| { _tag: "not-found" };
 
 export function StreamLink({
-  service,
-  pageData,
+	service,
+	pageData,
 }: Readonly<{
-  service: Service & Searchable
-  pageData: PageDataState
+	service: Service & Searchable;
+	pageData: PageDataState;
 }>) {
-  const [state, setState] = useState<StreamLinkState>(initial)
+	const [state, setState] = useState<StreamLinkState>(initial);
 
-  useEffect(() => {
-    void (async () => {
-      if (isLoading(pageData)) {
-        setState(loading)
-      } else if (isFailed(pageData)) {
-        setState(failed(pageData.error))
-      } else if (isComplete(pageData)) {
-        const releaseData = pageData.data
-        const existingLink = releaseData.links[service.id]
-        if (existingLink === undefined) {
-          setState(loading)
-          try {
-            const foundLink = await service.search(releaseData.metadata)
-            if (foundLink === undefined) {
-              setState(complete({ _tag: 'not-found' }))
-            } else {
-              setState(complete({ _tag: 'found', url: foundLink }))
-            }
-          } catch (error: unknown) {
-            setState(failed(parseError(error)))
-          }
-        } else {
-          setState(complete({ _tag: 'exists', url: existingLink }))
-        }
-      }
-    })()
-  }, [pageData, service])
+	useEffect(() => {
+		void (async () => {
+			if (isLoading(pageData)) {
+				setState(loading);
+			} else if (isFailed(pageData)) {
+				setState(failed(pageData.error));
+			} else if (isComplete(pageData)) {
+				const releaseData = pageData.data;
+				const existingLink = releaseData.links[service.id];
+				if (existingLink === undefined) {
+					setState(loading);
+					try {
+						const foundLink = await service.search(releaseData.metadata);
+						if (foundLink === undefined) {
+							setState(complete({ _tag: "not-found" }));
+						} else {
+							setState(complete({ _tag: "found", url: foundLink }));
+						}
+					} catch (error: unknown) {
+						setState(failed(parseError(error)));
+					}
+				} else {
+					setState(complete({ _tag: "exists", url: existingLink }));
+				}
+			}
+		})();
+	}, [pageData, service]);
 
-  const renderIcon = useCallback(
-    () => <StreamLinkIcon service={service} state={state} />,
-    [service, state],
-  )
+	const renderIcon = useCallback(
+		() => <StreamLinkIcon service={service} state={state} />,
+		[service, state],
+	);
 
-  // if we have a link available, wrap in an anchor element
-  if (
-    isComplete(state) &&
-    (state.data._tag === 'exists' || state.data._tag === 'found')
-  )
-    return (
-      <a href={state.data.url} target='_blank' rel='noreferrer'>
-        {renderIcon()}
-      </a>
-    )
+	// if we have a link available, wrap in an anchor element
+	if (
+		isComplete(state) &&
+		(state.data._tag === "exists" || state.data._tag === "found")
+	)
+		return (
+			<a href={state.data.url} target="_blank" rel="noreferrer">
+				{renderIcon()}
+			</a>
+		);
 
-  return renderIcon()
+	return renderIcon();
 }

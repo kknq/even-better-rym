@@ -1,7 +1,7 @@
-import { runPage } from '~/shared/page-settings'
+import { runPage } from "~/shared/page-settings";
 
-import { injectStreamLinkConverter } from './app'
+import { injectStreamLinkConverter } from "./app";
 
-await runPage('streamLinkSubmission', async () => {
-  await injectStreamLinkConverter()
-})
+await runPage("streamLinkSubmission", async () => {
+	await injectStreamLinkConverter();
+});

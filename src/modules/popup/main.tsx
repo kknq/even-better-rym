@@ -1,6 +1,6 @@
-import { render } from 'preact'
+import { render } from "preact";
 
-import { App } from './app'
+import { App } from "./app";
 
-const root = document.getElementById('app')
-if (root) render(<App />, root)
+const root = document.getElementById("app");
+if (root) render(<App />, root);
