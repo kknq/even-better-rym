@@ -305,7 +305,7 @@ const ATTRIBUTE_IDS: Record<ReleaseAttribute, number> = {
 	"box set": 12,
 	"collector's edition": 49,
 	"deluxe edition": 59,
-	demo: 18,
+	demo: 129,
 	exclusive: 72,
 	"fan club release": 38,
 	"limited edition": 16,

@@ -4,13 +4,21 @@ import { convertDuration, convertTotalTime } from "./convert";
 
 describe("convertTotalTime", () => {
 	test("Converts minutes over 60 to hours", () => {
-		expect(convertTotalTime("Total length: 75:30")).toBe("Total length: 1:15:30");
-		expect(convertTotalTime("Total length: 120:00")).toBe("Total length: 2:00:00");
-		expect(convertTotalTime("Total length: 61:05")).toBe("Total length: 1:01:05");
+		expect(convertTotalTime("Total length: 75:30")).toBe(
+			"Total length: 1:15:30",
+		);
+		expect(convertTotalTime("Total length: 120:00")).toBe(
+			"Total length: 2:00:00",
+		);
+		expect(convertTotalTime("Total length: 61:05")).toBe(
+			"Total length: 1:01:05",
+		);
 	});
 
 	test("Pads remaining minutes with a leading zero", () => {
-		expect(convertTotalTime("Total length: 65:09")).toBe("Total length: 1:05:09");
+		expect(convertTotalTime("Total length: 65:09")).toBe(
+			"Total length: 1:05:09",
+		);
 	});
 
 	test("Returns null when total is less than 60 minutes", () => {

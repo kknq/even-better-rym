@@ -1,7 +1,11 @@
 const TOTAL_PATTERN = /Total length: (\d+):(\d+)/;
 const DURATION_PATTERN = /^(\d+):(\d+)$/;
 
-function convertTime(text: string, pattern: RegExp, prefix: string): string | null {
+function convertTime(
+	text: string,
+	pattern: RegExp,
+	prefix: string,
+): string | null {
 	const match = pattern.exec(text);
 	if (!match) return null;
 

@@ -28,6 +28,8 @@ const hostsArray = [
 	"https://www.googleapis.com/*",
 	"https://*.livemixtapes.com/*",
 	"https://livemixtapes.com/*",
+	"https://*.metal-archives.com/*",
+	"https://metal-archives.com/*",
 ];
 
 const sharedManifest = {
