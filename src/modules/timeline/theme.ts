@@ -35,6 +35,12 @@ function luminance({ r, g, b }: RGB): number {
 	return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
 }
 
+/** Returns true if the page background near `el` is dark. */
+export function isDarkPage(el: HTMLElement | null): boolean {
+	const backgroundColor = getEffectiveBackgroundColor(el);
+	return luminance(parseRgb(backgroundColor)) < 0.35;
+}
+
 // Apply CSS vars to panel so its UI harmonizes with page theme
 export function applyRymThemeVars(
 	panelEl: HTMLElement,
@@ -65,8 +71,15 @@ export function applyRymThemeVars(
 		);
 		panelEl.style.setProperty("--rymmt-marker-halo", "rgba(0,0,0,0.55)");
 		panelEl.style.setProperty("--rymmt-bar-outline", "rgba(0,0,0,0.45)");
-		panelEl.style.setProperty("--rymmt-album-color", "#ffffff");
-		panelEl.style.setProperty("--rymmt-live-color", "#bdbdbd");
+		panelEl.style.setProperty(
+			"--rymmt-marker-border",
+			"rgba(255,255,255,0.32)",
+		);
+		panelEl.style.setProperty("--rymmt-album-color", "#94a3b8"); // slate-400
+		panelEl.style.setProperty("--rymmt-live-color", "#fbbf24"); // amber-400
+		panelEl.style.setProperty("--rymmt-ep-color", "#2dd4bf"); // teal-400
+		panelEl.style.setProperty("--rymmt-single-color", "#fb923c"); // orange-400
+		panelEl.style.setProperty("--rymmt-additional-color", "#c4b5fd"); // violet-300
 	} else {
 		panelEl.style.setProperty("--rymmt-track-border", "rgba(0,0,0,0.35)");
 		panelEl.style.setProperty("--rymmt-panel-border", "rgba(0,0,0,0.35)");
@@ -75,8 +88,12 @@ export function applyRymThemeVars(
 		panelEl.style.setProperty("--rymmt-tick-major-color", "rgba(0,0,0,0.30)");
 		panelEl.style.setProperty("--rymmt-marker-halo", "rgba(255,255,255,0.55)");
 		panelEl.style.setProperty("--rymmt-bar-outline", "rgba(0,0,0,0.35)");
-		panelEl.style.setProperty("--rymmt-album-color", "#000000");
-		panelEl.style.setProperty("--rymmt-live-color", "#666666");
+		panelEl.style.setProperty("--rymmt-marker-border", "rgba(0,0,0,0.60)");
+		panelEl.style.setProperty("--rymmt-album-color", "#334155"); // slate-700
+		panelEl.style.setProperty("--rymmt-live-color", "#92400e"); // amber-800
+		panelEl.style.setProperty("--rymmt-ep-color", "#0f766e"); // teal-700
+		panelEl.style.setProperty("--rymmt-single-color", "#c2410c"); // orange-700
+		panelEl.style.setProperty("--rymmt-additional-color", "#6d28d9"); // violet-700
 	}
 
 	panelEl.dataset.rymmtIsDark = isDark ? "1" : "0";

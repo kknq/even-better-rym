@@ -51,8 +51,8 @@ On every release page, replaces the plain-text descriptors in the descriptor row
 
 Two separate toggles covering two related pages:
 
-- **Film Chart Genre Links** — On film chart pages (`/charts/*/film/*`), rewrites every `a.genre` link to point to the corresponding `/film_genre/` page instead of the default genre description page.
-- **Film Genre Chart Button** — On film genre pages (`/film_genre/*`), injects a "View genre chart" button into the page that links directly to the RYM chart page filtered to that genre.
+- **Film Chart Genre Links** - On film chart pages (`/charts/*/film/*`), rewrites every `a.genre` link to point to the corresponding `/film_genre/` page instead of the default genre description page.
+- **Film Genre Chart Button** - On film genre pages (`/film_genre/*`), injects a "View genre chart" button into the page that links directly to the RYM chart page filtered to that genre.
 
 ---
 

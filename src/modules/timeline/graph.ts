@@ -1,17 +1,14 @@
-import { capitalizeWords, getRoleColor } from "./roles";
-import type {
-	DiscoMarker,
-	GraphOpts,
-	MarkersByType,
-	Member,
-	Stint,
-} from "./types";
+import { currentDecimalYear } from "./date-utils";
+import { buildChartRoleColorMap, capitalizeWords } from "./roles";
+import type { GraphOpts, MarkersByType, Member, Stint } from "./types";
 import { escapeHtml } from "./utils";
 
 export function buildTicksHtml(axisMin: number, axisMax: number): string {
 	const total = axisMax - axisMin || 1;
-	const years = [];
-	for (let y = axisMin; y <= axisMax; y++) years.push(y);
+	const startYear = Math.ceil(axisMin);
+	const endYear = Math.floor(axisMax);
+	const years: number[] = [];
+	for (let y = startYear; y <= endYear; y++) years.push(y);
 
 	return years
 		.map((y) => {
@@ -23,53 +20,78 @@ export function buildTicksHtml(axisMin: number, axisMax: number): string {
 		.join("");
 }
 
+const DISCO_TYPE_LABELS: Record<string, string> = {
+	album: "LP",
+	live: "Live",
+	ep: "EP",
+	single: "Single",
+	additional: "Add.",
+};
+
 export function buildMarkersOverlayHtml(
 	axisMin: number,
 	axisMax: number,
 	markers?: MarkersByType,
 ): string {
-	const existingMarkers: MarkersByType = markers ?? {
-		album: [],
-		live: [],
-		single: [],
-		ep: [],
-	};
+	if (!markers) return `<div class="rymmt-markers-global"></div>`;
 
 	const total = axisMax - axisMin || 1;
 
-	function linesFor(list: DiscoMarker[], cls: string): string {
-		return list
-			.filter((release) => release && Number.isFinite(release.year))
-			.filter((release) => release.year >= axisMin && release.year <= axisMax)
-			.map((release) => {
-				const left = ((release.year - axisMin) / total) * 100;
-				const title = release.title
-					? `${release.year} — ${release.title}`
-					: String(release.year);
-				return release.url
-					? `<a class="rymmt-marker ${cls}" href="${escapeHtml(release.url)}" target="_blank" rel="noopener noreferrer" style="left:${left}%" title="${escapeHtml(title)}"></a>`
-					: `<div class="rymmt-marker ${cls}" style="left:${left}%" title="${escapeHtml(title)}"></div>`;
-			})
-			.join("");
+	// Group all markers by year; one entry per individual release for the tooltip
+	const yearMap = new Map<number, { type: string; title: string }[]>();
+	for (const [type, list] of Object.entries(markers)) {
+		for (const marker of list) {
+			if (!Number.isFinite(marker.year)) continue;
+			if (marker.year < axisMin || marker.year > axisMax) continue;
+			if (!yearMap.has(marker.year)) yearMap.set(marker.year, []);
+			yearMap.get(marker.year)!.push({ type, title: marker.title });
+		}
 	}
 
-	return `<div class="rymmt-markers">
-    ${linesFor(existingMarkers.album, "album")}
-    ${linesFor(existingMarkers.live, "live")}
-    ${linesFor(existingMarkers.ep, "ep")}
-    ${linesFor(existingMarkers.single, "single")}
-  </div>`;
+	if (yearMap.size === 0) return `<div class="rymmt-markers-global"></div>`;
+
+	const groups = [...yearMap.keys()]
+		.toSorted((a, b) => a - b)
+		.map((year) => {
+			const left = ((year - axisMin) / total) * 100;
+			const entries = yearMap.get(year)!;
+
+			const tooltipText = entries
+				.map((e) => `${e.title} (${DISCO_TYPE_LABELS[e.type] ?? e.type})`)
+				.join("\n");
+
+			// One color segment per unique type at this year
+			const seenTypes = new Set<string>();
+			const segments = entries
+				.filter((e) => {
+					const isNew = !seenTypes.has(e.type);
+					seenTypes.add(e.type);
+					return isNew;
+				})
+				.map(
+					(e) =>
+						`<div class="rymmt-mseg rymmt-mseg-${escapeHtml(e.type)}"></div>`,
+				)
+				.join("");
+
+			return `<div class="rymmt-mgroup" style="left:${left}%" title="${escapeHtml(tooltipText)}">${segments}</div>`;
+		});
+
+	return `<div class="rymmt-markers-global">${groups.join("")}</div>`;
 }
 
 // Build the role-stripe HTML for a single member bar
-function buildMemberStripes(roles: string[], isDarkTheme: boolean): string {
+function buildMemberStripes(
+	roles: string[],
+	colorMap: Map<string, string>,
+): string {
 	if (!roles.length) {
 		return `<div class="rymmt-stripe rymmt-stripe-neutral"></div>`;
 	}
 	return roles
 		.map(
 			(role) =>
-				`<div class="rymmt-stripe" title="${escapeHtml(role)}" style="background:${getRoleColor(role, isDarkTheme)}"></div>`,
+				`<div class="rymmt-stripe" title="${escapeHtml(role)}" style="background:${colorMap.get(role) ?? "transparent"}"></div>`,
 		)
 		.join("");
 }
@@ -159,9 +181,9 @@ function buildMemberRowHtml(
 	axisMax: number,
 	total: number,
 	ticksHtml: string,
-	isDarkTheme: boolean,
+	colorMap: Map<string, string>,
 ): string {
-	const stripes = buildMemberStripes(member.roles ?? [], isDarkTheme);
+	const stripes = buildMemberStripes(member.roles ?? [], colorMap);
 
 	const fallbackStart =
 		Number.isFinite(member.startYear) && member.startYear != null
@@ -214,7 +236,7 @@ function computeAxisBounds(
 	members: Member[],
 	opts: GraphOpts,
 	nowYear: number,
-): { axisMin: number; axisMax: number } {
+): { axisMin: number; axisMax: number; axisMinKnown: boolean } {
 	const formedYear = Number.isFinite(opts.formedYear)
 		? Number(opts.formedYear)
 		: null;
@@ -222,34 +244,76 @@ function computeAxisBounds(
 		? Number(opts.disbandedYear)
 		: null;
 
+	// Marker years contribute integer bounds (floor) so axis ticks stay on whole years
 	const markerYears: number[] = [
-		...(opts.markers?.album ?? []).map((marker) => marker.year),
-		...(opts.markers?.live ?? []).map((marker) => marker.year),
-		...(opts.markers?.single ?? []).map((marker) => marker.year),
-		...(opts.markers?.ep ?? []).map((marker) => marker.year),
+		...(opts.markers?.album ?? []).map((marker) => Math.floor(marker.year)),
+		...(opts.markers?.live ?? []).map((marker) => Math.floor(marker.year)),
+		...(opts.markers?.single ?? []).map((marker) => Math.floor(marker.year)),
+		...(opts.markers?.ep ?? []).map((marker) => Math.floor(marker.year)),
+		...(opts.markers?.additional ?? []).map((marker) =>
+			Math.floor(marker.year),
+		),
 	];
 
 	const allYears = collectMemberStintYears(members, markerYears);
 
+	const axisMinKnown = formedYear !== null;
 	let axisMin = formedYear ?? Number.NaN;
 	let axisMax =
 		disbandedYear ??
 		(Number.isFinite(opts.endYear) ? Number(opts.endYear) : nowYear);
 
 	if (!Number.isFinite(axisMin))
-		axisMin = allYears.length ? Math.min(...allYears) : nowYear - 60;
+		axisMin = allYears.length ? Math.min(...allYears) : nowYear;
 	if (!Number.isFinite(axisMax))
 		axisMax = allYears.length ? Math.max(...allYears) : nowYear;
-	if (axisMin > axisMax) return { axisMin: axisMax, axisMax: axisMin };
+	if (axisMin > axisMax)
+		return { axisMin: axisMax, axisMax: axisMin, axisMinKnown };
 
-	return { axisMin, axisMax };
+	return { axisMin, axisMax, axisMinKnown };
+}
+
+// Build the releases legend HTML - only shows types that have at least one marker
+// Each chip is a toggle button with data-rymmt-type for JS interactivity
+function buildReleasesLegendHtml(markers?: MarkersByType): string {
+	if (!markers) return "";
+	const chips: string[] = [];
+	if (markers.album.length) {
+		chips.push(
+			`<button class="rymmt-role-chip rymmt-release-chip" data-rymmt-type="album" title="Click to hide/show Albums"><span class="rymmt-role-swatch" style="background:var(--rymmt-album-color)"></span>Albums</button>`,
+		);
+	}
+	if (markers.live.length) {
+		chips.push(
+			`<button class="rymmt-role-chip rymmt-release-chip" data-rymmt-type="live" title="Click to hide/show Live Albums"><span class="rymmt-role-swatch" style="background:var(--rymmt-live-color)"></span>Live Albums</button>`,
+		);
+	}
+	if (markers.ep.length) {
+		chips.push(
+			`<button class="rymmt-role-chip rymmt-release-chip" data-rymmt-type="ep" title="Click to hide/show EPs"><span class="rymmt-role-swatch" style="background:var(--rymmt-ep-color)"></span>EPs</button>`,
+		);
+	}
+	if (markers.single.length) {
+		chips.push(
+			`<button class="rymmt-role-chip rymmt-release-chip" data-rymmt-type="single" title="Click to hide/show Singles"><span class="rymmt-role-swatch" style="background:var(--rymmt-single-color)"></span>Singles</button>`,
+		);
+	}
+	if (markers.additional.length) {
+		chips.push(
+			`<button class="rymmt-role-chip rymmt-release-chip" data-rymmt-type="additional" title="Click to hide/show Additional"><span class="rymmt-role-swatch" style="background:var(--rymmt-additional-color)"></span>Additional</button>`,
+		);
+	}
+	return chips.join("");
 }
 
 // Build the role-chip legend HTML from a sorted role list
-function buildRoleLegendHtml(roles: string[], isDarkTheme: boolean): string {
+function buildRoleLegendHtml(
+	roles: string[],
+	colorMap: Map<string, string>,
+): string {
 	return roles
 		.map((role) => {
-			const color = getRoleColor(role, isDarkTheme);
+			const color = colorMap.get(role) ?? "transparent";
 			return `<span class="rymmt-role-chip">
         <span class="rymmt-role-swatch" style="background:${color}"></span>
         ${escapeHtml(capitalizeWords(role))}
@@ -264,9 +328,13 @@ export function buildGraph(
 	opts: GraphOpts = {},
 ): void {
 	const isDarkTheme = container?.dataset?.rymmtIsDark === "1";
-	const nowYear = new Date().getFullYear();
+	const nowYear = currentDecimalYear();
 
-	const { axisMin, axisMax } = computeAxisBounds(members, opts, nowYear);
+	const { axisMin, axisMax, axisMinKnown } = computeAxisBounds(
+		members,
+		opts,
+		nowYear,
+	);
 
 	const normalizedMembers = members.map((member) =>
 		normalizeMember(member, axisMin, axisMax),
@@ -276,27 +344,10 @@ export function buildGraph(
 		new Set(normalizedMembers.flatMap((mem) => mem.roles)),
 	).toSorted((a, b) => a.localeCompare(b));
 
-	const legendHtml = buildRoleLegendHtml(roleList, isDarkTheme);
+	const chartColorMap = buildChartRoleColorMap(roleList, isDarkTheme);
+	const legendHtml = buildRoleLegendHtml(roleList, chartColorMap);
 
-	// TODO: uncomment when release markers are actually scraped and shown on the chart
-	// const releasesLegendHtml = `
-	//   <span class="rymmt-role-chip">
-	//     <span class="rymmt-role-swatch" style="background:var(--rymmt-album-color)"></span>
-	//     Albums
-	//   </span>
-	//   <span class="rymmt-role-chip">
-	//     <span class="rymmt-role-swatch" style="background:var(--rymmt-live-color)"></span>
-	//     Live Albums
-	//   </span>
-	//   <span class="rymmt-role-chip">
-	//     <span class="rymmt-role-swatch rymmt-release-single"></span>
-	//     Singles
-	//   </span>
-	//   <span class="rymmt-role-chip">
-	//     <span class="rymmt-role-swatch rymmt-release-ep"></span>
-	//     EPs
-	//   </span>
-	// `;
+	const releasesLegendHtml = buildReleasesLegendHtml(opts.markers);
 
 	const safeAxisMin = axisMin;
 	const safeAxisMax = axisMax;
@@ -307,8 +358,11 @@ export function buildGraph(
 		opts.markers,
 	);
 	const total = axisMax - axisMin || 1;
+	const axisStartLabel = axisMinKnown
+		? String(Math.floor(axisMin))
+		: "First Release";
 	const axisEndLabel = Number.isFinite(opts.disbandedYear)
-		? String(axisMax)
+		? String(Math.floor(axisMax))
 		: "Now";
 
 	const rowsHtml = normalizedMembers
@@ -319,14 +373,18 @@ export function buildGraph(
 				axisMax,
 				total,
 				ticksHtml,
-				isDarkTheme,
+				chartColorMap,
 			),
 		)
 		.join("\n");
 
 	container.innerHTML = `
     <div class="rymmt-graph">
-      <div class="rymmt-graph-title">Timeline</div>
+      <div class="rymmt-graph-titlebar">
+        <span class="rymmt-graph-title">Timeline</span>
+        <button class="rymmt-btn rymmt-fs-btn" title="Expand to fullscreen" aria-label="Expand to fullscreen">&#x26F6;</button>
+        <button class="rymmt-btn rymmt-fs-close-btn" title="Exit fullscreen" aria-label="Exit fullscreen">&#x2715; Exit fullscreen</button>
+      </div>
       <div class="rymmt-grid rymmt-grid-has-overlay">
         ${markersOverlayHtml}
         ${rowsHtml}
@@ -334,7 +392,7 @@ export function buildGraph(
       <div class="rymmt-axis">
         <div></div>
         <div class="rymmt-axis-track">
-          <span>${escapeHtml(String(axisMin))}</span>
+          <span>${escapeHtml(axisStartLabel)}</span>
           <span>${escapeHtml(axisEndLabel)}</span>
         </div>
       </div>
@@ -342,12 +400,75 @@ export function buildGraph(
         <div class="rymmt-legend-title">Roles</div>
         <div class="rymmt-role-legend">${legendHtml}</div>
       </div>
-      <!-- TODO: uncomment when release markers are shown on the chart
-      <div class="rymmt-legend-section">
-        <div class="rymmt-legend-title">Releases</div>
-        <div class="rymmt-role-legend">...</div>
-      </div>
-      -->
+      ${releasesLegendHtml ? `<div class="rymmt-legend-section"><div class="rymmt-legend-title">Releases <span class="rymmt-legend-hint">(click to toggle)</span></div><div class="rymmt-role-legend">${releasesLegendHtml}</div></div>` : ""}
     </div>
   `;
+}
+
+export function attachGraphInteractivity(panel: HTMLElement): void {
+	// Types hidden on initial open (only Albums shown by default)
+	const INITIALLY_HIDDEN = new Set(["live", "ep", "single", "additional"]);
+	const hiddenTypes = new Set<string>(INITIALLY_HIDDEN);
+
+	// Re-evaluate each mgroup: hide it entirely when every one of its segments
+	function refreshMgroupVisibility(): void {
+		panel.querySelectorAll<HTMLElement>(".rymmt-mgroup").forEach((group) => {
+			const segs = group.querySelectorAll(".rymmt-mseg");
+			if (!segs.length) return;
+			const allHidden = Array.from(segs).every((seg) => {
+				for (const cls of seg.classList) {
+					if (cls.startsWith("rymmt-mseg-")) {
+						return hiddenTypes.has(cls.slice("rymmt-mseg-".length));
+					}
+				}
+				return false;
+			});
+			group.style.display = allHidden ? "none" : "";
+		});
+	}
+
+	// Apply initial hidden state
+	for (const type of INITIALLY_HIDDEN) {
+		panel.setAttribute(`data-hide-${type}`, "");
+	}
+	panel
+		.querySelectorAll<HTMLElement>(".rymmt-release-chip[data-rymmt-type]")
+		.forEach((chip) => {
+			if (hiddenTypes.has(chip.dataset.rymmtType ?? "")) {
+				chip.classList.add("rymmt-chip-inactive");
+			}
+		});
+	refreshMgroupVisibility();
+
+	// Release-type legend chips toggle the corresponding marker segments
+	panel
+		.querySelectorAll<HTMLElement>(".rymmt-release-chip[data-rymmt-type]")
+		.forEach((chip) => {
+			chip.addEventListener("click", () => {
+				const type = chip.dataset.rymmtType;
+				if (!type) return;
+				const attrName = `data-hide-${type}`;
+				if (hiddenTypes.has(type)) {
+					hiddenTypes.delete(type);
+					panel.removeAttribute(attrName);
+					chip.classList.remove("rymmt-chip-inactive");
+				} else {
+					hiddenTypes.add(type);
+					panel.setAttribute(attrName, "");
+					chip.classList.add("rymmt-chip-inactive");
+				}
+				refreshMgroupVisibility();
+			});
+		});
+
+	// Fullscreen expand / close
+	panel.querySelector(".rymmt-fs-btn")?.addEventListener("click", () => {
+		panel.classList.add("rymmt-fs");
+		document.body.classList.add("rymmt-fs-open");
+		panel.scrollTop = 0;
+	});
+	panel.querySelector(".rymmt-fs-close-btn")?.addEventListener("click", () => {
+		panel.classList.remove("rymmt-fs");
+		document.body.classList.remove("rymmt-fs-open");
+	});
 }

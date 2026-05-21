@@ -41,8 +41,6 @@ export function insertPanelAfterLastRenderedTextArtist(
 	).filter((span: Element) => !!span.querySelector("a.artist"));
 
 	const anchor = rendered.at(-1);
-	if (!anchor) return false;
-
-	anchor.after(panelEl);
+	(anchor ?? infoContent).after(panelEl);
 	return true;
 }

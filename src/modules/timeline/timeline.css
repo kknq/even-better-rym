@@ -21,48 +21,50 @@
 
 	--rymmt-muted-text: inherit;
 
-	--rymmt-album-color: #ffffff;
-	--rymmt-live-color: #bdbdbd;
+	--rymmt-album-color: transparent;
+	--rymmt-live-color: transparent;
+	--rymmt-ep-color: transparent;
+	--rymmt-single-color: transparent;
+	--rymmt-additional-color: transparent;
 	--rymmt-tick-color: rgba(255, 255, 255, 0.25);
 	--rymmt-tick-major-color: rgba(255, 255, 255, 0.45);
-	--rymmt-marker-halo: rgba(0, 0, 0, 0.55);
+	--rymmt-marker-border: rgba(0, 0, 0, 0.6);
 	--rymmt-bar-outline: rgba(0, 0, 0, 0.45);
 
 	/* Role color tokens (defaults) */
-	--rymmt-role-vocals: #ff4d6d;
-	--rymmt-role-backing-vocals: #ff7a95;
-	--rymmt-role-rap: #f43f5e;
+	--rymmt-role-vocals: #f43f5e;
+	--rymmt-role-backing-vocals: #ec4899;
 
 	--rymmt-role-guitar: #22c55e;
-	--rymmt-role-rhythm-guitar: #16a34a;
+	--rymmt-role-rhythm-guitar: #84cc16;
 
 	--rymmt-role-bass: #3b82f6;
 	--rymmt-role-piccolo-bass: #2563eb;
 
-	--rymmt-role-drums: #f59e0b;
-	--rymmt-role-percussion: #fb7185;
-	--rymmt-role-congas: #f97316;
-	--rymmt-role-bongos: #ea580c;
 	--rymmt-role-timbales: #dc2626;
+	--rymmt-role-bongos: #ea580c;
+	--rymmt-role-congas: #f97316;
+	--rymmt-role-drums: #f59e0b;
+	--rymmt-role-percussion: #facc15;
+	--rymmt-role-glockenspiel: #d4bf18;
 
+	--rymmt-role-laptop: #5b6de8;
+	--rymmt-role-synthesizer: #7060ef;
+	--rymmt-role-analogue-synthesizer: #8248ec;
+	--rymmt-role-sampler: #9638d4;
+	--rymmt-role-ondes-martenot: #9d3de8;
 	--rymmt-role-keyboards: #a855f7;
-	--rymmt-role-piano: #9333ea;
-	--rymmt-role-toy-piano: #c084fc;
-	--rymmt-role-synthesizer: #8b5cf6;
-	--rymmt-role-analogue-synthesizer: #7c3aed;
-	--rymmt-role-ondes-martenot: #6d28d9;
-	--rymmt-role-sampler: #4c1d95;
-	--rymmt-role-laptop: #6366f1;
-	--rymmt-role-glockenspiel: #eab308;
+	--rymmt-role-piano: #b540ee;
+	--rymmt-role-toy-piano: #d946ef;
 
-	--rymmt-role-saxophone: #06b6d4;
-	--rymmt-role-trumpet: #0ea5e9;
-	--rymmt-role-trombone: #0284c7;
-	--rymmt-role-flute: #14b8a6;
+	--rymmt-role-flute: #1dbf98;
+	--rymmt-role-saxophone: #0db8c8;
+	--rymmt-role-trumpet: #0ca4d8;
+	--rymmt-role-trombone: #0a82be;
 
-	--rymmt-role-producer: #64748b;
-	--rymmt-role-orchestration: #475569;
-	--rymmt-role-effects: #334155;
+	--rymmt-role-producer: #5a8ab8;
+	--rymmt-role-orchestration: #5070a8;
+	--rymmt-role-effects: #6070b8;
 
 	/* Panel layout */
 	position: fixed;
@@ -182,11 +184,54 @@
 	max-width: 100%; /* NEW */
 	box-sizing: border-box; /* NEW */
 }
-#rymmt-panel .rymmt-graph-title {
-	font-weight: 700;
+#rymmt-panel .rymmt-graph-titlebar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
 	margin-bottom: 10px;
+}
+#rymmt-panel .rymmt-graph-title {
+	flex: 1;
+	font-weight: 700;
 	color: var(--rymmt-panel-text);
 	font-size: 18px;
+}
+
+/* Fullscreen close button hidden by default; expand button shown */
+#rymmt-panel .rymmt-fs-close-btn {
+	display: none;
+}
+#rymmt-panel.rymmt-fs .rymmt-fs-btn {
+	display: none;
+}
+#rymmt-panel.rymmt-fs .rymmt-fs-close-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+/* Lock page scroll while the timeline fullscreen is open */
+body.rymmt-fs-open {
+	overflow: hidden !important;
+}
+
+/* Fullscreen state: override the static positioning */
+#rymmt-panel.rymmt-fs {
+	position: fixed !important;
+	inset: 0 !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	width: 100vw !important;
+	height: 100vh !important;
+	max-width: 100vw !important;
+	max-height: 100vh !important;
+	border-radius: 0 !important;
+	overflow-y: auto !important;
+	z-index: 2147483647 !important;
+	box-sizing: border-box !important;
+	padding: 16px !important;
 }
 
 /* The actual timeline UI container */
@@ -220,6 +265,18 @@
 	grid-template-columns: 160px minmax(0, 1fr);
 	column-gap: 12px;
 	align-items: center;
+
+	/* Lift rows above the markers-global overlay (z-index 1) */
+	position: relative;
+	z-index: 2;
+	/* Pass pointer events through the row gaps so marker tooltips remain hoverable */
+	pointer-events: none;
+}
+
+/* Restore interactivity on the interactive parts of each row */
+#rymmt-panel .rymmt-name,
+#rymmt-panel .rymmt-bar {
+	pointer-events: auto;
 }
 
 #rymmt-panel .rymmt-name {
@@ -268,15 +325,17 @@
 	border-radius: 2px;
 	z-index: 2;
 
-	/* Stripe layout */
+	/* Stripes fill the bar proportionally - no gap/padding to avoid whitespace */
 	display: flex;
 	flex-direction: column;
-	gap: 1px;
-	padding: 1px 0;
+	gap: 0;
+	padding: 0;
 	background: transparent;
+	overflow: hidden;
 }
 #rymmt-panel .rymmt-stripe {
-	height: 2px;
+	flex: 1;
+	min-height: 1px;
 	width: 100%;
 	display: block;
 }
@@ -286,36 +345,13 @@
 	background: rgba(127, 127, 127, 0.45);
 }
 
-/* Release markers ON TOP so you always see them */
+/* Release markers sit BEHIND role bars */
 #rymmt-panel .rymmt-markers {
 	position: absolute;
 	inset: 0;
 	pointer-events: none;
-	z-index: 3;
+	z-index: 1;
 }
-#rymmt-panel .rymmt-marker {
-	position: absolute;
-	top: 0;
-	height: 100%;
-	width: 3px;
-	background: var(--rymmt-album-color);
-	transform: translateX(-1px);
-	box-shadow: 0 0 0 1px var(--rymmt-marker-halo);
-}
-#rymmt-panel .rymmt-marker.live {
-	background: var(--rymmt-live-color);
-}
-#rymmt-panel .rymmt-marker.single {
-	background: transparent;
-	border: 2px solid var(--rymmt-album-color);
-	width: 2px;
-}
-#rymmt-panel .rymmt-marker.ep {
-	background: transparent;
-	border: 2px dashed var(--rymmt-album-color);
-	width: 2px;
-}
-
 #rymmt-panel .rymmt-markers-global {
 	position: absolute;
 	top: 0;
@@ -323,6 +359,59 @@
 	left: calc(160px + 12px); /* name column + gap */
 	right: 0;
 	pointer-events: none;
+	z-index: 1; /* below member rows so role bars render on top */
+	overflow: hidden; /* clip markers that extend past the track right edge */
+}
+
+/* Compound marker group: one per year, centered at its left% position. */
+#rymmt-panel .rymmt-mgroup {
+	position: absolute;
+	top: 0;
+	height: 100%;
+	display: flex;
+	transform: translateX(-50%);
+	pointer-events: auto;
+	cursor: default;
+	padding: 0 5px;
+}
+
+#rymmt-panel .rymmt-mseg {
+	width: 4px;
+	height: 100%;
+	box-sizing: border-box;
+	border: 1px solid var(--rymmt-marker-border);
+}
+#rymmt-panel .rymmt-mseg-album {
+	background: var(--rymmt-album-color);
+}
+#rymmt-panel .rymmt-mseg-live {
+	background: var(--rymmt-live-color);
+}
+#rymmt-panel .rymmt-mseg-ep {
+	background: var(--rymmt-ep-color);
+}
+#rymmt-panel .rymmt-mseg-single {
+	background: var(--rymmt-single-color);
+}
+#rymmt-panel .rymmt-mseg-additional {
+	background: var(--rymmt-additional-color);
+}
+
+/* Hide marker segments when their type is toggled off */
+#rymmt-panel[data-hide-album] .rymmt-mseg-album {
+	display: none;
+}
+#rymmt-panel[data-hide-live] .rymmt-mseg-live {
+	display: none;
+}
+#rymmt-panel[data-hide-ep] .rymmt-mseg-ep {
+	display: none;
+}
+#rymmt-panel[data-hide-single] .rymmt-mseg-single {
+	display: none;
+}
+#rymmt-panel[data-hide-additional] .rymmt-mseg-additional {
+	display: none;
 }
 
 /* Axis aligned to track column */
@@ -331,6 +420,7 @@
 
 	/* CHANGED: match the row grid so axis doesn't overflow either */
 	grid-template-columns: 160px minmax(0, 1fr);
+	column-gap: 12px; /* must match .rymmt-row column-gap so labels align */
 	align-items: center;
 	margin-top: 10px;
 }
@@ -393,6 +483,32 @@
 	white-space: nowrap;
 	opacity: 0.95;
 }
+
+/* Release type chips are interactive toggle buttons */
+#rymmt-panel .rymmt-release-chip {
+	appearance: none;
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+	color: inherit;
+	font-family: inherit;
+	transition: opacity 0.15s;
+}
+#rymmt-panel .rymmt-release-chip:hover {
+	opacity: 0.75;
+}
+#rymmt-panel .rymmt-release-chip.rymmt-chip-inactive {
+	opacity: 0.35;
+	text-decoration: line-through;
+}
+
+#rymmt-panel .rymmt-legend-hint {
+	font-size: 11px;
+	font-weight: 400;
+	opacity: 0.6;
+	font-style: italic;
+}
 #rymmt-panel .rymmt-role-swatch {
 	width: 12px;
 	height: 12px;
@@ -432,5 +548,8 @@
 	}
 	#rymmt-panel .rymmt-axis {
 		grid-template-columns: 120px minmax(0, 1fr);
+	}
+	#rymmt-panel .rymmt-markers-global {
+		left: calc(120px + 12px);
 	}
 }

@@ -1,31 +1,33 @@
-import type { Member, ParsedMembers, Stint } from "./types";
+import { canonicalRole } from "./roles";
+import type { EnrichedMember, Member, ParsedMembers, Stint } from "./types";
 import { normalizeDashes, sanitizeRoles } from "./utils";
 
 function parseYearToken(token: string): Stint | null {
 	const normalizedToken = normalizeDashes(token).trim();
-	const curYear = new Date().getFullYear();
 
 	if (/^\d{4}$/.test(normalizedToken)) {
-		const y = Number.parseInt(normalizedToken, 10);
-		return { start: y, end: y };
+		const year = Number.parseInt(normalizedToken, 10);
+		return { start: year, end: year };
 	}
 
-	const m = /^(\d{4})\s*-\s*(present|\d{2}|\d{4})$/i.exec(normalizedToken);
-	if (m) {
-		const start = Number.parseInt(m[1], 10);
+	const matches = /^(\d{4})\s*-\s*(present|\d{2}|\d{4}|\?)$/i.exec(normalizedToken);
+	if (matches) {
+		const start = Number.parseInt(matches[1], 10);
 		let end: number;
-		const rhs = m[2].toLowerCase();
-		if (rhs === "present") end = curYear;
-		else if (rhs.length === 2)
-			end = Math.floor(start / 100) * 100 + Number.parseInt(rhs, 10);
-		else end = Number.parseInt(rhs, 10);
+		const stintEnd = matches[2].toLowerCase();
+		if (stintEnd === "present") end = Number.POSITIVE_INFINITY;
+		else if (stintEnd === "?")
+			end = Number.NaN; // unknown - resolved after all members are parsed
+		else if (stintEnd.length === 2)
+			end = Math.floor(start / 100) * 100 + Number.parseInt(stintEnd, 10);
+		else end = Number.parseInt(stintEnd, 10);
 		return { start, end };
 	}
 
 	return null;
 }
 
-// Classify parenthesised tokens into year stints and role strings
+// Classify parenthesized tokens into year stints and role strings
 function classifyTokens(tokens: string[]): {
 	stints: Stint[];
 	roles: string[];
@@ -83,6 +85,44 @@ function mergeIntoMemberMap(
 	memberMap.set(name, member);
 }
 
+
+/** Returns the earliest start year among `others` that share a role and started after `startYear`. */
+function earliestCompatibleSuccessor(
+	startYear: number,
+	myCanons: Set<string>,
+	others: EnrichedMember[],
+): number {
+	let min = Number.POSITIVE_INFINITY;
+	for (const { canons, member } of others) {
+		if (![...myCanons].some((r) => canons.has(r))) continue;
+		for (const s of member.stints) {
+			if (s.start > startYear) min = Math.min(min, s.start);
+		}
+	}
+	return min;
+}
+
+/**
+ * For each stint with an unknown end (NaN), find the earliest start year
+ * among other members who share at least one canonical role and joined
+ * *after* this member's own start year.  Falls back to Infinity (present)
+ * if no such successor exists.
+ */
+function resolveUnknownEnds(members: Member[]): void {
+	const enrichedMembers: EnrichedMember[] = members.map((member) => ({
+		member: member,
+		canons: new Set(member.roles.map(canonicalRole)),
+	}));
+
+	for (const { member, canons } of enrichedMembers) {
+		const others = enrichedMembers.filter((enrichedMember) => enrichedMember.member !== member);
+		for (const stint of member.stints) {
+			if (!Number.isNaN(stint.end)) continue;
+			stint.end = earliestCompatibleSuccessor(stint.start, canons, others);
+		}
+	}
+}
+
 export function parseMembersFromText(text: string): ParsedMembers {
 	const sourceString = (text || "").replaceAll(/\s+/g, " ").trim();
 	const regExp = /([^()]+?)\s*\(([^)]*)\)\s*(?:,|$)/g;
@@ -114,5 +154,7 @@ export function parseMembersFromText(text: string): ParsedMembers {
 		);
 	}
 
-	return { members: Array.from(memberMap.values()), maxYearMentioned };
+	const members = Array.from(memberMap.values());
+	resolveUnknownEnds(members);
+	return { members, maxYearMentioned };
 }

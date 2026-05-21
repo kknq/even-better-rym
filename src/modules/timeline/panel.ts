@@ -1,16 +1,15 @@
+import { currentDecimalYear, decimalYearOf } from "./date-utils";
 import {
 	extractDiscographyMarkersFromDOM,
 	readFormedAndDisbanded,
-	toMarkersByType,
 } from "./discography";
 import {
 	findAdjacentInfoContent,
 	insertPanelAfterLastRenderedTextArtist,
 } from "./dom-helpers";
-import { buildGraph } from "./graph";
+import { attachGraphInteractivity, buildGraph } from "./graph";
 import { parseMembersFromText } from "./members";
 import { applyRymThemeVars } from "./theme";
-import { yearOf } from "./utils";
 
 const PANEL_ID = "rymmt-panel";
 
@@ -19,41 +18,51 @@ function renderIntoPanel(
 	headerEl: HTMLElement | null,
 ): void {
 	const membersContent = headerEl ? findAdjacentInfoContent(headerEl) : null;
-	const membersText = membersContent ? membersContent.textContent : "";
+	const renderedSpan = membersContent?.querySelector("span.rendered_text");
+	const membersText = (renderedSpan ?? membersContent)?.textContent ?? "";
 	const parsed = parseMembersFromText(membersText ?? "");
 
 	const bounds = readFormedAndDisbanded(document);
-	const formedYear = yearOf(bounds.formedDate);
-	const disbandedYear = yearOf(bounds.disbandedDate);
+	const formedYear = decimalYearOf(bounds.formedDate);
+	const disbandedYear = decimalYearOf(bounds.disbandedDate);
 
 	const disco = extractDiscographyMarkersFromDOM(disbandedYear);
 
-	const latestAnyRelease = Math.max(
-		disco.album.at(-1) ?? -Infinity,
-		disco.live.at(-1) ?? -Infinity,
-		disco.single.at(-1) ?? -Infinity,
-		disco.ep.at(-1) ?? -Infinity,
-	);
+	const allReleaseYears = [
+		...disco.album,
+		...disco.live,
+		...disco.single,
+		...disco.ep,
+		...disco.additional,
+	].map((m) => m.year);
+
+	const latestAnyRelease = allReleaseYears.length
+		? Math.max(...allReleaseYears)
+		: -Infinity;
 
 	const mentionedYear =
-		typeof parsed.maxYearMentioned === "number"
+		typeof parsed.maxYearMentioned === "number" &&
+		Number.isFinite(parsed.maxYearMentioned)
 			? parsed.maxYearMentioned
 			: -Infinity;
 
 	const latestReleaseOrNone = Number.isFinite(latestAnyRelease)
 		? latestAnyRelease
 		: -Infinity;
+	const nowDecimal = currentDecimalYear();
+
 	const endYear = Number.isFinite(disbandedYear)
 		? disbandedYear
-		: Math.max(latestReleaseOrNone, mentionedYear, new Date().getFullYear());
+		: Math.max(latestReleaseOrNone, mentionedYear, nowDecimal);
 
 	panelEl.innerHTML = "";
 	buildGraph(panelEl, parsed.members, {
 		formedYear,
 		endYear,
 		disbandedYear,
-		markers: toMarkersByType(disco),
+		markers: disco,
 	});
+	attachGraphInteractivity(panelEl);
 }
 
 export function togglePanel(headerEl: HTMLElement | null): void {
