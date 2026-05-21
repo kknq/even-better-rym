@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
 
 	return {
 		build: {
-			target: ["chrome89", "firefox89"]
+			target: ["chrome89", "firefox89"],
 		},
 		plugins: [
 			preact(),

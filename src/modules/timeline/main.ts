@@ -1,11 +1,7 @@
-/*import { runPage } from '~/common/pages'
-import { main } from '.'
+import { runPage } from "~/shared/page-settings";
 
-// Timeline is for artist pages
-void runPage('/artist/', () => {
-  void main()
-})*/
+import { main } from "./app";
 
-import { main } from '.'
-
-void main()
+await runPage("timeline", async () => {
+	await main();
+});
