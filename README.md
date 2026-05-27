@@ -154,6 +154,11 @@ MANIFEST_VERSION=2
 
 ### Commands
 
+### Husky
+
+Project has husky pre-commit hooks to simplify the process of linting. You can see that in the `prepare` script.
+
+
 #### Watch mode (recommended for development)
 
 Rebuilds the extension on every file change. After each rebuild, reload the extension in your browser's extension manager and refresh the page.

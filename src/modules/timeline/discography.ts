@@ -1,4 +1,9 @@
-import { getDayOfYear, isLeapYear, MONTH_NAMES, parseDateFromText } from "./date-utils";
+import {
+	getDayOfYear,
+	isLeapYear,
+	MONTH_NAMES,
+	parseDateFromText,
+} from "./date-utils";
 import { findAdjacentInfoContent } from "./dom-helpers";
 import type { Bounds, DiscoMarker, DiscoType, MarkersByType } from "./types";
 
@@ -123,7 +128,11 @@ export function extractDiscographyMarkersFromDOM(
 // Formed / Disbanded extraction
 // --------------------------
 
-function updateBoundsFromLabel(result: Bounds, label: string, date: Date): void {
+function updateBoundsFromLabel(
+	result: Bounds,
+	label: string,
+	date: Date,
+): void {
 	if (label === "formed") result.formedDate = date;
 	if (label === "disbanded") result.disbandedDate = date;
 	if (

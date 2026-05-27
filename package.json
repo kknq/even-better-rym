@@ -1,6 +1,6 @@
 {
 	"name": "even-better-rym",
-	"version": "2.2.0",
+	"version": "2.2.1",
 	"displayName": "EvenBetterRYM",
 	"author": "kknq",
 	"description": "Improvements for RateYourMusic",
@@ -11,10 +11,10 @@
 		"dev": "vite",
 		"serve:firefox": "web-ext run --start-url \"https://rateyourmusic.com/release/album/the-collapsible-mammals/the-collapsible-mammals\"  --source-dir ./dist/",
 		"serve:chrome": "web-ext run -t chromium --start-url \"https://rateyourmusic.com/release/album/the-collapsible-mammals/the-collapsible-mammals\" --source-dir ./dist",
-		"zip": "rm brym.zip || true && cd dist && atool -a ../brym.zip *",
 		"test": "vitest",
 		"lint": "biome check . && tsc --noEmit && eslint .",
 		"format": "biome format --write .",
+		"prepare": "husky",
 		"refresh-genres": "python scripts/vote_history_refresh.py genre && npx biome format --write src/modules/vote-history/data/genres.ts",
 		"refresh-descriptors": "python scripts/vote_history_refresh.py descriptor && npx biome format --write src/modules/vote-history/data/descriptors.ts",
 		"refresh-all": "npm run refresh-genres && npm run refresh-descriptors"
@@ -40,6 +40,7 @@
 		"@types/webextension-polyfill": "^0.10.6",
 		"@typescript-eslint/parser": "^8.57.0",
 		"eslint": "^10.0.3",
+		"husky": "^9.1.7",
 		"postcss-nested": "^7.0.2",
 		"postcss-preset-env": "^11.2.0",
 		"typescript": "^5.2.2",

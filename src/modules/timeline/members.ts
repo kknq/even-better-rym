@@ -10,7 +10,9 @@ function parseYearToken(token: string): Stint | null {
 		return { start: year, end: year };
 	}
 
-	const matches = /^(\d{4})\s*-\s*(present|\d{2}|\d{4}|\?)$/i.exec(normalizedToken);
+	const matches = /^(\d{4})\s*-\s*(present|\d{2}|\d{4}|\?)$/i.exec(
+		normalizedToken,
+	);
 	if (matches) {
 		const start = Number.parseInt(matches[1], 10);
 		let end: number;
@@ -85,7 +87,6 @@ function mergeIntoMemberMap(
 	memberMap.set(name, member);
 }
 
-
 /** Returns the earliest start year among `others` that share a role and started after `startYear`. */
 function earliestCompatibleSuccessor(
 	startYear: number,
@@ -115,7 +116,9 @@ function resolveUnknownEnds(members: Member[]): void {
 	}));
 
 	for (const { member, canons } of enrichedMembers) {
-		const others = enrichedMembers.filter((enrichedMember) => enrichedMember.member !== member);
+		const others = enrichedMembers.filter(
+			(enrichedMember) => enrichedMember.member !== member,
+		);
 		for (const stint of member.stints) {
 			if (!Number.isNaN(stint.end)) continue;
 			stint.end = earliestCompatibleSuccessor(stint.start, canons, others);

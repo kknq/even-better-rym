@@ -18,7 +18,21 @@ export function isLeapYear(y: number): boolean {
 }
 
 export function getDayOfYear(year: number, month: number, day: number): number {
-	const dims = [0, 31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+	const dims = [
+		0,
+		31,
+		isLeapYear(year) ? 29 : 28,
+		31,
+		30,
+		31,
+		30,
+		31,
+		31,
+		30,
+		31,
+		30,
+		31,
+	];
 	let doy = day;
 	for (let m = 1; m < month; m++) doy += dims[m];
 	return doy;
