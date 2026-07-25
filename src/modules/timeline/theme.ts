@@ -1,45 +1,4 @@
-import type { RGB } from "./types";
-
-function isTransparent(color: string): boolean {
-	if (!color) return true;
-	return color === "transparent" || color === "rgba(0, 0, 0, 0)";
-}
-
-// Walk up DOM to find first non-transparent background color
-function getEffectiveBackgroundColor(el: HTMLElement | null): string {
-	let current: HTMLElement | null = el;
-	for (let i = 0; i < 25 && current; i++) {
-		const backgroundColor =
-			globalThis.getComputedStyle(current).backgroundColor;
-		if (!isTransparent(backgroundColor)) return backgroundColor;
-		current = current.parentElement;
-	}
-	return (
-		globalThis.getComputedStyle(document.body).backgroundColor ||
-		"rgb(255,255,255)"
-	);
-}
-
-function parseRgb(rgb: string): RGB {
-	const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/i.exec(rgb || "");
-	if (!m) return { r: 255, g: 255, b: 255 };
-	return { r: +m[1], g: +m[2], b: +m[3] };
-}
-
-// Relative luminance for contrast decisions
-function luminance({ r, g, b }: RGB): number {
-	const srgb = [r, g, b].map((v: number) => {
-		v /= 255;
-		return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-	});
-	return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
-}
-
-/** Returns true if the page background near `el` is dark. */
-export function isDarkPage(el: HTMLElement | null): boolean {
-	const backgroundColor = getEffectiveBackgroundColor(el);
-	return luminance(parseRgb(backgroundColor)) < 0.35;
-}
+import { getEffectiveBackgroundColor, isDarkPage } from "~/shared/utils/theme";
 
 // Apply CSS vars to panel so its UI harmonizes with page theme
 export function applyRymThemeVars(
@@ -47,8 +6,7 @@ export function applyRymThemeVars(
 	headerEl: HTMLElement | null,
 ): void {
 	const backgroundColor = getEffectiveBackgroundColor(headerEl ?? panelEl);
-	const rgb = parseRgb(backgroundColor);
-	const isDark = luminance(rgb) < 0.35;
+	const isDark = isDarkPage(headerEl ?? panelEl);
 
 	const bodyColor =
 		globalThis.getComputedStyle(document.body).color || "rgb(220,220,220)";

@@ -1,8 +1,7 @@
 import { waitForCallback } from "~/shared/utils/dom";
-
-import { togglePanel } from "./panel";
-import { isDarkPage } from "./theme";
+import { isDarkPage } from "~/shared/utils/theme";
 import { addMapLink } from "./map-link";
+import { togglePanel } from "./panel";
 
 const LINK_CLASS = "rymmt-link";
 

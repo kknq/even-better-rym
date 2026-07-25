@@ -1,23 +1,31 @@
-.rymmt-small-map-root,
-#rymmt-map {
+.rymmt-small-map-wrapper {
+	position: relative;
 	width: 100%;
+	height: 0;
+	padding-bottom: 55%; /* Maintains 100:55 aspect ratio reliably across all browsers */
+	margin-bottom: 1.5em;
+	border-radius: 3px;
+	overflow: hidden;
+}
+
+.rymmt-small-map-root {
+	width: 100%;
+	height: 100%;
 	background: #333;
 	overflow: hidden;
-	position: relative;
-	padding-bottom: 55%;
-	margin-bottom: 1.5em;
+	position: absolute;
+	top: 0;
+	left: 0;
 	border-radius: 3px;
 	cursor: pointer;
 }
 
-.rymmt-small-map-root.night,
-#rymmt-map.night {
+.rymmt-small-map-root.night {
 	background: #222;
 }
 
 .svg-content-responsive,
-.rymmt-small-map-root svg,
-#rymmt-map svg {
+.rymmt-small-map-root svg {
 	display: inline-block;
 	position: absolute;
 	top: 0;
@@ -35,8 +43,7 @@
 	fill: #151 !important;
 }
 
-.rymmt-small-map-root.night .land,
-#rymmt-map.night .land {
+.rymmt-small-map-root.night .land {
 	fill: #555 !important;
 }
 
@@ -53,15 +60,32 @@
 	opacity: 0.45;
 }
 
-.rymmt-map-marker-count {
-	background: rgba(0,0,0,0.6);
-	color: white;
-	padding: 2px 6px;
-	border-radius: 999px;
-	font-size: 12px;
+#precontent {
+	/* Removed external map.svg background - use inline SMALL_MAP_SVG instead */
+	background-image: none !important;
 }
 
-#precontent {
-	/* Removed external map.svg background — use inline SMALL_MAP_SVG instead */
-	background-image: none !important;
+/* All layout/display styles are set inline on the element to ensure they apply
+   even if this stylesheet is not yet injected. These rules are kept as fallback. */
+.rymmt-map-loading-overlay {
+	position: absolute;
+	inset: 0;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	z-index: 10;
+	border-radius: 3px;
+}
+
+.rymmt-map-loading-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+}
+
+.rymmt-map-loading-text {
+	font-size: 14px;
+	font-weight: 500;
+	color: inherit;
 }
