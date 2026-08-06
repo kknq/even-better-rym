@@ -113,8 +113,16 @@ const sharedManifest = {
 		},
 		{
 			js: ["src/modules/hide-votes/main.ts"],
-			matches: ["*://*.rateyourmusic.com/rgenre/*", "*://*.rateyourmusic.com/rdescriptor/*"],
+			matches: [
+				"*://*.rateyourmusic.com/rgenre/*",
+				"*://*.rateyourmusic.com/rdescriptor/*",
+			],
 			run_at: "document_idle",
+		},
+		{
+			js: ["src/modules/chart-shortcuts/main.ts"],
+			matches: ["*://*.rateyourmusic.com/charts/*"],
+			run_at: "document_start",
 		},
 	],
 	icons: {
