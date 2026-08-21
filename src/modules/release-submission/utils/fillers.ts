@@ -208,7 +208,7 @@ async function fillTracks(tracks: Track[], capitalization: CapitalizationType) {
 		})
 		.join("\n");
 
-	// Use runScript (page world) to click the javascript: href buttons — calling
+	// Use runScript (page world) to click the javascript: href buttons - calling
 	// .click() directly in a content script is blocked by CSP.
 	await runScript(`document.querySelector('#goAdvancedBtn').click()`);
 	forceQuerySelector<HTMLTextAreaElement>(document)("#track_advanced").value =

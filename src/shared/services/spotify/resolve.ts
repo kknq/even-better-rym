@@ -147,7 +147,7 @@ const resolveAlbum = async (
 		artists,
 		date,
 		type,
-		format: "digital file",
+		format: "lossless digital",
 		attributes: ["streaming"],
 		tracks,
 		coverArt,

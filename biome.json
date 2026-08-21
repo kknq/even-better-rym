@@ -20,14 +20,16 @@
 				"noLabelWithoutControl": "off"
 			},
 			"style": {
-				"noNonNullAssertion": "off"
+				"noNonNullAssertion": "off",
+				"noDescendingSpecificity": "off"
 			},
 			"suspicious": {
 				"noControlCharactersInRegex": "off",
 				"noAssignInExpressions": "off"
 			},
 			"complexity": {
-				"noBannedTypes": "off"
+				"noBannedTypes": "off",
+				"noImportantStyles": "off"
 			}
 		}
 	},
