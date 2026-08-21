@@ -225,10 +225,15 @@ const parseDescription = (document_: Document, data: ResolveData) => {
 				case "deluxe expanded edition":
 					data.attributes = [...(data.attributes ?? []), "deluxe edition"];
 					break;
+				case "digibook":
+					data.attributes = [...(data.attributes ?? []), "digibook"];
+					break;
 				case "digipak":
+				case "digisleeve":
 					data.attributes = [...(data.attributes ?? []), "digipak"];
 					break;
 				case "limited edition":
+				case "lavish edition":
 					data.attributes = [...(data.attributes ?? []), "limited edition"];
 					break;
 				case "limited edition boxset":
