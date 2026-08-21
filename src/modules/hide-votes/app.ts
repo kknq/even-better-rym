@@ -17,6 +17,28 @@ const STYLE = `
 `;
 
 const VOTE_HEADER_PATTERN = /(<b>voted (?:for|against):<\/b>.*?:)/i;
+const VOTE_CONTAINER_SELECTOR = ".genrea, .genred, .descriptora, .descriptord";
+
+type SwitchLinkConfig = {
+	headingText: string;
+	linkText: string;
+	sourcePath: string;
+	targetPath: string;
+};
+
+const GENRE_SWITCH_LINK: SwitchLinkConfig = {
+	headingText: "Primary Genres",
+	linkText: "Switch to Descriptors",
+	sourcePath: "/rgenre/",
+	targetPath: "/rdescriptor/",
+};
+
+const DESCRIPTOR_SWITCH_LINK: SwitchLinkConfig = {
+	headingText: "Descriptors",
+	linkText: "Switch to Genres",
+	sourcePath: "/rdescriptor/",
+	targetPath: "/rgenre/",
+};
 
 function extractVoteCount(html: string): number {
 	// Match the number after "voted for:" or "voted against:" and before the parenthesis
@@ -65,7 +87,7 @@ function addHideButton(
 
 	if (hasScoreSection) {
 		// Descriptor page: append percentage after the colon
-		updatedBefore = before + ` ${currentCount}/${totalVotes}, ${percentage}%`;
+		updatedBefore = `${before} ${currentCount}/${totalVotes}, ${percentage}%`;
 	} else {
 		// Genre page: replace the vote count with percentage
 		updatedBefore = before.replace(
@@ -76,8 +98,9 @@ function addHideButton(
 
 	spanElement.innerHTML =
 		updatedBefore +
-		`<span class="ebr-hide-votes-button">Hide</span>` +
+		`<span class="ebr-hide-votes-button">Show</span>` +
 		`<span class="ebr-user-list">${userListHtml}</span>`;
+	spanElement.classList.add("ebr-votes-hidden");
 
 	const button = spanElement.querySelector<HTMLElement>(
 		".ebr-hide-votes-button",
@@ -97,43 +120,39 @@ function addHideButton(
 	});
 }
 
+function isVoteText(text: string | undefined): boolean {
+	return (
+		text?.startsWith("voted for:") === true ||
+		text?.startsWith("voted against:") === true
+	);
+}
+
+function getVoteContainer(span: Element): HTMLElement | null {
+	const text = span.querySelector("b")?.textContent?.trim().toLowerCase();
+
+	if (isVoteText(text)) {
+		return span.closest(VOTE_CONTAINER_SELECTOR);
+	}
+
+	if (text || !span.querySelector("a.user")) {
+		return null;
+	}
+
+	return span.closest(".genrea");
+}
+
 function collectVoteSpans(
 	spans: NodeListOf<Element>,
 ): Map<HTMLElement, HTMLElement[]> {
-	// Group spans by their container (genrea or descriptora)
 	const containerMap = new Map<HTMLElement, HTMLElement[]>();
 
 	for (const span of spans) {
-		const bold = span.querySelector("b");
-		if (!bold) continue;
+		const container = getVoteContainer(span);
+		if (!container) continue;
 
-		const text = bold.textContent?.trim().toLowerCase();
-		const hasUserLinks = span.querySelector("a.user");
-
-		// Only process spans with vote text or user links
-		if (
-			text &&
-			(text.startsWith("voted for:") || text.startsWith("voted against:"))
-		) {
-			const container = span.closest(
-				".genrea, .genred, .descriptora, .descriptord",
-			) as HTMLElement;
-			if (container) {
-				if (!containerMap.has(container)) {
-					containerMap.set(container, []);
-				}
-				containerMap.get(container)!.push(span as HTMLElement);
-			}
-		} else if (!text && hasUserLinks) {
-			// Genre page case with empty <b> tag
-			const container = span.closest(".genrea") as HTMLElement;
-			if (container) {
-				if (!containerMap.has(container)) {
-					containerMap.set(container, []);
-				}
-				containerMap.get(container)!.push(span as HTMLElement);
-			}
-		}
+		const containerSpans = containerMap.get(container) ?? [];
+		containerSpans.push(span as HTMLElement);
+		containerMap.set(container, containerSpans);
 	}
 
 	return containerMap;
@@ -171,53 +190,38 @@ function processVoteSpans(): void {
 	}
 }
 
+function getSwitchLinkConfig(url: string): SwitchLinkConfig | null {
+	if (url.includes(GENRE_SWITCH_LINK.sourcePath)) return GENRE_SWITCH_LINK;
+	if (url.includes(DESCRIPTOR_SWITCH_LINK.sourcePath))
+		return DESCRIPTOR_SWITCH_LINK;
+
+	return null;
+}
+
+function appendSwitchLink(url: string, config: SwitchLinkConfig): void {
+	const heading = [...document.querySelectorAll("h3")].find(
+		(h3) =>
+			h3.textContent?.includes(config.headingText) && !h3.querySelector("a"),
+	);
+	if (!heading) return;
+
+	const link = document.createElement("a");
+	link.textContent = config.linkText;
+	link.href = url.replace(config.sourcePath, config.targetPath);
+	link.style.marginLeft = "10px";
+	link.style.fontSize = "0.8em";
+	link.style.color = "rgb(102, 102, 102)";
+	link.style.cursor = "pointer";
+	heading.appendChild(link);
+}
+
 function addSwitchLink(): void {
 	const url = globalThis.location.href;
-	const isGenrePage = url.includes("/rgenre/");
-	const isDescriptorPage = url.includes("/rdescriptor/");
+	const config = getSwitchLinkConfig(url);
 
-	if (!isGenrePage && !isDescriptorPage) return;
+	if (!config || !/album_id=(\d+)/.test(url)) return;
 
-	// Extract album_id from URL
-	const albumIdMatch = /album_id=(\d+)/.exec(url);
-	if (!albumIdMatch) return;
-
-	if (isGenrePage) {
-		// Find "Primary Genres" h3 and add "Switch to Descriptor" link
-		const h3s = document.querySelectorAll("h3");
-		for (const h3 of h3s) {
-			if (
-				h3.textContent?.includes("Primary Genres") &&
-				!h3.querySelector("a")
-			) {
-				const link = document.createElement("a");
-				link.textContent = "Switch to Descriptors";
-				link.href = url.replace("/rgenre/", "/rdescriptor/");
-				link.style.marginLeft = "10px";
-				link.style.fontSize = "0.8em";
-				link.style.color = "rgb(102, 102, 102)";
-				link.style.cursor = "pointer";
-				h3.appendChild(link);
-				break;
-			}
-		}
-	} else if (isDescriptorPage) {
-		// Find "Descriptors" h3 and add "Switch to Genres" link
-		const h3s = document.querySelectorAll("h3");
-		for (const h3 of h3s) {
-			if (h3.textContent?.includes("Descriptors") && !h3.querySelector("a")) {
-				const link = document.createElement("a");
-				link.textContent = "Switch to Genres";
-				link.href = url.replace("/rdescriptor/", "/rgenre/");
-				link.style.marginLeft = "10px";
-				link.style.fontSize = "0.8em";
-				link.style.color = "rgb(102, 102, 102)";
-				link.style.cursor = "pointer";
-				h3.appendChild(link);
-				break;
-			}
-		}
-	}
+	appendSwitchLink(url, config);
 }
 
 function addCollapseAllButton(): void {
@@ -242,23 +246,23 @@ function addCollapseAllButton(): void {
 
 	const collapseButton = document.createElement("input");
 	collapseButton.type = "button";
-	collapseButton.value = "Collapse All";
+	collapseButton.value = "Expand All";
 	collapseButton.style.marginLeft = "0.5em";
 
-	let allCollapsed = false;
+	let allCollapsed = true;
 	collapseButton.addEventListener("click", () => {
 		const buttons = document.querySelectorAll(".ebr-hide-votes-button");
 		allCollapsed = !allCollapsed;
 
 		buttons.forEach((button) => {
-			const span = button.closest("span.small") as HTMLElement;
+			const span = button.closest("span.small");
 			if (span) {
 				if (allCollapsed) {
 					span.classList.add("ebr-votes-hidden");
-					(button as HTMLElement).textContent = "Show";
+					button.textContent = "Show";
 				} else {
 					span.classList.remove("ebr-votes-hidden");
-					(button as HTMLElement).textContent = "Hide";
+					button.textContent = "Hide";
 				}
 			}
 		});
