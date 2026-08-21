@@ -1,10 +1,8 @@
 import {
-	currentDecimalYear,
 	getDayOfYear,
 	isLeapYear,
 	MONTH_NAMES,
 	parseDateLabelFromText,
-	parseDecimalYearFromDateString,
 	parseFullDateFromText,
 } from "./date-utils";
 import { findAdjacentInfoContent } from "./dom-helpers";

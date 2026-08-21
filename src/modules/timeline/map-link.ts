@@ -1,6 +1,4 @@
 import { isDarkPage } from "~/shared/utils/theme";
-import mountMap from "../map/main";
-import { applySmallMapCoords, clearSmallMapOverlay } from "../map/overlay";
 import { findAdjacentInfoContent } from "./dom-helpers";
 import { openPastShows } from "./show";
 
@@ -51,10 +49,13 @@ export function addMapLink(showsHeaderEl: HTMLElement): void {
 
 		if (existing) {
 			existing.remove();
+			const { clearSmallMapOverlay } = await import("../map/overlay");
 			clearSmallMapOverlay();
 			return;
 		}
 
+		const mapModulePromise = import("../map/main");
+		const overlayModulePromise = import("../map/overlay");
 		await openPastShows(3000);
 
 		const root = document.createElement("div");
@@ -63,6 +64,10 @@ export function addMapLink(showsHeaderEl: HTMLElement): void {
 
 		insertMapInShowsSection(root, showsHeaderEl);
 
+		const [{ default: mountMap }, { applySmallMapCoords }] = await Promise.all([
+			mapModulePromise,
+			overlayModulePromise,
+		]);
 		mountMap(root);
 		applySmallMapCoords();
 	};
