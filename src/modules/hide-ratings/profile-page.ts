@@ -1,58 +1,33 @@
 import { wireButton } from "./button";
 import { fireHide, fireShow } from "./events";
 
-/**
- * Profile page (`/artist/*`, `/films/*`).
- *
- * Hides average ratings for releases the user has not rated, adds a
- * "Show / Hide Ratings" section in the artist info sidebar, and observes
- * lazy-loaded discography sections to re-apply the state.
- */
 export const setupProfilePage = (): void => {
 	setupProfileListeners();
 	fireHide();
 	insertProfileButton();
 };
 
-/**
- * Returns the `.disco_avg_rating` elements for releases the user has *not*
- * rated. Already-rated releases get the `.tm-visible` class so the
- * hide-styles skip them.
- */
-const getProfileHideable = (): (Element | null)[] => {
-	const releases = document.querySelectorAll(".disco_release, ul.films > li");
-	const hideable: (Element | null)[] = [];
-
+const refreshProfileRatings = (visible: boolean): void => {
+	const releases = document.querySelectorAll(".disco_release");
 	for (const release of releases) {
 		const rating = release.querySelector<HTMLElement>(".disco_cat_inner");
-		const avg = release.querySelector(".disco_avg_rating");
+		const ownRating = Number.parseFloat(rating?.textContent ?? "");
+		const shouldShow = visible || Number.isFinite(ownRating);
 
-		if (!rating || !Number.parseFloat(rating.innerText)) {
-			hideable.push(avg);
-		} else {
-			avg?.classList.add("tm-visible");
+		for (const value of release.querySelectorAll(
+			".disco_avg_rating, .disco_ratings",
+		)) {
+			value.classList.toggle("ebr-rating-visible", shouldShow);
 		}
 	}
-
-	return hideable;
 };
 
 const setupProfileListeners = (): void => {
-	const refresh = (visible: boolean) => {
-		for (const el of getProfileHideable()) {
-			if (visible) {
-				el?.classList.add("tm-visible");
-			} else {
-				el?.classList.remove("tm-visible");
-			}
-		}
-	};
-
 	document.addEventListener("ebrHideRatings", () => {
-		refresh(false);
+		refreshProfileRatings(false);
 	});
 	document.addEventListener("ebrShowRatings", () => {
-		refresh(true);
+		refreshProfileRatings(true);
 	});
 
 	observeDiscography();
@@ -87,7 +62,8 @@ const observeDiscography = (): void => {
 
 const insertProfileButton = (): void => {
 	const artistInfo = document.querySelector<HTMLElement>(".artist_info_main");
-	if (!artistInfo) return;
+	if (!artistInfo || document.getElementById("ebr-show-rating-btn-profile"))
+		return;
 
 	const clear = document.createElement("div");
 	clear.style.clear = "both";
@@ -102,7 +78,10 @@ const insertProfileButton = (): void => {
 	const wrapper = document.createElement("div");
 	wrapper.style.float = "left";
 	const button = document.createElement("a");
+	button.id = "ebr-show-rating-btn-profile";
 	button.href = "#";
+	button.classList.add("btn", "blue_btn", "ebr-rating-toggle");
+	button.style.fontSize = "0.9em";
 	wireButton(button);
 	wrapper.appendChild(button);
 

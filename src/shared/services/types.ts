@@ -13,6 +13,7 @@ export const SERVICE_IDS = [
 	"tidal",
 	"deezer",
 	"livemixtapes",
+	"metal-archives",
 ] as const;
 
 export type ServiceId = (typeof SERVICE_IDS)[number];

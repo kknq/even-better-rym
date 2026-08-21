@@ -1,9 +1,10 @@
 import { render } from "preact";
 
 import { Loader } from "~/shared/components/loader";
-import { forceQuerySelector, waitForElement } from "~/shared/utils/dom";
+import { forceQuerySelector, waitForDocumentReady } from "~/shared/utils/dom";
 import { fetchInPage } from "~/shared/utils/fetch";
 import { parseMarkup } from "~/shared/utils/markup";
+import { isOwnProfile } from "~/shared/utils/user";
 
 let headerArray: Element[];
 let currentPreferences: FormData;
@@ -220,12 +221,11 @@ const updateProfile = async () => {
 };
 
 export const main = async () => {
-	// look for the element that always appears on your user page, but never on others
-	const key = await waitForElement(".profile_set_listening_btn a");
+	await waitForDocumentReady();
 
-	if (key !== null) {
+	if (isOwnProfile()) {
 		const [, response, response2] = await Promise.all([
-			waitForElement(".bubble_header").then(() => {
+			Promise.resolve().then(() => {
 				headerArray = [...document.querySelectorAll(".bubble_header")];
 			}),
 			fetchInPage({ url: "https://rateyourmusic.com/account/reorder" }),

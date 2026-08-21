@@ -5,6 +5,7 @@ import { Deezer } from "./deezer";
 import { Discogs } from "./discogs";
 import { LiveMixtapes } from "./livemixtapes";
 import { Melon } from "./melon";
+import { MetalArchives } from "./metalarchives";
 import { Qobuz } from "./qobuz";
 import { Soundcloud } from "./soundcloud";
 import { Spotify } from "./spotify";
@@ -26,6 +27,7 @@ export const SERVICES: Service[] = [
 	Qobuz,
 	Tidal,
 	LiveMixtapes,
+	MetalArchives,
 ];
 
 export const SEARCHABLES: (Service & Searchable)[] =

@@ -1,6 +1,25 @@
 import type { ReleaseDate } from "../services/types";
 import { isDefined } from "./types";
 
+export const MONTHS = [
+	"January",
+	"February",
+	"March",
+	"April",
+	"May",
+	"June",
+	"July",
+	"August",
+	"September",
+	"October",
+	"November",
+	"December",
+] as const;
+
+export const MONTH_NAMES: Readonly<Record<string, number>> = Object.fromEntries(
+	MONTHS.map((month, index) => [month.toLowerCase(), index + 1]),
+);
+
 export const stringToDate = (dateString: string): ReleaseDate => {
 	const date = new Date(dateString);
 	return {

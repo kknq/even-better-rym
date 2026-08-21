@@ -151,6 +151,24 @@ function ImportOptionsForm({
 							}
 						/>
 					</label>
+					<label
+						htmlFor="brym-preserve-track-lengths"
+						style={{ display: "flex", alignItems: "center", gap: 4 }}
+					>
+						<span>Preserve Track Lengths:</span>
+						<input
+							id="brym-preserve-track-lengths"
+							type="checkbox"
+							checked={options.preserveTrackLengths}
+							onChange={(event) =>
+								setOptions({
+									...options,
+									preserveTrackLengths: (event.target as HTMLInputElement)
+										.checked,
+								})
+							}
+						/>
+					</label>
 					<hr style="width:100%;margin-bottom:0.5em" />
 					{(Object.keys(FIELDS_MAP) as FillField[]).map((field) => (
 						<label
@@ -212,4 +230,5 @@ const DEFAULT_FORM_OPTIONS: ImportOptions = {
 	) as ReleaseOptions["fillFields"],
 	capitalization: "title-case",
 	downloadArt: false,
+	preserveTrackLengths: false,
 };

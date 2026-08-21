@@ -47,6 +47,10 @@ const ENG_DO_NOT_CAPITALIZE_FORCE = new Set(["etc", "etc."]);
 
 const isWord = ({ type }: Token) => type === "word" || type === "romanNumeral";
 
+const isAfterHyphen = (phrase: Phrase, index: number) =>
+	phrase.slice(0, index).findLast((token) => token.type !== "whitespace")
+		?.text === "-";
+
 const toTitleCase = ({ text, type }: Token) => {
 	if (!text[0]) return text;
 	if (type === "romanNumeral") return text.toUpperCase();
@@ -76,6 +80,8 @@ const capitalizePhrase =
 							if (index === firstWordIndex) return toTitleCase(token);
 							if (token.type === "romanNumeral")
 								return token.text.toUpperCase();
+							if (token.type === "word" && isAfterHyphen(phrase, index))
+								return toTitleCase(token);
 							return token.text.toLowerCase();
 						})
 						.join(""),
@@ -89,6 +95,11 @@ const capitalizePhrase =
 									token.text.toLowerCase(),
 								);
 								return isForced ? token.text.toLowerCase() : toTitleCase(token);
+							} else if (
+								token.type === "word" &&
+								isAfterHyphen(phrase, index)
+							) {
+								return toTitleCase(token);
 							} else if (ENG_DO_NOT_CAPITALIZE.has(token.text.toLowerCase())) {
 								return token.text.toLowerCase();
 							} else {

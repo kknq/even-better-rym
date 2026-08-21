@@ -2,6 +2,7 @@ import type { CapitalizationType } from "./capitalization";
 
 export type ReleaseOptions = {
 	capitalization: CapitalizationType;
+	preserveTrackLengths: boolean;
 	fillFields: {
 		artists: boolean;
 		type: boolean;

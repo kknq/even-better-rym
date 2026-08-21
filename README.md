@@ -51,8 +51,8 @@ On every release page, replaces the plain-text descriptors in the descriptor row
 
 Two separate toggles covering two related pages:
 
-- **Film Chart Genre Links** — On film chart pages (`/charts/*/film/*`), rewrites every `a.genre` link to point to the corresponding `/film_genre/` page instead of the default genre description page.
-- **Film Genre Chart Button** — On film genre pages (`/film_genre/*`), injects a "View genre chart" button into the page that links directly to the RYM chart page filtered to that genre.
+- **Film Chart Genre Links** - On film chart pages (`/charts/*/film/*`), rewrites every `a.genre` link to point to the corresponding `/film_genre/` page instead of the default genre description page.
+- **Film Genre Chart Button** - On film genre pages (`/film_genre/*`), injects a "View genre chart" button into the page that links directly to the RYM chart page filtered to that genre.
 
 ---
 
@@ -110,6 +110,22 @@ Enhances the "media links you know" page (used for reporting releases that are m
 
 ---
 
+### Artist Timeline
+
+On every artist page that has a "Members" section, injects a `[Timeline]` link next to the Members header. Clicking it opens an inline panel that renders a horizontal Gantt-style chart of each member's active period(s), color-coded by instrument role. Hovering over a bar shows the member's full name, role(s), and year range. A role legend is shown below the chart.
+
+---
+
+### Artist Page Map and Location Markers
+
+Injects an inline small world map onto artist pages and plots gig locations from the artist's show list. The map is rendered using inline SVG so it matches the `musicmap` look and avoids external black-background issues.
+
+- Automatically detects cities from show entries, including styled markup like `span style="font-size:0.9em"`.
+- Clears any pre-rendered marker HTML and renders markers programmatically from TypeScript so radius, stroke, and positioning are controlled by the extension.
+- Supports both cached and live geocoding of city names.
+
+---
+
 ### Search Bar Shortcuts
 
 Intercepts the main RYM search bar. If your search query matches the RYM markup shortcut format `[Type123]` - e.g. `[Artist67]`, `[Album42]`, `[Genre]` - pressing Enter or clicking the Search button will parse the markup and redirect you **directly to that entity's page** instead of showing search results. Supported types: `Artist`, `Album`, `Genre`, `Label`, `List`, `Rating`, `Venue`, `Concert`, `Bug`. If the query does not match the pattern, the default search behavior is used unchanged.
@@ -118,11 +134,12 @@ Intercepts the main RYM search bar. If your search query matches the RYM markup 
 
 ### Hide Ratings If Unrated
 
-Hides community ratings (averages, rankings, track scores) on release, artist, chart, and other pages when you haven't rated the release yourself. Ratings are replaced with invisible placeholders so the page layout is preserved. A "Show Ratings" toggle button is injected into the page to reveal everything on demand.
+Hides community rating values while preserving page layout. A toggle reveals them on demand.
 
-- **Release pages** (`/release/*`, `/film/*`) — If you have not rated the release, all rating elements are hidden and a "Show Ratings" button appears in the action row. If you have already rated it, ratings are shown normally.
-- **Artist / filmography pages** (`/artist/*`, `/films/*`) — Per-release averages are hidden only for releases you haven't rated; already-rated releases keep their scores visible. A "Show / Hide Ratings" section is added to the artist info sidebar. The feature re-applies automatically when lazy-loaded discography pages are fetched.
-- **Charts, homepage, and other pages** — Ratings are hidden globally and a small floating toggle button is shown in the bottom-right corner.
+- **Release pages** (`/release/*`, `/film/*`) — Ratings remain visible when you have rated the release; otherwise, averages, rankings, review ratings, and track scores are hidden.
+- **Artist pages** (`/artist/*`) — Ratings remain visible only for releases you have rated. Lazy-loaded discography entries follow the current toggle state.
+- **Charts, homepage, and new releases** — Available rating values are hidden because the page does not provide per-release rating status for the current user.
+- **Profiles, collections, and collection reviews** — Ratings remain visible for your own pages and are hidden on other users' pages.
 
 ---
 
@@ -157,6 +174,10 @@ MANIFEST_VERSION=2
 ```
 
 ### Commands
+
+### Husky
+
+Project has husky pre-commit hooks to simplify the process of linting. You can see that in the `prepare` script.
 
 #### Watch mode (recommended for development)
 

@@ -1,6 +1,11 @@
 import { waitForElement } from "~/shared/utils/dom";
 
-const GENRES_NEEDING_SUFFIX = new Set(["comedy", "experimental", "satire"]);
+const GENRES_NEEDING_SUFFIX = new Set([
+	"comedy",
+	"experimental",
+	"satire",
+	"postmodernism",
+]);
 
 const STYLE = `
 	.ebr-film-genre-chart-link {
@@ -39,7 +44,7 @@ export async function mainFilmGenre(): Promise<void> {
 
 	const button = document.createElement("a");
 	button.textContent = "View genre chart";
-	button.href = `/charts/top/film/all-time/g:${formatGenreName(window.location.pathname)}`;
+	button.href = `/charts/top/film/all-time/g:${formatGenreName(globalThis.location.pathname)}`;
 	button.className = "ebr-film-genre-chart-link ui_button";
 
 	breadcrumb.appendChild(button);

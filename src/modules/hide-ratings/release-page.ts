@@ -1,17 +1,10 @@
 import { wireButton } from "./button";
 import { fireHide } from "./events";
 
-/**
- * Release page (`/release/*`, `/film/*`).
- *
- * If the user has already rated the release, ratings stay visible.
- * Otherwise:
- *  1. Marks the "Ranked" info row so the hide-styles can target it.
- *  2. Fires the initial hide event.
- *  3. Inserts a "Show Ratings" button into the existing button row.
- */
 export const setupReleasePage = (): void => {
-	const ownRating = document.querySelector("#catalog_list .my_rating");
+	const ownRating = document.querySelector(
+		"#catalog_list .my_rating, .catalog_line.my_rating",
+	);
 
 	if (ownRating) {
 		document.body.classList.add("ratings-visible");
@@ -39,17 +32,20 @@ const markRankingRow = (): void => {
 
 const insertReleaseButton = (): void => {
 	const buttonRow = document.querySelector<HTMLElement>(".release_my_catalog");
-	if (!buttonRow) return;
+	if (!buttonRow || document.getElementById("ebr-show-rating-btn")) return;
 
 	const wrapper = document.createElement("div");
 	wrapper.style.float = "left";
 
 	const button = document.createElement("div");
-	button.classList.add("more_btn");
 	button.id = "ebr-show-rating-btn";
+	button.tabIndex = 0;
+	button.setAttribute("role", "button");
+	button.classList.add("track_rating_btn", "ebr-rating-toggle");
 	wireButton(button);
 	wrapper.appendChild(button);
 
 	const clearEl = buttonRow.querySelector(".clear");
-	clearEl?.before(wrapper);
+	if (clearEl) clearEl.before(wrapper);
+	else buttonRow.appendChild(wrapper);
 };

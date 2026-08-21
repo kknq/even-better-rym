@@ -9,17 +9,30 @@ import { fireHide, fireShow } from "./events";
  *   triggers a visibility change.
  */
 export const wireButton = (button: HTMLElement): void => {
-	button.textContent = "Show Ratings";
-	button.dataset.hiding = "true";
-
-	button.addEventListener("click", (event) => {
-		event.preventDefault();
+	const toggleRatings = (): void => {
 		if (button.dataset.hiding === "true") {
 			fireShow();
 		} else {
 			fireHide();
 		}
+	};
+
+	button.textContent = "Show Ratings";
+	button.dataset.hiding = "true";
+
+	button.addEventListener("click", (event) => {
+		event.preventDefault();
+		toggleRatings();
 	});
+
+	if (button.getAttribute("role") === "button") {
+		button.addEventListener("keydown", (event) => {
+			if (event.key !== "Enter" && event.key !== " ") return;
+
+			event.preventDefault();
+			toggleRatings();
+		});
+	}
 
 	document.addEventListener("ebrHideRatings", () => {
 		button.dataset.hiding = "true";

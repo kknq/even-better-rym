@@ -128,7 +128,10 @@ def print_diff(old, new):
 # Main routine
 # =========================
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-TEMPLATE_ENV = Environment(loader=FileSystemLoader(PROJECT_ROOT / "scripts"), autoescape=False)
+TEMPLATE_ENV = Environment(
+    loader=FileSystemLoader(PROJECT_ROOT / "scripts"),
+    autoescape=True,
+)
 
 def refresh_entity(html_file, ts_file, txt_file, template_file, id_prefix):
     if not html_file.exists():

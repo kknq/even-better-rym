@@ -28,6 +28,8 @@ const hostsArray = [
 	"https://www.googleapis.com/*",
 	"https://*.livemixtapes.com/*",
 	"https://livemixtapes.com/*",
+	"https://*.metal-archives.com/*",
+	"https://metal-archives.com/*",
 ];
 
 const sharedManifest = {
@@ -73,6 +75,12 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/timeline/main.ts"],
+			css: ["src/modules/timeline/timeline.css"],
+			matches: ["*://*.rateyourmusic.com/artist/*"],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/stream-links/main.ts"],
 			matches: ["*://*.rateyourmusic.com/release/*"],
 			run_at: "document_start",
@@ -109,6 +117,14 @@ const sharedManifest = {
 			js: ["src/modules/film-genre/film-genre.ts"],
 			matches: ["*://*.rateyourmusic.com/film_genre/*"],
 			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/hide-votes/main.ts"],
+			matches: [
+				"*://*.rateyourmusic.com/rgenre/*",
+				"*://*.rateyourmusic.com/rdescriptor/*",
+			],
+			run_at: "document_idle",
 		},
 	],
 	icons: {

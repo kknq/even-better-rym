@@ -18,6 +18,13 @@ import { convertAppleMusicDuration } from "./convert";
 
 const FULL_IMAGE_SIZE = "3000x3000bb.jpg";
 
+const BROWSER_LIKE_HEADERS = {
+	Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+	"Accept-Language": "en-US,en;q=0.9",
+	"User-Agent":
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+};
+
 const getReleaseData = (document_: Document) => {
 	const releaseScript = document_.querySelector<HTMLScriptElement>(
 		String.raw`script#schema\:music-album`,
@@ -141,7 +148,7 @@ const resolveAlbumFields = (
 };
 
 export const resolve: ResolveFunction = async (url) => {
-	const response = await fetch({ url });
+	const response = await fetch({ url, headers: BROWSER_LIKE_HEADERS });
 	const document_ = new DOMParser().parseFromString(response, "text/html");
 	const release = getReleaseData(document_);
 
