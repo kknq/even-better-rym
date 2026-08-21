@@ -50,6 +50,11 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/hide-ratings/main.ts"],
+			matches: ["*://*.rateyourmusic.com/*"],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/stream-link-missing/main.ts"],
 			matches: ["*://*.rateyourmusic.com/misc/media_link_you_know*"],
 			run_at: "document_start",

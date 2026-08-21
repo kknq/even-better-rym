@@ -17,6 +17,10 @@ export const pages = {
 	timeline: "/artist/",
 	map: "/artist/",
 	hideVotes: "/r",
+<<<<<<< HEAD
+	hideRatings: "/",
+=======
+>>>>>>> main
 } as const;
 
 export type PageKey = keyof typeof pages;
@@ -40,6 +44,10 @@ export const pageLabels: Record<PageKey, string> = {
 	timeline: "Artist Timeline",
 	map: "Artist Location Map",
 	hideVotes: "Hide Votes on Genre/Descriptor Pages",
+<<<<<<< HEAD
+	hideRatings: "Hide Ratings If Unrated",
+=======
+>>>>>>> main
 };
 
 export const pageGroupLabels: Partial<Record<string, string>> = {
@@ -90,7 +98,12 @@ export const pageHints: Record<PageKey, string> = {
 	map: "On artist pages, adds an interactive map showing concert locations.",
 	hideVotes:
 		"On genre and descriptor pages, adds toggle buttons to hide user votes.",
+<<<<<<< HEAD
+	hideRatings:
+		"Hides ratings on supported pages; release and artist ratings remain visible when you have rated them.",
+=======
+>>>>>>> main
 };
 
 // Page keys whose features are global and should not affect the toolbar icon
-export const globalPageKeys = new Set<PageKey>(["searchBar"]);
+export const globalPageKeys = new Set<PageKey>(["searchBar", "hideRatings"]);

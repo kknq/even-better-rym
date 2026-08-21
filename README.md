@@ -106,6 +106,17 @@ Lets you hide user votes on genre and descriptor pages.
 
 ---
 
+### Hide Ratings If Unrated
+
+Hides community rating values while preserving page layout. A toggle reveals them on demand.
+
+- **Release pages** (`/release/*`, `/film/*`) — Ratings remain visible when you have rated the release; otherwise, averages, rankings, review ratings, and track scores are hidden.
+- **Artist pages** (`/artist/*`) — Ratings remain visible only for releases you have rated. Lazy-loaded discography entries follow the current toggle state.
+- **Charts, homepage, and new releases** — Available rating values are hidden because the page does not provide per-release rating status for the current user.
+- **Profiles, collections, and collection reviews** — Ratings remain visible for your own pages and are hidden on other users' pages.
+
+---
+
 ## Development
 
 ### Prerequisites
