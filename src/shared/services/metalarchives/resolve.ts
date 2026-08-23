@@ -4,12 +4,12 @@ import { getReleaseType } from "~/shared/utils/music";
 import { isDefined } from "~/shared/utils/types";
 import type {
 	DiscSize,
-	ReleaseFormat,
 	ReleaseType,
 	ResolveData,
 	ResolveFunction,
 	Track,
 } from "../types";
+import { getReleaseFormat, getVinylFormatMatch } from "./format";
 
 const parseMonthName = (month: string): number | undefined => {
 	return MONTH_NAMES[month.toLowerCase()];
@@ -84,8 +84,8 @@ const parseType = (document_: Document, data: ResolveData) => {
 			data.attributes = [...(data.attributes ?? []), "live"];
 			break;
 		case "demo":
-			data.type = "bootleg";
-			data.attributes = [...(data.attributes ?? []), "demo"];
+			data.type = "additional releases";
+			data.attributes = [...(data.attributes ?? []), "promotional demo"];
 			break;
 		case "video":
 		case "split video":
@@ -112,22 +112,21 @@ const parseType = (document_: Document, data: ResolveData) => {
 };
 
 const parseFormat = (document_: Document, data: ResolveData) => {
-	const vinylRegex =
-		/^(?:(\d+)\s+)?(?:(\d+(?:\.\d+)?)"\s*)?vinyls?\b(?:\s*\(\s*(\d+(?:\s*(?:⅓|⅔|1\/3))?)\s*RPM\s*\))?$/i;
 	const formatString = document_
 		.querySelector("#album_info dl.float_right dd:nth-child(4)")
-		?.textContent?.trim()
-		.toLowerCase();
-	const leadingFormat = formatString?.split("+").map((part) => part.trim())[0];
-	if (/\d*\s*cd\b/i.test(leadingFormat ?? "")) {
-		data.format = "cd";
-	} else if (/\d*\s*dvd\b/i.test(leadingFormat ?? "")) {
-		data.format = "dvd";
-	} else if (/\d*\s*blu-rays?\b/i.test(leadingFormat ?? "")) {
-		data.format = "blu-ray";
-	} else if (vinylRegex.test(leadingFormat ?? "")) {
-		data.format = "vinyl";
-		const match = leadingFormat ? vinylRegex.exec(leadingFormat) : undefined;
+		?.textContent?.trim();
+	const versionDescription = document_
+		.querySelector("#album_info dl.float_left dd:nth-child(8)")
+		?.textContent?.trim();
+	const leadingFormat = formatString
+		?.toLowerCase()
+		.split("+")
+		.map((part) => part.trim())[0];
+	const format = getReleaseFormat(formatString, versionDescription);
+	if (format) data.format = format;
+
+	if (format === "vinyl") {
+		const match = getVinylFormatMatch(leadingFormat);
 
 		const discSize = match?.[2];
 		switch (discSize) {
@@ -165,17 +164,6 @@ const parseFormat = (document_: Document, data: ResolveData) => {
 				break;
 			case "80":
 				data.attributes = [...(data.attributes ?? []), "80 rpm"];
-				break;
-		}
-	} else {
-		switch (leadingFormat) {
-			case "other":
-				break;
-			case "digital":
-				data.format = "digital file";
-				break;
-			default:
-				data.format = leadingFormat as ReleaseFormat | undefined;
 				break;
 		}
 	}
@@ -293,7 +281,7 @@ const getLabel = (document_: Document) => {
 
 	return {
 		name: labelString,
-		catno: catalogIdString,
+		catno: catalogIdString?.toLowerCase() === "n/a" ? "n/a" : catalogIdString,
 	};
 };
 
@@ -349,6 +337,16 @@ export const resolve: ResolveFunction = async (url) => {
 	data = parseType(document_, data);
 	data = parseFormat(document_, data);
 	data = parseDescription(document_, data);
+	if (
+		document_
+			.querySelector("#album_info dl.float_right dd:nth-child(4)")
+			?.textContent?.trim()
+			.toLowerCase() === "unknown" &&
+		data.format === undefined
+	) {
+		delete data.label;
+		delete data.tracks;
+	}
 
 	return data;
 };
