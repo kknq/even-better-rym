@@ -119,6 +119,12 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/genre_pages/main.ts"],
+			css: ["src/modules/genre_pages/genre-pages.css"],
+			matches: ["*://*.rateyourmusic.com/genre/*"],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/hide-votes/main.ts"],
 			matches: [
 				"*://*.rateyourmusic.com/rgenre/*",
