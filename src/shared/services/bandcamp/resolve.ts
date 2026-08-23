@@ -114,7 +114,7 @@ export const resolve: ResolveFunction = async (url) => {
 	const date = data ? getDate(data) : undefined;
 	const publishDate = data ? getPublishDate(data) : undefined;
 	const tracks = data ? await getTracks(data) : undefined;
-	const type = tracks ? getReleaseType(tracks.length) : undefined;
+	const type = tracks ? getReleaseType(title, tracks.length) : undefined;
 	const coverArt = asArray(getCoverArt(document_));
 
 	const attributes: ReleaseAttribute[] = ["downloadable", "streaming"];
