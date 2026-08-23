@@ -9,7 +9,7 @@
 	flex: 0 0 auto;
 	flex-wrap: nowrap;
 
-	gap: .25em;
+	gap: 0.25em;
 	width: auto;
 	min-width: 0;
 	margin-left: auto;
@@ -24,7 +24,7 @@
 	flex: 0 0 auto;
 	flex-wrap: nowrap;
 
-	gap: .25em;
+	gap: 0.25em;
 	min-width: 0;
 	margin-left: auto;
 
@@ -42,13 +42,152 @@
 }
 
 .ebr-genre-chart-controls-row .page_chart_query_item {
-	height: 2.5em;
+	box-sizing: border-box;
+	margin-right: 0;
+	white-space: nowrap;
+}
+
+/* =========================================================
+ * Closed selector controls
+ * ======================================================= */
+
+.ebr-genre-chart-controls-row .page_chart_query_item_frame,
+.ebr-genre-chart-controls-row .page_chart_query_main_criteria {
+	display: block;
+	position: static;
+	float: none;
+	clear: none;
+	margin: 0;
+	padding: 0;
+	flex: 0 0 auto;
+}
+
+.ebr-genre-chart-controls-row .page_chart_query_item_type_selector {
+	display: inline-flex;
+	align-items: center;
+	justify-content: space-between;
+
+	height: 38px;
+	min-height: 38px;
 	box-sizing: border-box;
 
-	align-items: center;
-	margin-right: 0;
+	margin: 0;
+	padding: 0 9px;
 
+	float: none;
+	clear: none;
+	position: static;
+
+	background: var(--surface-secondary);
+	color: var(--text-primary);
+
+	border: 1px solid var(--ui-divider-line);
+	border-radius: 3px;
+
+	cursor: pointer;
 	white-space: nowrap;
+	user-select: none;
+}
+
+.ebr-genre-chart-controls-row .page_chart_query_item_type_selector:hover {
+	background: var(--surface-tertiary);
+}
+
+.ebr-genre-chart-controls-row .page_chart_query_item_title {
+	display: block;
+	flex: 0 1 auto;
+
+	width: auto;
+	height: auto;
+
+	margin: 0;
+	padding: 0;
+
+	float: none;
+	clear: none;
+	position: static;
+
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1;
+
+	color: inherit;
+	white-space: nowrap;
+}
+
+.ebr-genre-chart-controls-row .page_chart_query_item_selector {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	flex: 0 0 auto;
+
+	width: auto;
+	height: auto;
+
+	margin: 0 0 0 7px;
+	padding: 0;
+
+	float: none;
+	clear: none;
+	position: static;
+
+	color: var(--text-secondary);
+}
+
+.ebr-genre-chart-controls-row .page_chart_query_item_selector i {
+	display: block;
+
+	width: auto;
+	height: auto;
+
+	margin: 0;
+	padding: 0;
+
+	font-size: 10px;
+	line-height: 1;
+}
+
+.ebr-genre-chart-controls-row .page_chart_query_item.label {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	flex: 0 0 auto;
+
+	height: 38px;
+	min-height: 38px;
+	box-sizing: border-box;
+
+	margin: 0;
+	padding: 0 9px;
+
+	float: none;
+	clear: none;
+	position: static;
+
+	background: var(--surface-secondary);
+	color: var(--text-primary);
+
+	border: 1px solid var(--ui-divider-line);
+	border-radius: 3px;
+
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.ebr-genre-chart-controls-row #page_chart_query_item_chart_type_title {
+	min-width: 28px;
+}
+
+.ebr-genre-chart-controls-row #page_chart_query_item_chart_object_title {
+	min-width: 52px;
+}
+
+.ebr-genre-chart-controls-row #page_chart_query_item_chart_date_type_title {
+	min-width: 90px;
 }
 
 .ebr-genre-chart-see-button {
@@ -60,11 +199,10 @@
 	height: 2.5em;
 	box-sizing: border-box;
 
-	margin-left: .75em !important;
+	margin-left: 0.75em !important;
 
 	white-space: nowrap;
 }
-
 
 /* =========================================================
  * Dropdown positioning
@@ -92,9 +230,8 @@
 
 	background: var(--surface-primary);
 	border: 1px solid var(--ui-divider-line);
-	box-shadow: 0 .25em .75em rgba(0, 0, 0, .18);
+	box-shadow: 0 0.25em 0.75em rgba(0, 0, 0, 0.18);
 }
-
 
 /* =========================================================
  * Chart-type dropdown
@@ -103,32 +240,149 @@
 .ebr-genre-chart-controls-row #page_chart_query_item_type_select {
 	width: 30em;
 	min-width: 30em;
+
+	font-size: 0.9em;
+	line-height: 1;
 }
 
-
 /* =========================================================
- * Common dropdown options
+ * Native-style open dropdown options
  * ======================================================= */
 
-.ebr-genre-chart-controls-row .page_chart_query_item_option {
+.ebr-genre-chart-controls-row .chart_ui_filter_list {
+	text-align: left;
+	white-space: normal;
+}
+
+.ebr-genre-chart-controls-row
+	.chart_ui_filter_list
+	> .page_chart_query_item_option {
+	display: block;
+
+	width: 100%;
+	box-sizing: border-box;
+
+	margin: 0;
+	padding: 1em;
+
+	position: relative;
+	float: none;
+	clear: both;
+
 	background: var(--surface-primary);
 	color: var(--text-primary);
 
-	border-top: 1px solid var(--ui-divider-line);
+	border: 0;
+	border-top: 1px solid var(--mono-d, var(--ui-divider-line));
+
+	font-family: inherit;
+	line-height: 1;
+	text-align: left;
+
+	cursor: pointer;
+	user-select: none;
 }
 
-.ebr-genre-chart-controls-row .page_chart_query_item_option:first-child {
+.ebr-genre-chart-controls-row
+	.chart_ui_filter_list
+	> .page_chart_query_item_option:first-child {
 	border-top: 0;
 }
 
-.ebr-genre-chart-controls-row .page_chart_query_item_option:hover {
+.ebr-genre-chart-controls-row
+	.chart_ui_filter_list
+	> .page_chart_query_item_option:hover {
 	background: var(--surface-tertiary);
+	color: var(--text-primary);
+}
+
+.ebr-genre-chart-controls-row
+	.chart_ui_filter_list
+	> .page_chart_query_item_option::after {
+	display: block;
+	clear: both;
+	content: "";
+}
+
+.ebr-genre-chart-controls-row .page_chart_query_item_option_icon {
+	display: block;
+	float: left;
+
+	width: 3em;
+	height: auto;
+	box-sizing: border-box;
+
+	margin: 0;
+	padding: 0;
+
+	position: static;
+
+	color: var(--text-primary);
+
+	font-size: 1.2em;
+	line-height: 1.5;
+	text-align: center;
+}
+
+.ebr-genre-chart-controls-row .page_chart_query_item_option_label,
+.ebr-genre-chart-controls-row .page_chart_query_item_label {
+	display: block;
+
+	margin: 0 0 0 3em;
+	padding: 0;
+
+	position: static;
+	float: none;
+	clear: none;
+
+	background: transparent;
+	color: var(--text-primary);
+
+	font-family: inherit;
+	font-size: 1.2em;
+	font-weight: normal;
+	line-height: 1.2;
+	text-align: left;
+
+	cursor: pointer;
+	white-space: normal;
 }
 
 .ebr-genre-chart-controls-row .page_chart_query_item_option_description {
+	display: block;
+
+	margin: 0.25em 0 0 3.6em;
+	padding: 0;
+
+	position: static;
+	float: none;
+	clear: none;
+
+	background: transparent;
 	color: var(--text-secondary);
+
+	font-family: inherit;
+	font-weight: normal;
+	line-height: 1.2;
+	text-align: left;
+
+	white-space: normal;
 }
 
+.ebr-genre-chart-controls-row .page_chart_query_item_option_description span {
+	font-size: 0.9em;
+	line-height: inherit;
+}
+
+.ebr-genre-chart-controls-row .page_chart_query_item_option.no_description {
+	min-height: 3.4em;
+}
+
+.ebr-genre-chart-controls-row
+	.page_chart_query_item_option.no_description
+	.page_chart_query_item_option_label {
+	line-height: 1.5;
+}
 
 /* =========================================================
  * Release-type dropdown
@@ -155,16 +409,15 @@
 	background: var(--surface-primary);
 }
 
-.ebr-genre-chart-controls-row
-	.chart_section_release_type_chooser_frame {
+.ebr-genre-chart-controls-row .chart_section_release_type_chooser_frame {
 	width: 349px;
 	box-sizing: border-box;
 
 	padding: 6px 10px 10px;
 
 	background: var(--surface-primary);
+	color: var(--text-secondary);
 }
-
 
 /* Quick selectors: all | main | albums | singles | clear */
 
@@ -199,11 +452,11 @@
 	color: var(--text-primary);
 }
 
-
 /* Main 4-column release grid */
 
-.ebr-genre-chart-controls-row
-	#chart_section_release_type > .chart_section_release_type_chooser_frame > .release_type_chooser:not(.ebr-release-type-extra-row) {
+.ebr-genre-chart-controls-row #chart_section_release_type
+	> .chart_section_release_type_chooser_frame
+	> .release_type_chooser:not(.ebr-release-type-extra-row) {
 	width: 330px;
 	height: 58px;
 	box-sizing: border-box;
@@ -217,7 +470,9 @@
 }
 
 .ebr-genre-chart-controls-row
-	#chart_section_release_type > .chart_section_release_type_chooser_frame > .release_type_chooser:not(.ebr-release-type-extra-row)
+	#chart_section_release_type
+	> .chart_section_release_type_chooser_frame
+	> .release_type_chooser:not(.ebr-release-type-extra-row)
 	.release_type_chooser_row {
 	display: flex;
 
@@ -228,7 +483,9 @@
 }
 
 .ebr-genre-chart-controls-row
-	#chart_section_release_type > .chart_section_release_type_chooser_frame > .release_type_chooser:not(.ebr-release-type-extra-row)
+	#chart_section_release_type
+	> .chart_section_release_type_chooser_frame
+	> .release_type_chooser:not(.ebr-release-type-extra-row)
 	.release_type_btn {
 	display: flex;
 	align-items: center;
@@ -261,7 +518,6 @@
 	cursor: pointer;
 	user-select: none;
 }
-
 
 /* Supplemental row:
  * Music video | Addl release | Songs
@@ -326,7 +582,6 @@
 	user-select: none;
 }
 
-
 /* Release hover / selected states */
 
 .ebr-genre-chart-controls-row .release_type_btn:hover {
@@ -341,11 +596,10 @@
 	font-weight: 400;
 }
 
-
 /* Release chooser Close button */
 
 .ebr-genre-chart-controls-row
-	.chart_section_release_type_chooser_frame_apply_btn {
+.chart_section_release_type_chooser_frame_apply_btn {
 	width: 330px;
 	height: 26px;
 
@@ -357,7 +611,8 @@
 }
 
 .ebr-genre-chart-controls-row
-	.chart_section_release_type_chooser_frame_apply_btn .btn {
+	.chart_section_release_type_chooser_frame_apply_btn
+	.btn {
 	display: inline-block;
 
 	height: 26px;
@@ -370,7 +625,6 @@
 	font-weight: 700;
 	line-height: 18px;
 }
-
 
 /* =========================================================
  * Date dropdown
@@ -391,7 +645,7 @@
 
 .ebr-genre-chart-controls-row
 	#page_chart_query_item_date_select
-	.page_chart_query_item_option {
+	> .page_chart_query_item_option {
 	width: 349px;
 	min-height: 61px;
 	box-sizing: border-box;
@@ -421,6 +675,12 @@
 	line-height: 12px;
 }
 
+.ebr-genre-chart-controls-row
+	#page_chart_query_item_date_select
+	.page_chart_query_item_option_description
+	span {
+	font-size: 1em;
+}
 
 /* =========================================================
  * Date help
@@ -454,12 +714,9 @@
 	line-height: 1.45;
 }
 
-.page_chart_query.date_type_all_time
-	.ebr-chart-date-help-all-time,
-.page_chart_query.date_type_year_decade
-	.ebr-chart-date-help-year-decade,
-.page_chart_query.date_type_year_range
-	.ebr-chart-date-help-year-range {
+.page_chart_query.date_type_all_time .ebr-chart-date-help-all-time,
+.page_chart_query.date_type_year_decade .ebr-chart-date-help-year-decade,
+.page_chart_query.date_type_year_range .ebr-chart-date-help-year-range {
 	display: block;
 }
 
@@ -471,7 +728,6 @@
 .page_chart_query.date_type_year_range .date_year_chooser {
 	display: block;
 }
-
 
 /* =========================================================
  * Year / decade chooser
@@ -548,7 +804,7 @@
 	background: var(--mono-fc);
 	color: var(--mono-a);
 
-	border-right: 1px solid rgba(128, 128, 128, .2);
+	border-right: 1px solid rgba(128, 128, 128, 0.2);
 	border-radius: 0;
 }
 
@@ -593,19 +849,16 @@
 .ebr-genre-chart-controls-row .page_chart_query_date_close {
 	width: 349px;
 	box-sizing: border-box;
-	padding: .5em 1em 1em;
+	padding: 0.5em 1em 1em;
 	text-align: center;
 	background: var(--surface-primary);
 }
-
 
 /* =========================================================
  * Selected radio-dot indicators
  * ======================================================= */
 
-.ebr-genre-chart-controls-row
-	.page_chart_query_item_option_icon
-	.fa.fa-circle {
+.ebr-genre-chart-controls-row .page_chart_query_item_option_icon .fa.fa-circle {
 	display: none;
 }
 
@@ -614,12 +867,10 @@
 	.far.fa-circle {
 	display: inline;
 }
-
 
 /* Chart type */
 
-.ebr-genre-chart-controls-row
-	.page_chart_query.chart_type_top
+.ebr-genre-chart-controls-row .page_chart_query.chart_type_top
 	.page_chart_query_item_option_icon_chart_type_top
 	.fa.fa-circle,
 .ebr-genre-chart-controls-row
@@ -655,12 +906,10 @@
 	.far.fa-circle {
 	display: none;
 }
-
 
 /* Music releases */
 
-.ebr-genre-chart-controls-row
-	.page_chart_query.object_release
+.ebr-genre-chart-controls-row .page_chart_query.object_release
 	.page_chart_query_item_option_icon_object_release
 	.fa.fa-circle {
 	display: inline;
@@ -672,12 +921,10 @@
 	.far.fa-circle {
 	display: none;
 }
-
 
 /* Date mode */
 
-.ebr-genre-chart-controls-row
-	.page_chart_query.date_type_all_time
+.ebr-genre-chart-controls-row .page_chart_query.date_type_all_time
 	.page_chart_query_item_option_date_type_all_time
 	.fa.fa-circle,
 .ebr-genre-chart-controls-row
@@ -705,7 +952,6 @@
 	.far.fa-circle {
 	display: none;
 }
-
 
 /* =========================================================
  * Responsive
@@ -721,4 +967,286 @@
 	.ebr-genre-chart-controls-row::-webkit-scrollbar {
 		display: none;
 	}
+}
+
+/* =========================================================
+ * Closed music chart controls
+ *
+ * Match film-genre geometry while using RYM's blue
+ * primary-button palette.
+ *
+ * Result:
+ * [Top ▼] [Albums ▼] of [All-time ▼] [See Albums chart]
+ * ======================================================= */
+
+.ebr-genre-chart-controls-row #page_chart_query {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: flex-end !important;
+	flex: 0 0 auto !important;
+	flex-wrap: nowrap !important;
+
+	gap: 0.25em !important;
+	width: auto !important;
+	min-width: 0 !important;
+
+	margin: 0 !important;
+	padding: 0 !important;
+
+	position: static !important;
+	float: none !important;
+	clear: none !important;
+}
+
+.ebr-genre-chart-controls-row #page_chart_query .page_chart_query_item_frame,
+.ebr-genre-chart-controls-row
+	#page_chart_query
+	.page_chart_query_main_criteria {
+	display: block !important;
+	flex: 0 0 auto !important;
+
+	width: auto !important;
+	height: auto !important;
+
+	margin: 0 !important;
+	padding: 0 !important;
+
+	position: static !important;
+	float: none !important;
+	clear: none !important;
+}
+
+.ebr-genre-chart-controls-row
+	#page_chart_query
+	.page_chart_query_item_type_selector {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	flex: 0 0 auto !important;
+
+	width: auto !important;
+	height: 37.5px !important;
+	min-height: 37.5px !important;
+	box-sizing: border-box !important;
+
+	margin: 0 !important;
+	padding: 0 15px !important;
+
+	position: static !important;
+	inset: auto !important;
+	float: none !important;
+	clear: none !important;
+
+	background: var(--btn-primary-background-default) !important;
+	color: var(--btn-primary-text) !important;
+
+	border: 0 !important;
+	border-radius: 4.5px !important;
+	box-shadow: none !important;
+
+	font-family: inherit !important;
+	font-size: 15px !important;
+	font-weight: bold !important;
+	line-height: 1 !important;
+	text-align: center !important;
+
+	cursor: pointer !important;
+	user-select: none !important;
+	white-space: nowrap !important;
+}
+
+.ebr-genre-chart-controls-row
+	#page_chart_query
+	.page_chart_query_item_type_selector:hover {
+	background: var(
+		--btn-primary-background-hover,
+		var(--btn-primary-background-default)
+	) !important;
+	color: var(--btn-primary-text) !important;
+}
+
+.ebr-genre-chart-controls-row
+	#page_chart_query
+	.page_chart_query_item_type_selector:active {
+	background: var(
+		--btn-primary-background-active,
+		var(--btn-primary-background-hover, var(--btn-primary-background-default))
+	) !important;
+}
+
+.ebr-genre-chart-controls-row
+	#page_chart_query
+	.page_chart_query_item_type_selector
+	.page_chart_query_item_title {
+	display: inline-block !important;
+	flex: 0 1 auto !important;
+
+	width: auto !important;
+	min-width: 0 !important;
+	max-width: none !important;
+	height: auto !important;
+
+	margin: 0 !important;
+	padding: 0 !important;
+
+	position: static !important;
+	inset: auto !important;
+	float: none !important;
+	clear: none !important;
+
+	background: transparent !important;
+	color: inherit !important;
+
+	font: inherit !important;
+	line-height: 1 !important;
+	text-align: center !important;
+
+	white-space: nowrap !important;
+}
+
+.ebr-genre-chart-controls-row
+	#page_chart_query
+	.page_chart_query_item_type_selector
+	.page_chart_query_item_selector {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	flex: 0 0 auto !important;
+
+	width: auto !important;
+	min-width: 0 !important;
+	height: auto !important;
+
+	margin: 0 0 0 0.4em !important;
+	padding: 0 !important;
+
+	position: static !important;
+	inset: auto !important;
+	float: none !important;
+	clear: none !important;
+	transform: none !important;
+
+	background: transparent !important;
+	color: inherit !important;
+
+	line-height: 1 !important;
+}
+
+.ebr-genre-chart-controls-row
+	#page_chart_query
+	.page_chart_query_item_type_selector
+	.page_chart_query_item_selector
+	i {
+	display: block !important;
+
+	width: auto !important;
+	height: auto !important;
+
+	margin: 0 !important;
+	padding: 0 !important;
+
+	position: static !important;
+	inset: auto !important;
+	float: none !important;
+
+	color: inherit !important;
+
+	font-size: 1em !important;
+	line-height: 1 !important;
+}
+
+.ebr-genre-chart-controls-row #page_chart_query > .page_chart_query_item.label {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	flex: 0 0 auto !important;
+
+	width: auto !important;
+	height: 37.5px !important;
+	min-height: 37.5px !important;
+	box-sizing: border-box !important;
+
+	margin: 0 !important;
+	padding: 0 3.75px !important;
+
+	position: static !important;
+	inset: auto !important;
+	float: none !important;
+	clear: none !important;
+
+	background: transparent !important;
+	color: var(--text-secondary) !important;
+
+	border: 0 !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+
+	font-family: inherit !important;
+	font-size: 15px !important;
+	font-weight: normal !important;
+	line-height: 37.5px !important;
+
+	cursor: default !important;
+	white-space: nowrap !important;
+}
+
+.ebr-genre-chart-controls-row > .ebr-genre-chart-see-button.ui_button {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	flex: 0 0 auto !important;
+
+	width: auto !important;
+	min-width: 143px !important;
+	height: 37.5px !important;
+	min-height: 37.5px !important;
+	box-sizing: border-box !important;
+
+	margin: 0 0 0 11.25px !important;
+	padding: 0 15px !important;
+
+	position: static !important;
+	float: none !important;
+	clear: none !important;
+
+	background: var(--btn-primary-background-default) !important;
+	color: var(--btn-primary-text) !important;
+
+	border: 0 !important;
+	border-radius: 4.5px !important;
+	box-shadow: none !important;
+
+	font-family: inherit !important;
+	font-size: 15px !important;
+	font-weight: bold !important;
+	line-height: 1 !important;
+	text-align: center !important;
+	text-decoration: none !important;
+
+	cursor: pointer !important;
+	user-select: none !important;
+	white-space: nowrap !important;
+}
+
+.ebr-genre-chart-controls-row > .ebr-genre-chart-see-button.ui_button:hover {
+	background: var(
+		--btn-primary-background-hover,
+		var(--btn-primary-background-default)
+	) !important;
+	color: var(--btn-primary-text) !important;
+	text-decoration: none !important;
+}
+
+.ebr-genre-chart-controls-row > .ebr-genre-chart-see-button.ui_button:active {
+	background: var(
+		--btn-primary-background-active,
+		var(--btn-primary-background-hover, var(--btn-primary-background-default))
+	) !important;
+}
+
+.ebr-genre-chart-controls-row #page_chart_query_item_chart_type_title,
+.ebr-genre-chart-controls-row #page_chart_query_item_chart_object_title,
+.ebr-genre-chart-controls-row #page_chart_query_item_chart_date_type_title {
+	min-width: 0 !important;
+	max-width: none !important;
 }

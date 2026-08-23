@@ -13,7 +13,7 @@ const CHART_CONTROLS_HTML = `
           <div class="page_chart_query_item_option_icon page_chart_query_item_option_icon_chart_type_top">
             <i class="fa fa-circle"></i><i class="far fa-circle"></i>
           </div>
-          <div class="page_chart_query_item_label">
+          <div class="page_chart_query_item_option_label">
             Top
           </div>
           <div class="page_chart_query_item_option_description">
@@ -24,7 +24,7 @@ const CHART_CONTROLS_HTML = `
           <div class="page_chart_query_item_option_icon page_chart_query_item_option_icon_chart_type_popular">
             <i class="fa fa-circle"></i><i class="far fa-circle"></i>
           </div>
-          <div class="page_chart_query_item_label">
+          <div class="page_chart_query_item_option_label">
             Popular
           </div>
           <div class="page_chart_query_item_option_description">
@@ -35,7 +35,7 @@ const CHART_CONTROLS_HTML = `
           <div class="page_chart_query_item_option_icon page_chart_query_item_option_icon_chart_type_esoteric">
             <i class="fa fa-circle"></i><i class="far fa-circle"></i>
           </div>
-          <div class="page_chart_query_item_label">
+          <div class="page_chart_query_item_option_label">
             Esoteric
           </div>
           <div class="page_chart_query_item_option_description">
@@ -46,7 +46,7 @@ const CHART_CONTROLS_HTML = `
           <div class="page_chart_query_item_option_icon page_chart_query_item_option_icon_chart_type_diverse">
             <i class="fa fa-circle"></i><i class="far fa-circle"></i>
           </div>
-          <div class="page_chart_query_item_label">
+          <div class="page_chart_query_item_option_label">
             Diverse
           </div>
           <div class="page_chart_query_item_option_description">
