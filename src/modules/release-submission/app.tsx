@@ -1,3 +1,4 @@
+import injectArtistLinkFormatting from "./use-cases/artist-link-formatting";
 import injectCatalogNumberControls from "./use-cases/catalog-number-controls";
 import injectCreditsControls from "./use-cases/credits-controls";
 import injectDateControls from "./use-cases/date-controls";
@@ -10,6 +11,7 @@ export const main = () =>
 	Promise.all([
 		injectImportControls(),
 		injectTracklistControls(),
+		injectArtistLinkFormatting(),
 		injectFileUnderControls(),
 		injectCreditsControls(),
 		injectLabelControls(),
