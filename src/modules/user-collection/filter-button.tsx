@@ -23,9 +23,9 @@ function makeUrl(base: string, modifier: string) {
 			element.toLowerCase() === "film_collection",
 	);
 	const modifiers = [
-		...(path[collectionIndex + 2] || "")
-			.split(/\s*,\s*/)
-			.filter((module) => !module.startsWith(base)),
+		...splitCollectionModifiers(path[collectionIndex + 2] || "").filter(
+			(module) => !module.startsWith(base),
+		),
 		filterApplied(modifier) ? "" : modifier,
 	]
 		.filter((s) => s.length > 0)
@@ -42,5 +42,11 @@ function filterApplied(modifier: string) {
 			element.toLowerCase() === "collection" ||
 			element.toLowerCase() === "film_collection",
 	);
-	return (path[collectionIndex + 2] || "").split(/\s*,\s*/).includes(modifier);
+	return splitCollectionModifiers(path[collectionIndex + 2] || "").includes(
+		modifier,
+	);
+}
+
+export function splitCollectionModifiers(modifiers: string) {
+	return modifiers.split(/\s*(?:,|%2c)\s*/i);
 }
