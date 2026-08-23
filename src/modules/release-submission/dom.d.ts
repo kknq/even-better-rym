@@ -3,10 +3,19 @@ import type { ResolveData } from "~/shared/services/types";
 type CustomEventMap = {
 	importEvent: CustomEvent<ResolveData>;
 	fillEvent: CustomEvent<FillData>;
+	EbrArtistShortcutInsertedEvent: CustomEvent<ArtistShortcutInsertedDetail>;
 };
 
 export type FillData = {
 	filledField: "date";
+};
+
+export type ArtistShortcutInsertedDetail = {
+	type: string;
+	assocId: string;
+	text?: string;
+	targetId: string;
+	previousValue?: string;
 };
 
 declare global {
