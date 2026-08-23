@@ -65,7 +65,8 @@ export type ReleaseType =
 	| "music video"
 	| "dj mix"
 	| "bootleg"
-	| "video";
+	| "video"
+	| "additional releases";
 
 export type ReleaseFormat =
 	| "digital file"
@@ -134,6 +135,7 @@ export type ReleaseAttribute =
 	| "collector's edition"
 	| "deluxe edition"
 	| "demo"
+	| "promotional demo"
 	| "exclusive"
 	| "fan club release"
 	| "limited edition"
