@@ -116,7 +116,7 @@ const resolveAlbumFields = (
 
 	const { title, type: titleType } = parseTitleAndType(
 		release.name,
-		getReleaseType(release.tracks.length),
+		getReleaseType(release.name, release.tracks.length),
 	);
 	const { label, type } = parseLabelAndType(document_, titleType);
 

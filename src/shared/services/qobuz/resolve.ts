@@ -85,7 +85,7 @@ export const resolve: ResolveFunction = async (url) => {
 		? stringToDate(releaseData.datePublished)
 		: undefined;
 	const tracks = getTracks(document_);
-	const type = getReleaseType(tracks.length);
+	const type = getReleaseType(title, tracks.length);
 	const coverArt = asArray(getCoverArt(document_));
 	const labelName = getLabel(document_);
 

@@ -110,7 +110,7 @@ export const resolve: ResolveFunction = async (url) => {
 	const artists = getArtists(nextData);
 	const date = getDate(nextData);
 	const tracks = getTracks(nextData, artists);
-	const type = getReleaseType(tracks.length);
+	const type = getReleaseType(title, tracks.length);
 	const coverArt = getCoverArt(nextData);
 	const label = getLabel(nextData);
 

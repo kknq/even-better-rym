@@ -98,7 +98,9 @@ const parseType = (document_: Document, data: ResolveData) => {
 		case "split": {
 			const trackCount = data.tracks?.filter((track) => !track.header).length;
 			data.type =
-				trackCount === undefined ? undefined : getReleaseType(trackCount);
+				trackCount === undefined
+					? undefined
+					: getReleaseType(data.title, trackCount);
 			break;
 		}
 		default:
