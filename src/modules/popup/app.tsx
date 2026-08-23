@@ -54,8 +54,10 @@ export function App() {
 						type="button"
 						onClick={() => setView("features")}
 						style={styles.backButton}
+						aria-label="Back"
+						title="Back"
 					>
-						← Back
+						←
 					</button>
 				) : (
 					<img
