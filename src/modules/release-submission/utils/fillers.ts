@@ -228,6 +228,7 @@ const TYPE_IDS: Record<ReleaseType, string> = {
 	"dj mix": "j",
 	bootleg: "b",
 	video: "d",
+	"additional releases": "x",
 };
 
 const FORMAT_IDS: Record<ReleaseFormat, number> = {
@@ -299,6 +300,7 @@ const ATTRIBUTE_IDS: Record<ReleaseAttribute, number> = {
 	"collector's edition": 49,
 	"deluxe edition": 59,
 	demo: 129,
+	"promotional demo": 18,
 	exclusive: 72,
 	"fan club release": 38,
 	"limited edition": 16,

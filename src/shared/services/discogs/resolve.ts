@@ -428,7 +428,7 @@ const resolveRelease = async (id: string): Promise<ResolveData> => {
 		.map((image) => image.resource_url)
 		.filter((url) => url.length > 0);
 	const label: ReleaseLabel = response.labels[0];
-	if (label.catno === "none") label.catno = "N/A";
+	if (label.catno === "none") label.catno = "n/a";
 	const countries = response.country
 		? parseCountries(response.country)
 		: undefined;
