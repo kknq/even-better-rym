@@ -86,8 +86,8 @@ const getTracks = async (
 	}));
 };
 
-const parseType = (type: AlbumType, numberOfTracks: number) =>
-	type === "compilation" ? type : getReleaseType(numberOfTracks);
+const parseType = (type: AlbumType, title: string, numberOfTracks: number) =>
+	type === "compilation" ? type : getReleaseType(title, numberOfTracks);
 
 const getCoverArt = async (
 	data: AlbumObject | TrackObject,
@@ -130,7 +130,7 @@ const resolveAlbum = async (
 	const artists = response.artists.map((artist) => artist.name);
 	const date = parseDate(response.release_date);
 	const tracks = await getTracks(response.tracks, response.artists, token);
-	const type = parseType(response.album_type, tracks.length);
+	const type = parseType(response.album_type, title, tracks.length);
 	const coverArt = asArray(await getCoverArt(response));
 	const label = {
 		name: response.copyrights[0]?.text

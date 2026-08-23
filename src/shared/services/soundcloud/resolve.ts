@@ -118,7 +118,7 @@ export const resolve: ResolveFunction = async (url) => {
 	const artists = asArray(response.user.username);
 	const date = stringToDate(response.display_date);
 	const tracks = await getTracks(response, token);
-	let type = getReleaseType(tracks.length);
+	let type = getReleaseType(title, tracks.length);
 	const coverArt = getCoverArt(response);
 
 	const isLongTrack =

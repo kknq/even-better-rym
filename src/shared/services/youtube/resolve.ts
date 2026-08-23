@@ -97,7 +97,7 @@ const resolvePlaylist = async (id: string): Promise<ResolveData> => {
 	const { title, artists } = parseTitle(response);
 	const date = stringToDate(response.snippet.publishedAt);
 	const tracks = await getTracks(id);
-	const type = getReleaseType(tracks.length);
+	const type = getReleaseType(title, tracks.length);
 	const coverArt = Object.values(response.snippet.thumbnails)
 		.sort((a, b) => b.width * b.height - a.width * a.height)
 		.map((item) => item.url);

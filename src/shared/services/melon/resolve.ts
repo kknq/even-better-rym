@@ -35,7 +35,11 @@ const getTracks = (document_: Document) =>
 		return { position, title };
 	});
 
-const getType = (document_: Document, numberOfTracks: number) => {
+const getType = (
+	document_: Document,
+	title: string | undefined,
+	numberOfTracks: number,
+) => {
 	const type = document_
 		.querySelector(".info .gubun")
 		?.textContent?.trim()
@@ -49,7 +53,7 @@ const getType = (document_: Document, numberOfTracks: number) => {
 		case "정규":
 			return "album";
 		default:
-			return getReleaseType(numberOfTracks);
+			return getReleaseType(title, numberOfTracks);
 	}
 };
 
@@ -74,7 +78,7 @@ export const resolve: ResolveFunction = async (url) => {
 	const artists = getArtists(document_);
 	const date = getDate(document_);
 	const tracks = getTracks(document_);
-	const type = getType(document_, tracks.length);
+	const type = getType(document_, title, tracks.length);
 	const coverArt = asArray(getCoverArt(document_));
 
 	return {
