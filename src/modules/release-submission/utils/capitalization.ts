@@ -45,14 +45,21 @@ const ENG_DO_NOT_CAPITALIZE = new Set([
 // Don't capitalize even if it's the first or last word
 const ENG_DO_NOT_CAPITALIZE_FORCE = new Set(["etc", "etc."]);
 
+const RELEASE_FORMATS = new Set(["ep", "lp"]);
+
 const isWord = ({ type }: Token) => type === "word" || type === "romanNumeral";
 
 const isAfterHyphen = (phrase: Phrase, index: number) =>
 	phrase.slice(0, index).findLast((token) => token.type !== "whitespace")
 		?.text === "-";
 
-const toTitleCase = ({ text, type }: Token) => {
+const isReleaseFormat = (token: Token) =>
+	RELEASE_FORMATS.has(token.text.toLowerCase());
+
+const toTitleCase = (token: Token) => {
+	const { text, type } = token;
 	if (!text[0]) return text;
+	if (isReleaseFormat(token)) return text.toUpperCase();
 	if (type === "romanNumeral") return text.toUpperCase();
 	return text[0].toUpperCase() + text.slice(1).toLowerCase();
 };
@@ -77,6 +84,7 @@ const capitalizePhrase =
 			? pipe(
 					phrase
 						.map((token, index) => {
+							if (isReleaseFormat(token)) return token.text.toUpperCase();
 							if (index === firstWordIndex) return toTitleCase(token);
 							if (token.type === "romanNumeral")
 								return token.text.toUpperCase();
