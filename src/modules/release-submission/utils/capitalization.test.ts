@@ -102,6 +102,7 @@ describe("title caps", () => {
 		"Triptych II: Awareness",
 		"Triptych III: Blood Flow",
 		"The Band - The Song",
+		"LP and EP",
 	];
 	test.each(titles)("correctly capitalizes %p", (testCase) => {
 		const [input, output] =
@@ -118,6 +119,7 @@ describe("sentence caps", () => {
 		["One Is For", "One is for"],
 		["Grand Theft Auto IV", "Grand theft auto IV"],
 		["The Band - The Song", "The band - The song"],
+		["This LP Is an EP", "This LP is an EP"],
 	];
 
 	test.each(titles)("correctly capitalizes %p", (input, output) =>
