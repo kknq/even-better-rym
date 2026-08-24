@@ -55,6 +55,19 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/hide-reviews/main.ts"],
+			matches: ["*://*.rateyourmusic.com/*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/hide-comment-boxes/main.ts"],
+			matches: [
+				"*://*.rateyourmusic.com/release/*",
+				"*://*.rateyourmusic.com/film/*",
+			],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/stream-link-missing/main.ts"],
 			matches: ["*://*.rateyourmusic.com/misc/media_link_you_know*"],
 			run_at: "document_start",

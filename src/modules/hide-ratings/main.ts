@@ -1,5 +1,7 @@
 import { getPageEnabled } from "~/shared/page-settings";
+import { getRatingSettings } from "~/shared/visibility/settings";
 import { main } from "./app";
+import { insertGlobalRatingButton } from "./generic-page";
 import { getRatingsPageType } from "./page-type";
 import {
 	injectHideStyles,
@@ -14,6 +16,8 @@ if (getRatingsPageType(globalThis.location.pathname)) {
 	if (await getPageEnabled("hideRatings")) {
 		await main();
 	} else {
-		removeHideStyles();
+		const settings = await getRatingSettings();
+		if (settings.globalButton) insertGlobalRatingButton();
+		else removeHideStyles();
 	}
 }

@@ -7,9 +7,10 @@ import { pageGroupLabels, pageHints, pageLabels, pages } from "~/shared/pages";
 
 import { ShortcutView } from "./shortcut-view";
 import { styles } from "./styles";
+import { RatingVisibilityView, ReviewVisibilityView } from "./visibility-view";
 
 type FeatureState = Record<PageKey, boolean>;
-type View = "features" | "chartShortcuts";
+type View = "features" | "chartShortcuts" | "hideRatings" | "hideReviews";
 
 function buildGroups(): [string, PageKey[]][] {
 	const map = new Map<string, PageKey[]>();
@@ -26,6 +27,7 @@ const groups = buildGroups();
 export function App() {
 	const [view, setView] = useState<View>("features");
 	const [features, setFeatures] = useState<FeatureState | null>(null);
+	const [needsReload, setNeedsReload] = useState(false);
 
 	useEffect(() => {
 		const keys = Object.keys(pages) as PageKey[];
@@ -44,12 +46,13 @@ export function App() {
 		const next = !features[key];
 		await setPageEnabled(key, next);
 		setFeatures((prev) => prev && { ...prev, [key]: next });
+		setNeedsReload(true);
 	};
 
 	return (
 		<div style={styles.root}>
 			<header style={styles.header}>
-				{view === "chartShortcuts" ? (
+				{view !== "features" ? (
 					<button
 						type="button"
 						onClick={() => setView("features")}
@@ -70,18 +73,45 @@ export function App() {
 				)}
 				<div>
 					<div style={styles.title}>
-						{view === "chartShortcuts" ? "Chart Shortcuts" : "EvenBetterRYM"}
+						{view === "chartShortcuts"
+							? "Chart Shortcuts"
+							: view === "hideRatings"
+								? "Hide Ratings"
+								: view === "hideReviews"
+									? "Hide Reviews"
+									: "EvenBetterRYM"}
 					</div>
 					<div style={styles.subtitle}>
 						{view === "chartShortcuts"
 							? "Customize keyboard shortcuts"
-							: "RateYourMusic Enhancements"}
+							: view === "features"
+								? "RateYourMusic Enhancements"
+								: "Configure visibility"}
 					</div>
 				</div>
 			</header>
+			{needsReload && (
+				<div style={styles.reloadNotice}>
+					<span>
+						Reload the current page if this change does not apply immediately.
+					</span>
+					<button
+						type="button"
+						onClick={() => setNeedsReload(false)}
+						aria-label="Dismiss reload notice"
+						style={styles.reloadNoticeDismiss}
+					>
+						×
+					</button>
+				</div>
+			)}
 
 			{view === "chartShortcuts" ? (
-				<ShortcutView />
+				<ShortcutView onSettingsChange={() => setNeedsReload(true)} />
+			) : view === "hideRatings" ? (
+				<RatingVisibilityView onSettingsChange={() => setNeedsReload(true)} />
+			) : view === "hideReviews" ? (
+				<ReviewVisibilityView onSettingsChange={() => setNeedsReload(true)} />
 			) : (
 				<main style={styles.list}>
 					{features === null ? (
@@ -117,6 +147,15 @@ export function App() {
 													Customize shortcuts
 												</button>
 											)}
+											{(key === "hideRatings" || key === "hideReviews") && (
+												<button
+													type="button"
+													onClick={() => setView(key)}
+													style={styles.customizeButton}
+												>
+													Configure
+												</button>
+											)}
 											<Toggle
 												checked={features[key]}
 												onChange={() => void toggle(key)}
@@ -133,7 +172,7 @@ export function App() {
 	);
 }
 
-function Toggle({
+export function Toggle({
 	checked,
 	onChange,
 }: Readonly<{
