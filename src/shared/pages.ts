@@ -18,6 +18,8 @@ export const pages = {
 	map: "/artist/",
 	hideVotes: "/r",
 	hideRatings: "/",
+	hideReviews: "/",
+	hideCommentBoxes: "/release/",
 	chartShortcuts: "/charts/",
 } as const;
 
@@ -42,7 +44,9 @@ export const pageLabels: Record<PageKey, string> = {
 	timeline: "Artist Timeline",
 	map: "Artist Location Map",
 	hideVotes: "Hide Votes on Genre/Descriptor Pages",
-	hideRatings: "Hide Ratings If Unrated",
+	hideRatings: "Hide Ratings",
+	hideReviews: "Hide Reviews",
+	hideCommentBoxes: "Hide Comment Boxes",
 	chartShortcuts: "Chart Shortcuts",
 };
 
@@ -95,10 +99,16 @@ export const pageHints: Record<PageKey, string> = {
 	hideVotes:
 		"On genre and descriptor pages, adds toggle buttons to hide user votes.",
 	hideRatings:
-		"Hides ratings on supported pages; release and artist ratings remain visible when you have rated them.",
+		"Hides ratings on supported pages with configurable page and release behavior.",
+	hideReviews: "Hides review content on configurable supported pages.",
+	hideCommentBoxes: "Hides comment boxes on release pages.",
 	chartShortcuts:
 		"Adds keyboard shortcuts for applying genre/descriptor matches, toggling sub-genre and 'must contain all' options, and updating the chart to chart pages.",
 };
 
 // Page keys whose features are global and should not affect the toolbar icon
-export const globalPageKeys = new Set<PageKey>(["searchBar", "hideRatings"]);
+export const globalPageKeys = new Set<PageKey>([
+	"searchBar",
+	"hideRatings",
+	"hideReviews",
+]);

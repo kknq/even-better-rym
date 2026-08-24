@@ -1,18 +1,26 @@
+import type { RatingVisibility } from "~/shared/visibility/settings";
 import { wireButton } from "./button";
 import { fireHide, fireShow } from "./events";
 
-export const setupProfilePage = (): void => {
-	setupProfileListeners();
+export const setupProfilePage = (
+	visibility: RatingVisibility,
+	showButton: boolean,
+): void => {
+	setupProfileListeners(visibility);
 	fireHide();
-	insertProfileButton();
+	if (showButton) insertProfileButton();
 };
 
-const refreshProfileRatings = (visible: boolean): void => {
+const refreshProfileRatings = (
+	visible: boolean,
+	visibility: RatingVisibility,
+): void => {
 	const releases = document.querySelectorAll(".disco_release");
 	for (const release of releases) {
 		const rating = release.querySelector<HTMLElement>(".disco_cat_inner");
 		const ownRating = Number.parseFloat(rating?.textContent ?? "");
-		const shouldShow = visible || Number.isFinite(ownRating);
+		const shouldShow =
+			visible || (visibility === "unrated" && Number.isFinite(ownRating));
 
 		for (const value of release.querySelectorAll(
 			".disco_avg_rating, .disco_ratings",
@@ -22,12 +30,12 @@ const refreshProfileRatings = (visible: boolean): void => {
 	}
 };
 
-const setupProfileListeners = (): void => {
+const setupProfileListeners = (visibility: RatingVisibility): void => {
 	document.addEventListener("ebrHideRatings", () => {
-		refreshProfileRatings(false);
+		refreshProfileRatings(false, visibility);
 	});
 	document.addEventListener("ebrShowRatings", () => {
-		refreshProfileRatings(true);
+		refreshProfileRatings(true, visibility);
 	});
 
 	observeDiscography();
@@ -52,7 +60,7 @@ const observeDiscography = (): void => {
 	if (!discography) return;
 
 	new MutationObserver(() => {
-		if (document.body.classList.contains("ratings-visible")) {
+		if (!document.body.classList.contains("ebr-hide-ratings")) {
 			fireShow();
 		} else {
 			fireHide();
@@ -61,32 +69,26 @@ const observeDiscography = (): void => {
 };
 
 const insertProfileButton = (): void => {
-	const artistInfo = document.querySelector<HTMLElement>(".artist_info_main");
-	if (!artistInfo || document.getElementById("ebr-show-rating-btn-profile"))
+	const navigation = document.querySelector<HTMLElement>(
+		".section_artist_page_section_nav",
+	);
+	if (!navigation || document.getElementById("ebr-show-rating-btn-profile"))
 		return;
 
-	const clear = document.createElement("div");
-	clear.style.clear = "both";
-	artistInfo.appendChild(clear);
-
-	const header = document.createElement("div");
-	header.textContent = "Show / Hide Ratings";
-	header.classList.add("info_hdr");
-	header.style.marginTop = "1em";
-	artistInfo.appendChild(header);
-
-	const wrapper = document.createElement("div");
-	wrapper.style.float = "left";
 	const button = document.createElement("a");
 	button.id = "ebr-show-rating-btn-profile";
 	button.href = "#";
-	button.classList.add("btn", "blue_btn", "ebr-rating-toggle");
-	button.style.fontSize = "0.9em";
+	button.classList.add("btn", "blue_btn", "ebr-profile-rating-toggle");
 	wireButton(button);
-	wrapper.appendChild(button);
+	const followButton = document.querySelector<HTMLElement>(
+		'[id^="follow_btn_artist_"]',
+	);
+	if (followButton) {
+		button.style.height = `${followButton.getBoundingClientRect().height}px`;
+	}
 
-	const content = document.createElement("div");
-	content.classList.add("info_content");
-	content.appendChild(wrapper);
-	artistInfo.appendChild(content);
+	const control = document.createElement("div");
+	control.classList.add("ebr-profile-rating-control");
+	control.appendChild(button);
+	navigation.before(control);
 };
