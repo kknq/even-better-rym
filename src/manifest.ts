@@ -122,13 +122,16 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
-			js: ["src/modules/film-genre/chart.ts"],
-			matches: ["*://*.rateyourmusic.com/charts/*/film/*"],
-			run_at: "document_start",
-		},
-		{
-			js: ["src/modules/film-genre/film-genre.ts"],
-			matches: ["*://*.rateyourmusic.com/film_genre/*"],
+			js: ["src/modules/genre-chart-controls/main.ts"],
+			css: [
+				"src/modules/genre-chart-controls/film-controls.css",
+				"src/modules/genre-chart-controls/music-genre-controls.css",
+			],
+			matches: [
+				"*://*.rateyourmusic.com/charts/*/film/*",
+				"*://*.rateyourmusic.com/film_genre/*",
+				"*://*.rateyourmusic.com/genre/*",
+			],
 			run_at: "document_start",
 		},
 		{
