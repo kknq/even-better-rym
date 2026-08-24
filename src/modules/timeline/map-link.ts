@@ -1,4 +1,6 @@
 import { isDarkPage } from "~/shared/utils/theme";
+import mountMap from "../map/main";
+import { applySmallMapCoords, clearSmallMapOverlay } from "../map/overlay";
 import { findAdjacentInfoContent } from "./dom-helpers";
 import { openPastShows } from "./show";
 
@@ -44,32 +46,40 @@ export function addMapLink(showsHeaderEl: HTMLElement): void {
 		mapLink.style.color = "#7eb8f7";
 	}
 
+	let loading = false;
 	const handleMapClick = async () => {
+		if (loading) return;
+
 		const existing = document.getElementById("rymmt-map-root");
 
 		if (existing) {
 			existing.remove();
-			const { clearSmallMapOverlay } = await import("../map/overlay");
 			clearSmallMapOverlay();
 			return;
 		}
 
-		const mapModulePromise = import("../map/main");
-		const overlayModulePromise = import("../map/overlay");
-		await openPastShows(3000);
+		loading = true;
+		mapLink.textContent = "[Building map...]";
+		mapLink.style.cursor = "wait";
+		mapLink.style.pointerEvents = "none";
 
-		const root = document.createElement("div");
-		root.id = "rymmt-map-root";
-		root.style.marginBottom = "10px";
+		try {
+			await openPastShows(3000);
 
-		insertMapInShowsSection(root, showsHeaderEl);
+			const root = document.createElement("div");
+			root.id = "rymmt-map-root";
+			root.style.marginBottom = "10px";
 
-		const [{ default: mountMap }, { applySmallMapCoords }] = await Promise.all([
-			mapModulePromise,
-			overlayModulePromise,
-		]);
-		mountMap(root);
-		applySmallMapCoords();
+			insertMapInShowsSection(root, showsHeaderEl);
+
+			mountMap(root);
+			applySmallMapCoords();
+		} finally {
+			loading = false;
+			mapLink.textContent = "[Map]";
+			mapLink.style.cursor = "";
+			mapLink.style.pointerEvents = "";
+		}
 	};
 
 	mapLink.addEventListener("click", () => {

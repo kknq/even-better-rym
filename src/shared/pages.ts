@@ -17,6 +17,7 @@ export const pages = {
 	timeline: "/artist/",
 	map: "/artist/",
 	hideVotes: "/r",
+	switchGenreDescriptor: "/r",
 	hideRatings: "/",
 	hideReviews: "/",
 	hideCommentBoxes: "/release/",
@@ -44,6 +45,7 @@ export const pageLabels: Record<PageKey, string> = {
 	timeline: "Artist Timeline",
 	map: "Artist Location Map",
 	hideVotes: "Hide Votes on Genre/Descriptor Pages",
+	switchGenreDescriptor: "Genre/Descriptor Switch Links",
 	hideRatings: "Hide Ratings",
 	hideReviews: "Hide Reviews",
 	hideCommentBoxes: "Hide Comment Boxes",
@@ -97,7 +99,9 @@ export const pageHints: Record<PageKey, string> = {
 		"On artist pages, adds an inline timeline visualizing member activity and discography.",
 	map: "On artist pages, adds an interactive map showing concert locations.",
 	hideVotes:
-		"On genre and descriptor pages, adds toggle buttons to hide user votes.",
+		"On genre and descriptor pages, adds toggle buttons to show or hide user votes.",
+	switchGenreDescriptor:
+		"Adds links to switch between a release's genre and descriptor pages.",
 	hideRatings:
 		"Hides ratings on supported pages with configurable page and release behavior.",
 	hideReviews: "Hides review content on configurable supported pages.",

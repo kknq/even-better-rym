@@ -8,9 +8,15 @@ import { pageGroupLabels, pageHints, pageLabels, pages } from "~/shared/pages";
 import { ShortcutView } from "./shortcut-view";
 import { styles } from "./styles";
 import { RatingVisibilityView, ReviewVisibilityView } from "./visibility-view";
+import { VoteVisibilityView } from "./vote-visibility-view";
 
 type FeatureState = Record<PageKey, boolean>;
-type View = "features" | "chartShortcuts" | "hideRatings" | "hideReviews";
+type View =
+	| "features"
+	| "chartShortcuts"
+	| "hideRatings"
+	| "hideReviews"
+	| "hideVotes";
 
 function buildGroups(): [string, PageKey[]][] {
 	const map = new Map<string, PageKey[]>();
@@ -79,7 +85,9 @@ export function App() {
 								? "Hide Ratings"
 								: view === "hideReviews"
 									? "Hide Reviews"
-									: "EvenBetterRYM"}
+									: view === "hideVotes"
+										? "Hide Votes"
+										: "EvenBetterRYM"}
 					</div>
 					<div style={styles.subtitle}>
 						{view === "chartShortcuts"
@@ -112,6 +120,8 @@ export function App() {
 				<RatingVisibilityView onSettingsChange={() => setNeedsReload(true)} />
 			) : view === "hideReviews" ? (
 				<ReviewVisibilityView onSettingsChange={() => setNeedsReload(true)} />
+			) : view === "hideVotes" ? (
+				<VoteVisibilityView onSettingsChange={() => setNeedsReload(true)} />
 			) : (
 				<main style={styles.list}>
 					{features === null ? (
@@ -147,7 +157,9 @@ export function App() {
 													Customize shortcuts
 												</button>
 											)}
-											{(key === "hideRatings" || key === "hideReviews") && (
+											{(key === "hideRatings" ||
+												key === "hideReviews" ||
+												key === "hideVotes") && (
 												<button
 													type="button"
 													onClick={() => setView(key)}

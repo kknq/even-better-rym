@@ -84,7 +84,7 @@ Adds filters and search to the list of releases missing streaming links.
 
 ### Artist Timeline
 
-Adds a timeline to artist pages so you can see when members were active and what they played.
+Adds a timeline to group pages so you can see when members were active and what they played. Artist pages with shows also include a map of concert locations, including solo artists.
 
 ---
 
@@ -94,26 +94,38 @@ Lets you use RYM markup, such as `[Artist67]` or `[Album42]`, to go straight to 
 
 ---
 
-### Hide Ratings If Unrated
-
-Hides community ratings until you choose to reveal them. On release and artist pages, ratings for music you have rated can stay visible.
-
----
-
 ### Hide Votes on Genre and Descriptor Pages
 
-Lets you hide user votes on genre and descriptor pages.
+Lets you show or hide user votes on genre and descriptor pages. Configure genre and descriptor votes independently to start hidden or shown.
 
 ---
 
-### Hide Ratings If Unrated
+### Genre/Descriptor Switch Links
 
-Hides community rating values while preserving page layout. A toggle reveals them on demand.
+Adds links on release genre and descriptor pages to switch between their genre and descriptor views.
+
+---
+
+### Hide Ratings
+
+Hides community rating values while preserving page layout. Configure the supported pages and whether ratings are hidden only until you rate a release or at all times; a toggle reveals them on demand.
 
 - **Release pages** (`/release/*`, `/film/*`) — Ratings remain visible when you have rated the release; otherwise, averages, rankings, review ratings, and track scores are hidden.
 - **Artist pages** (`/artist/*`) — Ratings remain visible only for releases you have rated. Lazy-loaded discography entries follow the current toggle state.
 - **Charts, homepage, and new releases** — Available rating values are hidden because the page does not provide per-release rating status for the current user.
 - **Profiles, collections, and collection reviews** — Ratings remain visible for your own pages and are hidden on other users' pages.
+
+---
+
+### Hide Reviews
+
+Hides review text on supported release, film, collection, profile, review, and homepage views. Configure the covered pages, whether reviews stay visible after rating a release, and when friends' reviews remain visible. Per-page controls let you reveal reviews when needed.
+
+---
+
+### Hide Comment Boxes
+
+Hides comment boxes on music release and film pages.
 
 ---
 
@@ -259,11 +271,13 @@ src/
     film-genre/
     hide-ratings/
     hide-votes/
+    map/
     release-submission/
     search-bar/
     stream-link-missing/
     stream-link-submission/
     stream-links/
+    switch-genre-descriptor/
     timeline/
     track-time/
     user-collection/

@@ -4,7 +4,6 @@ import { isDarkPage } from "~/shared/utils/theme";
 import { geocodeCity, getCachedCity, latLonToSmallMapCoords } from "./geocode";
 import { SMALL_MAP_SVG } from "./map-svg";
 import type { CityPoint } from "./types";
-import "./map.css";
 
 type Props = {
 	cities?: (string | CityPoint)[];
@@ -42,7 +41,7 @@ function createMarker(point: CityPoint, index: number) {
 	const r = 3;
 	const strokeW = 1.5;
 
-	// Set attributes (works in all browsers)
+	// Set attributes and inline styles so RYM's page CSS cannot override markers.
 	circle.setAttribute("r", String(r));
 	circle.setAttribute("cx", String(cx));
 	circle.setAttribute("cy", String(cy));
@@ -50,6 +49,10 @@ function createMarker(point: CityPoint, index: number) {
 	circle.setAttribute("stroke", "#fff");
 	circle.setAttribute("stroke-width", String(strokeW));
 	circle.setAttribute("opacity", "0.45");
+	circle.style.setProperty("fill", "rgb(255, 255, 255)", "important");
+	circle.style.setProperty("stroke", "#fff", "important");
+	circle.style.setProperty("stroke-width", String(strokeW), "important");
+	circle.style.setProperty("opacity", "0.45", "important");
 	circle.dataset.city = point.name;
 	circle.dataset.index = String(index);
 	circle.setAttribute("title", point.name);
@@ -67,6 +70,13 @@ function createMarker(point: CityPoint, index: number) {
 	}
 
 	return circle;
+}
+
+function fillMapContainer(svg: SVGSVGElement): void {
+	svg.setAttribute("preserveAspectRatio", "none");
+	svg.style.setProperty("display", "block", "important");
+	svg.style.setProperty("width", "100%", "important");
+	svg.style.setProperty("height", "100%", "important");
 }
 
 export default function MapApp({ cities = [] }: Readonly<Props>) {
@@ -120,6 +130,7 @@ export default function MapApp({ cities = [] }: Readonly<Props>) {
 		const svg = root.querySelector("svg");
 		if (!svg || !(svg instanceof SVGSVGElement)) return;
 
+		fillMapContainer(svg);
 		const markerGroup = getMarkerGroup(svg);
 		markerGroup.innerHTML = "";
 
