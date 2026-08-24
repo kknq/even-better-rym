@@ -1,3 +1,4 @@
+import { getVoteVisibilitySettings } from "~/shared/hide-votes/settings";
 import { waitForDocumentReady } from "~/shared/utils/dom";
 
 const STYLE = `
@@ -19,27 +20,6 @@ const STYLE = `
 const VOTE_HEADER_PATTERN = /(<b>voted (?:for|against):<\/b>.*?:)/i;
 const VOTE_CONTAINER_SELECTOR = ".genrea, .genred, .descriptora, .descriptord";
 
-type SwitchLinkConfig = {
-	headingText: string;
-	linkText: string;
-	sourcePath: string;
-	targetPath: string;
-};
-
-const GENRE_SWITCH_LINK: SwitchLinkConfig = {
-	headingText: "Primary Genres",
-	linkText: "Switch to Descriptors",
-	sourcePath: "/rgenre/",
-	targetPath: "/rdescriptor/",
-};
-
-const DESCRIPTOR_SWITCH_LINK: SwitchLinkConfig = {
-	headingText: "Descriptors",
-	linkText: "Switch to Genres",
-	sourcePath: "/rdescriptor/",
-	targetPath: "/rgenre/",
-};
-
 function extractVoteCount(html: string): number {
 	// Match the number after "voted for:" or "voted against:" and before the parenthesis
 	// For descriptor pages: "(321 / <span..." or "(7):"
@@ -52,6 +32,7 @@ function addHideButton(
 	spanElement: HTMLElement,
 	voteForCount: number,
 	voteAgainstCount: number,
+	hiddenByDefault: boolean,
 ): void {
 	if (spanElement.querySelector(".ebr-hide-votes-button")) return;
 
@@ -98,9 +79,11 @@ function addHideButton(
 
 	spanElement.innerHTML =
 		updatedBefore +
-		`<span class="ebr-hide-votes-button">Show</span>` +
+		`<span class="ebr-hide-votes-button">${
+			hiddenByDefault ? "Show" : "Hide"
+		}</span>` +
 		`<span class="ebr-user-list">${userListHtml}</span>`;
-	spanElement.classList.add("ebr-votes-hidden");
+	spanElement.classList.toggle("ebr-votes-hidden", hiddenByDefault);
 
 	const button = spanElement.querySelector<HTMLElement>(
 		".ebr-hide-votes-button",
@@ -176,7 +159,7 @@ function getVoteCounts(containerSpans: HTMLElement[]) {
 	return { voteForCount, voteAgainstCount };
 }
 
-function processVoteSpans(): void {
+function processVoteSpans(hiddenByDefault: boolean): void {
 	const spans = document.querySelectorAll("span.small");
 
 	const containerMap = collectVoteSpans(spans);
@@ -185,46 +168,12 @@ function processVoteSpans(): void {
 		const { voteForCount, voteAgainstCount } = getVoteCounts(containerSpans);
 
 		for (const span of containerSpans) {
-			addHideButton(span, voteForCount, voteAgainstCount);
+			addHideButton(span, voteForCount, voteAgainstCount, hiddenByDefault);
 		}
 	}
 }
 
-function getSwitchLinkConfig(url: string): SwitchLinkConfig | null {
-	if (url.includes(GENRE_SWITCH_LINK.sourcePath)) return GENRE_SWITCH_LINK;
-	if (url.includes(DESCRIPTOR_SWITCH_LINK.sourcePath))
-		return DESCRIPTOR_SWITCH_LINK;
-
-	return null;
-}
-
-function appendSwitchLink(url: string, config: SwitchLinkConfig): void {
-	const heading = [...document.querySelectorAll("h3")].find(
-		(h3) =>
-			h3.textContent?.includes(config.headingText) && !h3.querySelector("a"),
-	);
-	if (!heading) return;
-
-	const link = document.createElement("a");
-	link.textContent = config.linkText;
-	link.href = url.replace(config.sourcePath, config.targetPath);
-	link.style.marginLeft = "10px";
-	link.style.fontSize = "0.8em";
-	link.style.color = "rgb(102, 102, 102)";
-	link.style.cursor = "pointer";
-	heading.appendChild(link);
-}
-
-function addSwitchLink(): void {
-	const url = globalThis.location.href;
-	const config = getSwitchLinkConfig(url);
-
-	if (!config || !/album_id=(\d+)/.test(url)) return;
-
-	appendSwitchLink(url, config);
-}
-
-function addCollapseAllButton(): void {
+function addCollapseAllButton(hiddenByDefault: boolean): void {
 	const url = globalThis.location.href;
 	const isGenrePage = url.includes("/rgenre/");
 	const isDescriptorPage = url.includes("/rdescriptor/");
@@ -249,7 +198,7 @@ function addCollapseAllButton(): void {
 	collapseButton.value = "Expand All";
 	collapseButton.style.marginLeft = "0.5em";
 
-	let allCollapsed = true;
+	let allCollapsed = hiddenByDefault;
 	collapseButton.addEventListener("click", () => {
 		const buttons = document.querySelectorAll(".ebr-hide-votes-button");
 		allCollapsed = !allCollapsed;
@@ -286,9 +235,10 @@ export async function main(): Promise<void> {
 
 	if (!isGenrePage && !isDescriptorPage) return;
 
-	// Add switch link and collapse button immediately (don't depend on content loading)
-	addSwitchLink();
-	addCollapseAllButton();
+	const settings = await getVoteVisibilitySettings();
+	const hiddenByDefault = isGenrePage ? settings.genres : settings.descriptors;
+
+	addCollapseAllButton(hiddenByDefault);
 
 	// Wait for loading image to have "blank" in src before processing vote spans
 	const waitForLoadingComplete = (): Promise<void> => {
@@ -327,7 +277,7 @@ export async function main(): Promise<void> {
 
 	// Wait for loading to complete, then process vote spans
 	await waitForLoadingComplete();
-	processVoteSpans();
+	processVoteSpans(hiddenByDefault);
 
 	// Set up MutationObserver to handle dynamic content changes
 	const observer = new MutationObserver((mutations) => {
@@ -349,7 +299,7 @@ export async function main(): Promise<void> {
 							// Re-process vote spans when new content is added
 							// TODO: add a mechanism to trigger that based on the page changes instead of being time-based.
 							setTimeout(() => {
-								processVoteSpans();
+								processVoteSpans(hiddenByDefault);
 							}, 500);
 							break;
 						}

@@ -89,7 +89,7 @@ const sharedManifest = {
 		},
 		{
 			js: ["src/modules/timeline/main.ts"],
-			css: ["src/modules/timeline/timeline.css"],
+			css: ["src/modules/timeline/timeline.css", "src/modules/map/map.css"],
 			matches: ["*://*.rateyourmusic.com/artist/*"],
 			run_at: "document_start",
 		},
@@ -133,6 +133,14 @@ const sharedManifest = {
 		},
 		{
 			js: ["src/modules/hide-votes/main.ts"],
+			matches: [
+				"*://*.rateyourmusic.com/rgenre/*",
+				"*://*.rateyourmusic.com/rdescriptor/*",
+			],
+			run_at: "document_idle",
+		},
+		{
+			js: ["src/modules/switch-genre-descriptor/main.ts"],
 			matches: [
 				"*://*.rateyourmusic.com/rgenre/*",
 				"*://*.rateyourmusic.com/rdescriptor/*",

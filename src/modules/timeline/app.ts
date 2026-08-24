@@ -1,4 +1,4 @@
-import { waitForCallback } from "~/shared/utils/dom";
+import { waitForDocumentReady } from "~/shared/utils/dom";
 import { isDarkPage } from "~/shared/utils/theme";
 import { addMapLink } from "./map-link";
 import { togglePanel } from "./panel";
@@ -6,13 +6,19 @@ import { togglePanel } from "./panel";
 const LINK_CLASS = "rymmt-link";
 
 export const main = async (): Promise<void> => {
-	const membersHeaderEl = await waitForCallback<HTMLElement>(() => {
-		const headers = document.querySelectorAll<HTMLElement>(".info_hdr");
-		for (const header of headers) {
-			if ((header.textContent || "").trim() === "Members") return header;
-		}
-		return undefined;
-	});
+	await waitForDocumentReady();
+
+	const showsHeaderEl = document.querySelector<HTMLElement>(
+		".section_artist_shows .artist_page_header h2",
+	);
+
+	if (showsHeaderEl?.textContent?.trim() === "Shows") {
+		addMapLink(showsHeaderEl);
+	}
+
+	const membersHeaderEl = [
+		...document.querySelectorAll<HTMLElement>(".info_hdr"),
+	].find((header) => header.textContent?.trim() === "Members");
 
 	// Only add Timeline link if Members section exists
 	if (membersHeaderEl) {
@@ -31,21 +37,5 @@ export const main = async (): Promise<void> => {
 
 			membersHeaderEl.appendChild(link);
 		}
-	}
-
-	const showsHeaderEl = await waitForCallback<HTMLElement>(() => {
-		const header = document.querySelector<HTMLElement>(
-			".section_artist_shows .artist_page_header h2",
-		);
-
-		if (header && (header.textContent || "").trim() === "Shows") {
-			return header;
-		}
-
-		return undefined;
-	});
-
-	if (showsHeaderEl) {
-		addMapLink(showsHeaderEl);
 	}
 };
