@@ -81,14 +81,12 @@ export const styles = {
 		boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
 	} satisfies CSSProperties,
 
-	cardFlat: {
-		background: "#fff",
-		borderRadius: 8,
-		overflow: "hidden",
-		boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
-	} satisfies CSSProperties,
-
 	groupHeader: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "space-between",
+		width: "100%",
+		border: 0,
 		padding: "7px 12px 6px",
 		fontSize: 10,
 		fontWeight: 700,
@@ -97,6 +95,8 @@ export const styles = {
 		color: "#4286c4",
 		background: "#f0f6fc",
 		borderBottom: "1px solid #d8eaf7",
+		cursor: "pointer",
+		textAlign: "left",
 	} satisfies CSSProperties,
 
 	row: {
@@ -138,6 +138,10 @@ export const styles = {
 	} satisfies CSSProperties,
 
 	loading: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: 8,
 		padding: "20px 16px",
 		color: "#999",
 		textAlign: "center" as const,

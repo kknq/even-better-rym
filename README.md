@@ -6,7 +6,7 @@ Most of the credit goes to [jgchk](https://github.com/jgchk) and all the beautif
 
 ## Features
 
-Turn each feature on or off from the extension popup.
+Turn each feature on or off from the extension popup. Settings are grouped by purpose: Search and navigation, Charts, Release and submission tools, Library and user profiles, Artist profiles, and Content visibility.
 
 ---
 
@@ -34,9 +34,9 @@ Makes descriptors clickable so you can explore charts for each one.
 
 ---
 
-### Film Genre Navigation Enhancements
+### Genre Chart Controls
 
-Makes it easier to move between film genre pages and their charts.
+Adds chart type, release type, and date controls to music genre pages; adds chart controls to film genre pages; and links film-chart genres to their corresponding film genre pages. The year chooser is generated from the current year, so it stays up to date automatically.
 
 ---
 

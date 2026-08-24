@@ -1,3 +1,9 @@
+import {
+	combineYearRanges,
+	decadeRange,
+	type YearRange,
+	yearRange,
+} from "~/shared/chart-date-range";
 import { waitForElement } from "~/shared/utils/dom";
 
 const GENRES_NEEDING_SUFFIX = new Set([
@@ -19,438 +25,6 @@ type FilmChartState = {
 	startYear: number | null;
 	endYear: number | null;
 };
-
-const STYLE = `
-	/* =========================================================
-	 * Breadcrumb / controls layout
-	 * ======================================================= */
-
-	.ui_breadcrumb_frame,
-	#page_breadcrumb {
-		overflow: visible !important;
-	}
-
-	.ui_breadcrumb_frame {
-		position: relative;
-		z-index: 7100;
-	}
-
-	.ebr-film-genre-chart-controls {
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		gap: .25em;
-		margin-left: auto;
-		float: right;
-		position: relative;
-		z-index: 7101;
-		white-space: nowrap;
-	}
-
-	.ebr-film-genre-chart-control-frame {
-		position: static;
-	}
-
-
-	/* =========================================================
-	 * Top / date / See Film chart buttons
-	 * ======================================================= */
-
-	.ebr-film-genre-chart-control,
-	.ebr-film-genre-chart-link {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-
-		height: 37.5px !important;
-		box-sizing: border-box;
-		padding: 0 15px !important;
-
-		border: 0;
-		border-radius: 4.5px;
-
-		background: #b78424;
-		color: #FFFFFF !important;
-
-		font-family: inherit;
-		font-size: 15px !important;
-		font-weight: bold;
-		line-height: 1 !important;
-
-		cursor: pointer;
-		user-select: none;
-	}
-
-	.ebr-film-genre-chart-control:hover,
-	.ebr-film-genre-chart-link:hover {
-		background: #a4680d;
-		color: #FFFFFF !important;
-	}
-
-	.ebr-film-genre-chart-control i {
-		margin-left: .4em;
-	}
-
-	.ebr-film-genre-chart-label {
-		padding: 0 3.75px;
-		color: var(--text-secondary);
-		font-size: 15px !important;
-		line-height: 37.5px;
-	}
-
-	.ebr-film-genre-chart-link {
-		width: 143px;
-		margin-left: 11.25px !important;
-		text-decoration: none;
-	}
-
-
-	/* =========================================================
-	 * Generic dropdown
-	 *
-	 * Keep the chart-type dropdown at the existing larger size.
-	 * The date menu gets its own RYM-sized override below.
-	 * ======================================================= */
-
-	.ebr-film-chart-menu {
-		display: none;
-		position: absolute;
-
-		left: auto;
-		right: 0;
-		top: 3.2em;
-
-		width: 448px;
-		max-width: calc(100vw - 24px);
-
-		font-size: 15px;
-		line-height: 1;
-
-		background: var(--surface-primary);
-		border: 1px solid var(--ui-divider-line);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
-
-		z-index: 7200;
-		pointer-events: auto;
-
-		white-space: normal;
-		text-align: left;
-	}
-
-	.ebr-film-chart-menu.is-open {
-		display: block;
-	}
-
-
-	/* =========================================================
-	 * Date dropdown
-	 *
-	 * Match RYM's native date menu:
-	 * outer menu ≈ 351px
-	 * inner content ≈ 349px
-	 * ======================================================= */
-
-	.ebr-film-chart-date-menu {
-		width: 351px;
-		min-width: 351px;
-		max-width: calc(100vw - 24px);
-
-		font-size: 14px;
-		line-height: 14px;
-	}
-
-
-	/* =========================================================
-	 * Generic dropdown options
-	 * ======================================================= */
-
-	.ebr-film-chart-option {
-		display: block;
-		width: 100%;
-		min-height: 66.75px;
-		box-sizing: border-box;
-
-		padding: 12px 15px;
-
-		border: 0;
-		border-top: 1px solid var(--ui-divider-line);
-
-		background: transparent;
-		color: var(--text-primary);
-
-		font: inherit;
-		text-align: left;
-
-		cursor: pointer;
-		pointer-events: auto;
-	}
-
-	.ebr-film-chart-option:first-child {
-		border-top: 0;
-	}
-
-	.ebr-film-chart-option:hover {
-		background: var(--surface-tertiary);
-	}
-
-	.ebr-film-chart-option-icon {
-		float: left;
-		width: 3em;
-
-		font-size: 1.2em;
-		line-height: 1.5;
-		text-align: center;
-	}
-
-	.ebr-film-chart-option-icon .fa.fa-circle {
-		display: none;
-	}
-
-	.ebr-film-chart-option-icon .far.fa-circle {
-		display: inline;
-	}
-
-	.ebr-film-chart-option.is-selected
-		.ebr-film-chart-option-icon
-		.fa.fa-circle {
-		display: inline;
-	}
-
-	.ebr-film-chart-option.is-selected
-		.ebr-film-chart-option-icon
-		.far.fa-circle {
-		display: none;
-	}
-
-	.ebr-film-chart-option-title {
-		margin-left: 45px;
-
-		font-size: 18px;
-		line-height: 1.15;
-	}
-
-	.ebr-film-chart-option-description {
-		margin-top: 4px;
-		margin-left: 54px;
-
-		color: var(--text-secondary);
-
-		font-size: 14px;
-		line-height: 1.15;
-	}
-
-
-	/* =========================================================
-	 * Date menu option overrides
-	 *
-	 * RYM's native date rows are ≈349 × 61px.
-	 * ======================================================= */
-
-	.ebr-film-chart-date-menu .ebr-film-chart-option {
-		width: 349px;
-		min-height: 61px;
-
-		padding: 14px;
-
-		font-size: 14px;
-		line-height: 14px;
-	}
-
-	.ebr-film-chart-date-menu .ebr-film-chart-option-title {
-		margin-left: 49px;
-
-		font-size: 16px;
-		line-height: 16px;
-	}
-
-	.ebr-film-chart-date-menu .ebr-film-chart-option-description {
-		margin-top: 4px;
-		margin-left: 49px;
-
-		font-size: 14px;
-		line-height: 14px;
-	}
-
-
-	/* =========================================================
-	 * Date help
-	 * ======================================================= */
-
-	.ebr-film-chart-date-help {
-		width: 349px;
-		box-sizing: border-box;
-
-		padding: 10px 14px;
-
-		background: var(--surface-secondary);
-		color: var(--text-secondary);
-
-		font-size: 14px;
-		line-height: 1.25;
-	}
-
-
-	/* =========================================================
-	 * Year / decade chooser
-	 *
-	 * Native RYM dimensions:
-	 * chooser: 349px
-	 * row:     22px
-	 * decade:  ~69px
-	 * year:    ~28px for complete decades
-	 * ======================================================= */
-
-	.ebr-film-chart-year-chooser {
-		display: none;
-
-		width: 349px;
-		max-width: 349px;
-		box-sizing: border-box;
-
-		margin: 4px 0 14px;
-
-		overflow: hidden;
-
-		background: var(--mono-fc);
-
-		border: 0;
-		border-radius: 4px;
-
-		font-size: 11px;
-		line-height: 11px;
-		white-space: nowrap;
-	}
-
-	.ebr-film-chart-date-menu[data-mode="year_decade"]
-		.ebr-film-chart-year-chooser,
-	.ebr-film-chart-date-menu[data-mode="year_range"]
-		.ebr-film-chart-year-chooser {
-		display: block;
-	}
-
-	.ebr-film-chart-year-row {
-		display: flex;
-		align-items: stretch;
-
-		width: 100%;
-		height: 22px;
-		box-sizing: border-box;
-
-		border-bottom: 1px solid rgba(128, 128, 128, .2);
-	}
-
-	.ebr-film-chart-year-row:last-child {
-		border-bottom: 0;
-	}
-
-	.ebr-film-chart-decade,
-	.ebr-film-chart-year {
-		appearance: none;
-		-webkit-appearance: none;
-
-		display: flex;
-		align-items: center;
-		justify-content: center;
-
-		flex: 0 0 auto;
-
-		box-sizing: border-box;
-		height: 22px;
-		min-height: 22px;
-
-		margin: 0;
-		padding: 5px 1px;
-
-		font-family: inherit;
-		font-size: 11px;
-		font-weight: normal;
-		line-height: 11px;
-
-		text-align: center;
-		white-space: nowrap;
-
-		color: var(--mono-a);
-		background: var(--mono-fc);
-
-		cursor: pointer;
-		user-select: none;
-
-		border: 0;
-		border-right: 1px solid rgba(128, 128, 128, .2);
-		border-radius: 0;
-
-		box-shadow: none;
-	}
-
-	.ebr-film-chart-decade {
-		width: 20%;
-		font-weight: bold;
-	}
-
-	.ebr-film-chart-year {
-		width: 8%;
-	}
-
-	.ebr-film-chart-decade:hover,
-	.ebr-film-chart-year:hover {
-		color: var(--text-primary);
-		background: var(--surface-tertiary);
-	}
-
-	.ebr-film-chart-decade.is-selected,
-	.ebr-film-chart-year.is-selected {
-		color: #FFFFFF;
-		background: #b78424;
-		font-weight: bold;
-	}
-
-
-	/* =========================================================
-	 * Close button
-	 * ======================================================= */
-
-	.ebr-film-chart-close {
-		width: 349px;
-		box-sizing: border-box;
-		padding: .5em 1em 1em;
-		text-align: center;
-	}
-
-	.ebr-film-chart-close button {
-		padding: .5em 1em;
-
-		background: #b78424;
-		color: #FFFFFF;
-
-		border: 0;
-		border-radius: .3em;
-
-		font: inherit;
-
-		cursor: pointer;
-	}
-
-	.ebr-film-chart-close button:hover {
-		background: #a4680d;
-	}
-
-
-	/* =========================================================
-	 * Responsive
-	 * ======================================================= */
-
-	@media only screen and (max-width: 48.1em) {
-		.ebr-film-genre-chart-controls {
-			overflow-x: auto;
-			max-width: 100%;
-			scrollbar-width: none;
-		}
-
-		.ebr-film-genre-chart-controls::-webkit-scrollbar {
-			display: none;
-		}
-	}
-`;
 
 function formatGenreName(path: string, toFilmGenre = false): string {
 	const genre = path.split("/")[2]?.toLowerCase() ?? "";
@@ -592,21 +166,21 @@ function updateControls(
 
 	document
 		.querySelectorAll<HTMLElement>("[data-chart-type]")
-		.forEach((option) =>
+		.forEach((option) => {
 			option.classList.toggle(
 				"is-selected",
 				option.dataset.chartType === state.chartType,
-			),
-		);
+			);
+		});
 
 	document
 		.querySelectorAll<HTMLElement>("[data-date-mode]")
-		.forEach((option) =>
+		.forEach((option) => {
 			option.classList.toggle(
 				"is-selected",
 				option.dataset.dateMode === state.dateMode,
-			),
-		);
+			);
+		});
 
 	const dateMenu = document.getElementById("ebr-film-chart-date-menu");
 	if (dateMenu) dateMenu.dataset.mode = state.dateMode;
@@ -656,7 +230,7 @@ function wireControls(
 	const dateMenu = controls.querySelector<HTMLElement>(
 		"#ebr-film-chart-date-menu",
 	);
-	let rangeStart: number | null = null;
+	let rangeStart: YearRange | null = null;
 
 	const closeMenus = () => {
 		chartTypeMenu?.classList.remove("is-open");
@@ -732,13 +306,15 @@ function wireControls(
 				if (!Number.isFinite(year)) return;
 
 				if (state.dateMode === "year_range") {
+					const selectedRange = yearRange(year);
 					if (rangeStart === null) {
-						rangeStart = year;
-						state.startYear = year;
-						state.endYear = year;
+						rangeStart = selectedRange;
+						state.startYear = selectedRange.start;
+						state.endYear = selectedRange.end;
 					} else {
-						state.startYear = Math.min(rangeStart, year);
-						state.endYear = Math.max(rangeStart, year);
+						const range = combineYearRanges(rangeStart, selectedRange);
+						state.startYear = range.start;
+						state.endYear = range.end;
 						rangeStart = null;
 					}
 				} else {
@@ -759,13 +335,15 @@ function wireControls(
 				if (!Number.isFinite(decade)) return;
 
 				if (state.dateMode === "year_range") {
+					const selectedRange = decadeRange(decade);
 					if (rangeStart === null) {
-						rangeStart = decade;
-						state.startYear = decade;
-						state.endYear = decade + 9;
+						rangeStart = selectedRange;
+						state.startYear = selectedRange.start;
+						state.endYear = selectedRange.end;
 					} else {
-						state.startYear = Math.min(rangeStart, decade);
-						state.endYear = Math.max(rangeStart, decade + 9);
+						const range = combineYearRanges(rangeStart, selectedRange);
+						state.startYear = range.start;
+						state.endYear = range.end;
 						rangeStart = null;
 					}
 				} else {
@@ -802,13 +380,6 @@ export async function mainFilmGenre(): Promise<void> {
 
 	if (breadcrumb.querySelector(".ebr-film-genre-chart-controls")) {
 		return;
-	}
-
-	if (!document.getElementById("ebr-film-genre-chart-controls-style")) {
-		const style = document.createElement("style");
-		style.id = "ebr-film-genre-chart-controls-style";
-		style.textContent = STYLE;
-		document.head.appendChild(style);
 	}
 
 	const genre = formatGenreName(globalThis.location.pathname);

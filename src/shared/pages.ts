@@ -12,8 +12,7 @@ export const pages = {
 	voteHistoryDescriptors: "/rdescriptor/vote_history",
 	streamLinkMissing: "/misc/media_link_you_know",
 	searchBar: "/",
-	filmChartGenreLinks: "/charts/",
-	filmGenreChartButton: "/film_genre/",
+	genreChartControls: "/genre/",
 	timeline: "/artist/",
 	map: "/artist/",
 	hideVotes: "/r",
@@ -40,8 +39,7 @@ export const pageLabels: Record<PageKey, string> = {
 	voteHistoryDescriptors: "Enhancements for Descriptor Vote History",
 	streamLinkMissing: 'Filtering in "Media Link You Know" List',
 	searchBar: "Search Bar Shortcuts",
-	filmChartGenreLinks: "Film Chart Genre Links",
-	filmGenreChartButton: "Film Genre Chart Button",
+	genreChartControls: "Genre Chart Controls",
 	timeline: "Artist Timeline",
 	map: "Artist Location Map",
 	hideVotes: "Hide Votes on Genre/Descriptor Pages",
@@ -52,22 +50,45 @@ export const pageLabels: Record<PageKey, string> = {
 	chartShortcuts: "Chart Shortcuts",
 };
 
-export const pageGroupLabels: Partial<Record<string, string>> = {
-	"/release/": "Release Pages",
-	"/releases/ac": "Release Submission",
-	"/images/upload": "Cover Art Submission",
-	"/submit_media_link": "Media Links Submission",
-	"/collection": "Music Collection",
-	"/film_collection": "Film Collection",
-	"/~": "User Page",
-	"/rgenre/vote_history": "Genre Vote History",
-	"/rdescriptor/vote_history": "Descriptor Vote History",
-	"/misc/media_link_you_know": "Media Link You Know",
-	"/": "Global",
-	"/charts/": "Charts",
-	"/film_genre/": "Film Genre",
-	"/artist/": "Artist Pages",
-};
+export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
+	[
+		["Search and navigation", ["searchBar"]],
+		[
+			"Charts",
+			[
+				"genreChartControls",
+				"chartShortcuts",
+				"descriptorLinks",
+				"switchGenreDescriptor",
+			],
+		],
+		[
+			"Release and submission tools",
+			[
+				"streamLinks",
+				"trackTime",
+				"releaseSubmission",
+				"coverArt",
+				"streamLinkSubmission",
+			],
+		],
+		[
+			"Library and user profiles",
+			[
+				"userCollection",
+				"filmCollection",
+				"userPage",
+				"streamLinkMissing",
+				"voteHistoryGenres",
+				"voteHistoryDescriptors",
+			],
+		],
+		["Artist profiles", ["timeline", "map"]],
+		[
+			"Content visibility",
+			["hideRatings", "hideReviews", "hideCommentBoxes", "hideVotes"],
+		],
+	] as const;
 
 export const pageHints: Record<PageKey, string> = {
 	streamLinks:
@@ -91,10 +112,8 @@ export const pageHints: Record<PageKey, string> = {
 	streamLinkMissing:
 		'Adds filtering controls to the "Media Link You Know" submission list.',
 	searchBar: "Adds shortcuts to the site-wide search bar.",
-	filmChartGenreLinks:
-		"On film chart pages, redirects genre links to their corresponding film genre pages.",
-	filmGenreChartButton:
-		"On film genre pages, adds a button to open the top chart filtered by that genre.",
+	genreChartControls:
+		"Adds chart controls to music genre pages and film genre pages, and links film chart genres to their film genre pages.",
 	timeline:
 		"On artist pages, adds an inline timeline visualizing member activity and discography.",
 	map: "On artist pages, adds an interactive map showing concert locations.",

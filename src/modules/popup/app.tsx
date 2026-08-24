@@ -1,9 +1,9 @@
 import { useEffect, useState } from "preact/hooks";
 import browser from "webextension-polyfill";
 
-import { getPageEnabled, setPageEnabled } from "~/shared/page-settings";
+import { getAllPageEnabled, setPageEnabled } from "~/shared/page-settings";
 import type { PageKey } from "~/shared/pages";
-import { pageGroupLabels, pageHints, pageLabels, pages } from "~/shared/pages";
+import { featureGroups, pageHints, pageLabels } from "~/shared/pages";
 
 import { ShortcutView } from "./shortcut-view";
 import { styles } from "./styles";
@@ -18,33 +18,16 @@ type View =
 	| "hideReviews"
 	| "hideVotes";
 
-function buildGroups(): [string, PageKey[]][] {
-	const map = new Map<string, PageKey[]>();
-	for (const key of Object.keys(pages) as PageKey[]) {
-		const path = pages[key];
-		if (!map.has(path)) map.set(path, []);
-		map.get(path)!.push(key);
-	}
-	return [...map.entries()];
-}
-
-const groups = buildGroups();
-
 export function App() {
 	const [view, setView] = useState<View>("features");
 	const [features, setFeatures] = useState<FeatureState | null>(null);
+	const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+		() => new Set(),
+	);
 	const [needsReload, setNeedsReload] = useState(false);
 
 	useEffect(() => {
-		const keys = Object.keys(pages) as PageKey[];
-		void Promise.all(
-			keys.map(async (key) => {
-				const enabled = await getPageEnabled(key);
-				return [key, enabled] as const;
-			}),
-		).then((entries) => {
-			setFeatures(Object.fromEntries(entries) as FeatureState);
-		});
+		void getAllPageEnabled().then(setFeatures);
 	}, []);
 
 	const toggle = async (key: PageKey) => {
@@ -125,61 +108,82 @@ export function App() {
 			) : (
 				<main style={styles.list}>
 					{features === null ? (
-						<div style={styles.loading}>Loading…</div>
+						<LoadingIndicator />
 					) : (
-						groups.map(([path, keys]) => {
-							const isGroup = keys.length > 1;
+						featureGroups.map(([label, keys]) => {
+							const expanded = expandedGroups.has(label);
 							return (
-								<div key={path} style={isGroup ? styles.card : styles.cardFlat}>
-									{isGroup && (
-										<div style={styles.groupHeader}>
-											{pageGroupLabels[path] ?? path}
-										</div>
-									)}
-									{keys.map((key, i) => (
-										<label
-											key={key}
-											style={{
-												...styles.row,
-												...(i < keys.length - 1 ? styles.rowDivider : {}),
-											}}
-										>
-											<span style={styles.label}>
-												{pageLabels[key]}
-												<span class="ebr-hint">{pageHints[key]}</span>
-											</span>
-											{key === "chartShortcuts" && (
-												<button
-													type="button"
-													onClick={() => setView("chartShortcuts")}
-													style={styles.customizeButton}
-												>
-													Customize shortcuts
-												</button>
-											)}
-											{(key === "hideRatings" ||
-												key === "hideReviews" ||
-												key === "hideVotes") && (
-												<button
-													type="button"
-													onClick={() => setView(key)}
-													style={styles.customizeButton}
-												>
-													Configure
-												</button>
-											)}
-											<Toggle
-												checked={features[key]}
-												onChange={() => void toggle(key)}
-											/>
-										</label>
-									))}
+								<div key={label} style={styles.card}>
+									<button
+										type="button"
+										aria-expanded={expanded}
+										onClick={() =>
+											setExpandedGroups((current) => {
+												const next = new Set(current);
+												if (next.has(label)) next.delete(label);
+												else next.add(label);
+												return next;
+											})
+										}
+										style={styles.groupHeader}
+									>
+										<span>{label}</span>
+										<span aria-hidden="true">{expanded ? "⌄" : "›"}</span>
+									</button>
+									{expanded &&
+										keys.map((key, i) => (
+											<label
+												key={key}
+												style={{
+													...styles.row,
+													...(i < keys.length - 1 ? styles.rowDivider : {}),
+												}}
+											>
+												<span style={styles.label}>
+													{pageLabels[key]}
+													<span class="ebr-hint">{pageHints[key]}</span>
+												</span>
+												{key === "chartShortcuts" && (
+													<button
+														type="button"
+														onClick={() => setView("chartShortcuts")}
+														style={styles.customizeButton}
+													>
+														Customize shortcuts
+													</button>
+												)}
+												{(key === "hideRatings" ||
+													key === "hideReviews" ||
+													key === "hideVotes") && (
+													<button
+														type="button"
+														onClick={() => setView(key)}
+														style={styles.customizeButton}
+													>
+														Configure
+													</button>
+												)}
+												<Toggle
+													checked={features[key]}
+													onChange={() => void toggle(key)}
+												/>
+											</label>
+										))}
 								</div>
 							);
 						})
 					)}
 				</main>
 			)}
+		</div>
+	);
+}
+
+function LoadingIndicator() {
+	return (
+		<div style={styles.loading} role="status">
+			<span aria-hidden="true">⏳</span>
+			<span>Loading settings…</span>
 		</div>
 	);
 }

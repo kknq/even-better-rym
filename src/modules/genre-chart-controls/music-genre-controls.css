@@ -17,6 +17,50 @@
 	position: relative;
 }
 
+/* Preserve the visual language of RYM's native chart choosers. */
+.ebr-genre-chart-controls-row .release_type_chooser,
+.ebr-genre-chart-controls-row .date_year_chooser {
+	background: var(--mono-fc);
+	border: 1px solid rgba(128, 128, 128, 0.5);
+	border-radius: 4px;
+}
+
+.ebr-genre-chart-controls-row .release_type_chooser_row {
+	display: block;
+	height: auto;
+}
+
+.ebr-genre-chart-controls-row .release_type_btn {
+	display: inline-block;
+	width: 25% !important;
+	height: auto;
+	min-height: 0;
+	padding: 0.7em;
+	background: transparent;
+	color: var(--mono-a);
+	font-size: 0.9em;
+	line-height: normal;
+}
+
+.ebr-genre-chart-controls-row .ebr-release-type-extra-row .release_type_btn {
+	width: 33.3333% !important;
+}
+
+.ebr-genre-chart-controls-row .release_type_btn:hover,
+.ebr-genre-chart-controls-row .date_year_chooser_decade_btn:hover,
+.ebr-genre-chart-controls-row .date_year_chooser_year_btn:hover {
+	background: var(--mono-f4);
+	color: var(--mono-abs-6);
+}
+
+.ebr-genre-chart-controls-row .release_type_btn.selected,
+.ebr-genre-chart-controls-row .date_year_chooser_decade_btn.selected,
+.ebr-genre-chart-controls-row .date_year_chooser_year_btn.selected {
+	background: var(--btn-primary-background-default) !important;
+	color: var(--btn-primary-text) !important;
+	font-weight: bold;
+}
+
 .ebr-genre-chart-controls-row #page_chart_query {
 	display: flex;
 	align-items: center;
@@ -1249,4 +1293,62 @@
 .ebr-genre-chart-controls-row #page_chart_query_item_chart_date_type_title {
 	min-width: 0 !important;
 	max-width: none !important;
+}
+
+.ebr-genre-chart-controls-row .release_type_chooser {
+	width: 100% !important;
+	height: auto !important;
+	background: var(--mono-fc) !important;
+	border: 1px solid rgba(128, 128, 128, 0.5) !important;
+}
+
+.ebr-genre-chart-controls-row
+	.release_type_chooser:not(.ebr-release-type-extra-row)
+	.release_type_chooser_row {
+	display: grid !important;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	width: 100% !important;
+	height: auto !important;
+}
+
+.ebr-genre-chart-controls-row
+	.release_type_chooser:not(.ebr-release-type-extra-row)
+	.release_type_chooser_row:first-child {
+	border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.ebr-genre-chart-controls-row
+	.ebr-release-type-extra-row
+	.release_type_chooser_row {
+	display: grid !important;
+	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+	width: 100% !important;
+	height: auto !important;
+}
+
+.ebr-genre-chart-controls-row .release_type_btn {
+	display: flex !important;
+	align-items: center;
+	justify-content: center;
+	width: auto !important;
+	height: auto !important;
+	min-height: 2.8em !important;
+	min-width: 0;
+	margin: 0 !important;
+	padding: 0.7em 0.3em !important;
+	float: none !important;
+	clear: none !important;
+	flex: none !important;
+	grid-column: auto !important;
+	background: transparent !important;
+	color: var(--mono-a) !important;
+	font-size: 0.9em !important;
+	line-height: normal !important;
+}
+
+.ebr-genre-chart-controls-row
+	.ebr-release-type-extra-row
+	.release_type_chooser_row
+	> .release_type_btn {
+	width: 100% !important;
 }
