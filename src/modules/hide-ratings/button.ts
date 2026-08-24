@@ -1,24 +1,39 @@
+import { eyeIcon } from "~/shared/icons/eye";
+
 import { fireHide, fireShow } from "./events";
 
-/**
- * Wires a DOM element as a Show/Hide Ratings toggle button.
- *
- * - Sets the initial label to "Show Ratings".
- * - On click dispatches the appropriate custom event.
- * - Listens for custom events so the label stays in sync when other code
- *   triggers a visibility change.
- */
-export const wireButton = (button: HTMLElement): void => {
+export const wireButton = (
+	button: HTMLElement,
+	global = false,
+	onVisibilityChange?: (visible: boolean) => void,
+): void => {
 	const toggleRatings = (): void => {
 		if (button.dataset.hiding === "true") {
+			document.body.classList.remove("ebr-manual-hide-ratings");
 			fireShow();
+			onVisibilityChange?.(true);
 		} else {
+			document.body.classList.add("ebr-manual-hide-ratings");
 			fireHide();
+			onVisibilityChange?.(false);
 		}
 	};
 
-	button.textContent = "Show Ratings";
-	button.dataset.hiding = "true";
+	const update = (hidden: boolean) => {
+		button.dataset.hiding = String(hidden);
+		const label = global
+			? hidden
+				? "Disable Hide Ratings"
+				: "Enable Hide Ratings"
+			: hidden
+				? "Show Ratings"
+				: "Hide Ratings";
+		button.innerHTML = `${eyeIcon(hidden)}<span>${label}</span>`;
+		button.setAttribute("aria-label", label);
+		button.setAttribute("title", label);
+	};
+
+	update(document.body.classList.contains("ebr-hide-ratings"));
 
 	button.addEventListener("click", (event) => {
 		event.preventDefault();
@@ -35,12 +50,10 @@ export const wireButton = (button: HTMLElement): void => {
 	}
 
 	document.addEventListener("ebrHideRatings", () => {
-		button.dataset.hiding = "true";
-		button.textContent = "Show Ratings";
+		update(true);
 	});
 
 	document.addEventListener("ebrShowRatings", () => {
-		button.dataset.hiding = "false";
-		button.textContent = "Hide Ratings";
+		update(false);
 	});
 };

@@ -29,7 +29,11 @@ function labelFor(actionId: ChartShortcutActionId): string {
 	);
 }
 
-export function ShortcutView() {
+export function ShortcutView({
+	onSettingsChange,
+}: Readonly<{
+	onSettingsChange: () => void;
+}>) {
 	const [bindings, setBindings] = useState<ChartShortcutBindings | null>(null);
 
 	useEffect(() => {
@@ -39,6 +43,7 @@ export function ShortcutView() {
 	const save = async (next: ChartShortcutBindings) => {
 		setBindings(next);
 		await setChartShortcutBindings(next);
+		onSettingsChange();
 	};
 
 	const removeCombo = (actionId: ChartShortcutActionId, combo: string) => {
