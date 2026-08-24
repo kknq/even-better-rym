@@ -79,13 +79,6 @@ function clickPastShowsButton(): void {
 	if (expandButton.offsetParent === null) return;
 
 	expandButton.click();
-	expandButton.dispatchEvent(
-		new MouseEvent("click", {
-			bubbles: true,
-			cancelable: true,
-			view: window,
-		}),
-	);
 }
 
 async function waitForPastShowsLoaded(timeoutMs = 3000): Promise<void> {
@@ -105,7 +98,7 @@ async function waitForPastShowsLoaded(timeoutMs = 3000): Promise<void> {
 
 		const expandButton = document.getElementById("disco_expand_prev");
 
-		if (expandButton?.offsetParent === null) {
+		if (!expandButton || expandButton.offsetParent === null) {
 			resolve();
 			return;
 		}
