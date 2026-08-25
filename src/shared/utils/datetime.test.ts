@@ -1,11 +1,23 @@
 import { describe, expect, test } from "vitest";
 
-import { MONTH_NAMES, secondsToString } from "./datetime";
+import { formatDuration, MONTH_NAMES, secondsToString } from "./datetime";
 
 describe("secondsToString", () => {
 	test("gets rounding correct", () => {
 		expect(secondsToString(59.4)).toBe("0:59");
 		expect(secondsToString(59.5)).toBe("1:00");
+	});
+});
+
+describe("formatDuration", () => {
+	test.each([
+		["1:23:45", "83:45"],
+		["23:45", "23:45"],
+		["1:2:3", "62:03"],
+		["00:30", "0:30"],
+		["N/A", "N/A"],
+	])("formats %s to %s", (input, expected) => {
+		expect(formatDuration(input)).toBe(expected);
 	});
 });
 
