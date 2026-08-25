@@ -1,4 +1,4 @@
-import { MONTH_NAMES } from "~/shared/utils/datetime";
+import { formatDuration, MONTH_NAMES } from "~/shared/utils/datetime";
 import { fetch } from "~/shared/utils/fetch";
 import { getReleaseType } from "~/shared/utils/music";
 import { isDefined } from "~/shared/utils/types";
@@ -307,7 +307,8 @@ const getTracks = (document_: Document): Track[] => {
 			row.querySelector("td:first-child") ?? row,
 		)?.replace(/\.$/, "");
 		const title = getText(titleCell);
-		const duration = getText(row.querySelector("td[align='right']") ?? row);
+		const durationText = getText(row.querySelector("td[align='right']") ?? row);
+		const duration = durationText ? formatDuration(durationText) : undefined;
 
 		return [{ position, title, duration }];
 	});

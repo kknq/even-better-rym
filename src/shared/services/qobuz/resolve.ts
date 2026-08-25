@@ -1,5 +1,5 @@
 import { asArray } from "~/shared/utils/array";
-import { stringToDate } from "~/shared/utils/datetime";
+import { formatDuration, stringToDate } from "~/shared/utils/datetime";
 import { fetch } from "~/shared/utils/fetch";
 import { getReleaseType } from "~/shared/utils/music";
 import { isDefined } from "~/shared/utils/types";
@@ -52,25 +52,13 @@ const getTracks = (document_: Document) => {
 				.querySelector("div.track__item--number")
 				?.textContent?.trim();
 			const title = element.getAttribute("title")?.trim();
-			const duration = normalizeDuration(
-				element
-					.querySelector("span.track__item--duration")
-					?.textContent?.trim(),
-			);
+			const durationText = element
+				.querySelector("span.track__item--duration")
+				?.textContent?.trim();
+			const duration = durationText ? formatDuration(durationText) : undefined;
 			return { position, title, duration };
 		},
 	);
-};
-
-const normalizeDuration = (extractedDuration: string | undefined) => {
-	if (extractedDuration === undefined) return extractedDuration;
-
-	const parts = extractedDuration.split(":").map((n) => Number.parseInt(n, 10));
-
-	const [h, m, s] = parts;
-	return h === 0
-		? `${m}:${s.toString().padStart(2, "0")}`
-		: `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 };
 
 export const resolve: ResolveFunction = async (url) => {
