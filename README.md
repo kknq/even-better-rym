@@ -28,6 +28,12 @@ Download cover art from a supported service with a pasted link. The artwork sour
 
 ---
 
+### Discogs Release Image Carousel
+
+On music release pages, looks up the selected release issue on Discogs using its catalogue number and displays the matching secondary release images in a navigable carousel. The feature is enabled by default and can be disabled from the extension popup. Requests use Discogs' public API; releases without matching secondary images show an empty state.
+
+---
+
 ### Descriptor Links on Release Pages
 
 Makes descriptors clickable so you can explore charts for each one.
@@ -169,7 +175,7 @@ Discogs also has an auth block, but it seems to work without any keys
 
 ### Manifest Version
 
-The extension supports both Manifest V2 and V3. Set the `MANIFEST_VERSION` environment variable to switch between them (defaults to V3):
+The extension supports both Manifest V2 and V3. Manifest V3 is the default and primary target for ongoing development; set the `MANIFEST_VERSION` environment variable only when you specifically need to test or build the older MV2 variant:
 
 ```
 MANIFEST_VERSION=2

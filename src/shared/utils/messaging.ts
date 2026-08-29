@@ -18,6 +18,8 @@ export type FetchResponse = {
 	type: "fetch";
 	data: {
 		body: string;
+		status: number;
+		statusText: string;
 	};
 };
 
