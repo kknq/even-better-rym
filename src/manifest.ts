@@ -106,14 +106,8 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
-			js: ["src/modules/whosampled/main.ts"],
-			css: ["src/modules/whosampled/whosampled.css"],
-			matches: ["*://*.rateyourmusic.com/release/*"],
-			run_at: "document_start",
-		},
-		{
-			js: ["src/modules/wikipedia/main.ts"],
-			css: ["src/modules/wikipedia/wikipedia.css"],
+			js: ["src/modules/reference-links/main.ts"],
+			css: ["src/modules/reference-links/reference-links.css"],
 			matches: ["*://*.rateyourmusic.com/release/*"],
 			run_at: "document_start",
 		},

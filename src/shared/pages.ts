@@ -5,8 +5,7 @@ export const pages = {
 	releaseSubmission: "/releases/ac",
 	coverArt: "/images/upload",
 	discogsCarousel: "/release/",
-	whosampled: "/release/",
-	wikipedia: "/release/",
+	referenceLinks: "/release/",
 	streamLinkSubmission: "/submit_media_link",
 	userCollection: "/collection",
 	filmCollection: "/film_collection",
@@ -35,8 +34,7 @@ export const pageLabels: Record<PageKey, string> = {
 	releaseSubmission: "Release Submission Helper",
 	coverArt: "Cover Art Submission Helper",
 	discogsCarousel: "Discogs Release Image Carousel",
-	whosampled: "WhoSampled Links",
-	wikipedia: "Wikipedia Album Search",
+	referenceLinks: "Reference Links",
 	streamLinkSubmission: "Media Links Submission Helper",
 	userCollection: "Music Collection Filters",
 	filmCollection: "Film Collection Filters",
@@ -79,7 +77,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 				"streamLinkSubmission",
 			],
 		],
-		["External reference links", ["whosampled", "wikipedia"]],
+		["External reference links", ["referenceLinks"]],
 		[
 			"Library and user profiles",
 			[
@@ -110,8 +108,8 @@ export const pageHints: Record<PageKey, string> = {
 	coverArt: "Adds download controls to the cover art upload page.",
 	discogsCarousel:
 		"Adds an optional carousel of secondary Discogs release images to music release pages.",
-	whosampled: "Adds a direct link to the matching WhoSampled album page.",
-	wikipedia: "Adds a Wikipedia search link for the current release.",
+	referenceLinks:
+		"Adds a WhoSampled album link and a Wikipedia search action for the current release.",
 	streamLinkSubmission:
 		"Assists with converting Soundcloud and Bandcamp links to embed codes on the media link submission page.",
 	userCollection: "Adds filters to your music collection page.",

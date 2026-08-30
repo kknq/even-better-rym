@@ -5,8 +5,7 @@ const defaultPageEnabled: Partial<Record<PageKey, boolean>> = {
 	hideReviews: false,
 	hideCommentBoxes: false,
 	discogsCarousel: true,
-	whosampled: true,
-	wikipedia: true,
+	referenceLinks: true,
 };
 
 const legacyGenreChartControlKeys = [
@@ -15,10 +14,17 @@ const legacyGenreChartControlKeys = [
 	"genrePageChartControls",
 ] as const;
 
+const legacyReferenceLinkKeys = ["whosampled", "wikipedia"] as const;
+
 const getLegacyGenreChartControlsEnabled = (
 	values: Record<string, unknown>,
 ): boolean =>
 	legacyGenreChartControlKeys.every((key) => values[`pages.${key}`] !== false);
+
+const getLegacyReferenceLinksEnabled = (
+	values: Record<string, unknown>,
+): boolean =>
+	legacyReferenceLinkKeys.every((key) => values[`pages.${key}`] !== false);
 
 export const getPageEnabled = async (key: PageKey): Promise<boolean> => {
 	const enabled = await storage.get<boolean>(`pages.${key}`);
@@ -26,6 +32,9 @@ export const getPageEnabled = async (key: PageKey): Promise<boolean> => {
 
 	if (key === "genreChartControls") {
 		return getLegacyGenreChartControlsEnabled(await storage.getAll());
+	}
+	if (key === "referenceLinks") {
+		return getLegacyReferenceLinksEnabled(await storage.getAll());
 	}
 
 	return defaultPageEnabled[key] ?? true;
@@ -42,6 +51,9 @@ export const getAllPageEnabled = async (): Promise<
 			if (typeof enabled === "boolean") return [key, enabled];
 			if (key === "genreChartControls") {
 				return [key, getLegacyGenreChartControlsEnabled(values)];
+			}
+			if (key === "referenceLinks") {
+				return [key, getLegacyReferenceLinksEnabled(values)];
 			}
 			return [key, defaultPageEnabled[key] ?? true];
 		}),

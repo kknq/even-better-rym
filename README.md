@@ -34,6 +34,12 @@ On music release pages, looks up the selected release issue on Discogs using its
 
 ---
 
+### Reference Links
+
+Adds direct external reference links for the current release: a WhoSampled album destination and a Wikipedia search action. The code is kept in a single release-page module so the user-facing behavior stays consistent and easy to maintain.
+
+---
+
 ### Descriptor Links on Release Pages
 
 Makes descriptors clickable so you can explore charts for each one.
@@ -175,7 +181,7 @@ Discogs also has an auth block, but it seems to work without any keys
 
 ### Manifest Version
 
-The extension supports both Manifest V2 and V3. Manifest V3 is the default and primary target for ongoing development; set the `MANIFEST_VERSION` environment variable only when you specifically need to test or build the older MV2 variant:
+The extension supports both Manifest V2 and V3. Set the `MANIFEST_VERSION` environment variable to switch between them (defaults to V3):
 
 ```
 MANIFEST_VERSION=2

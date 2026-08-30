@@ -5,7 +5,7 @@ import { waitForElement } from "~/shared/utils/dom";
 import type { FetchRequest, FetchResponse } from "~/shared/utils/messaging";
 import { sendBackgroundMessage } from "~/shared/utils/messaging";
 
-import "./wikipedia.css";
+import "./reference-links.css";
 
 type SearchResult = {
 	ns: number;
@@ -21,6 +21,13 @@ type SearchResponse = {
 
 const normalize = (value: string): string =>
 	value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const toSlug = (value: string): string =>
+	value
+		.trim()
+		.replace(/\s+/g, "-")
+		.replace(/-By-.*/i, "")
+		.replace(/-+$/g, "");
 
 const searchWikipedia = async (
 	artistName: string,
@@ -73,6 +80,50 @@ const searchWikipedia = async (
 		: undefined;
 };
 
+const appendReferenceLinks = (
+	submitLink: HTMLAnchorElement,
+	release: ReturnType<typeof getReleaseTitleData>,
+): void => {
+	if (!release) return;
+
+	const container = document.createElement("div");
+	container.className = "ebr-reference-links";
+
+	const whoSampled = document.createElement("a");
+	whoSampled.className = "ebr-reference-link ebr-reference-link--primary";
+	whoSampled.href = `https://www.whosampled.com/album/${toSlug(release.artistName)}/${toSlug(release.albumTitle)}/`;
+	whoSampled.target = "_blank";
+	whoSampled.rel = "noreferrer";
+	whoSampled.textContent = "View on WhoSampled";
+
+	const wikipedia = document.createElement("button");
+	wikipedia.type = "button";
+	wikipedia.className = "ebr-reference-link ebr-reference-link--secondary";
+	wikipedia.textContent = "Search Wikipedia";
+	wikipedia.addEventListener("click", () => {
+		const previous = wikipedia.textContent;
+		wikipedia.disabled = true;
+		wikipedia.textContent = "Searching Wikipedia…";
+		void searchWikipedia(release.artistName, release.albumTitle)
+			.then((url) => {
+				if (url) window.open(url, "_blank", "noopener,noreferrer");
+				else wikipedia.textContent = "No Wikipedia article found";
+			})
+			.catch(() => {
+				wikipedia.textContent = "Wikipedia search failed";
+			})
+			.finally(() => {
+				wikipedia.disabled = false;
+				setTimeout(() => {
+					wikipedia.textContent = previous;
+				}, 1200);
+			});
+	});
+
+	container.append(whoSampled, wikipedia);
+	submitLink.parentElement?.after(container);
+};
+
 async function main(): Promise<void> {
 	await waitForElement<HTMLAnchorElement>('a[href*="/submit_media_link"]');
 	const submitLinks = Array.from(
@@ -84,31 +135,8 @@ async function main(): Promise<void> {
 		submitLinks.find((link) => !link.closest(".show-for-small")) ??
 		submitLinks.at(-1);
 	const release = getReleaseTitleData();
-	if (!submitLink?.parentElement || !release || !findReleaseIssue()) return;
-
-	const container = document.createElement("div");
-	container.className = "ebr-wikipedia-button-container";
-	const link = document.createElement("button");
-	link.className = "ebr-wikipedia-button";
-	link.textContent = "Search Wikipedia";
-	link.type = "button";
-	link.addEventListener("click", () => {
-		link.disabled = true;
-		link.textContent = "Searching Wikipedia…";
-		void searchWikipedia(release.artistName, release.albumTitle)
-			.then((url) => {
-				if (url) window.open(url, "_blank", "noopener,noreferrer");
-				else link.textContent = "No Wikipedia article found";
-			})
-			.catch(() => {
-				link.textContent = "Wikipedia search failed";
-			})
-			.finally(() => {
-				link.disabled = false;
-			});
-	});
-	container.append(link);
-	submitLink.parentElement.after(container);
+	if (!submitLink || !release || !findReleaseIssue()) return;
+	appendReferenceLinks(submitLink, release);
 }
 
-void runPage("wikipedia", main);
+void runPage("referenceLinks", main);
