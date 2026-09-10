@@ -28,6 +28,30 @@ Download cover art from a supported service with a pasted link. The artwork sour
 
 ---
 
+### Discogs Release Image Carousel
+
+On music release pages, looks up the selected release issue on Discogs using its catalogue number and displays the matching secondary release images in a navigable carousel. The feature is enabled by default and can be disabled from the extension popup. Requests use Discogs' public API; releases without matching secondary images show an empty state.
+
+---
+
+### WhoSampled Link
+
+Adds a direct WhoSampled album link for the current release. The feature can be enabled or disabled independently from the extension popup.
+
+---
+
+### Wikipedia Search
+
+Adds a button that searches Wikipedia for the current release using its album and artist names. The search runs only after you press the button, and the feature can be enabled or disabled independently from the extension popup.
+
+---
+
+### User Reception
+
+Adds a release-page summary based on RYM's rating distribution. Ratings are grouped into six reception categories and shown with a ranked breakdown plus a positive-reception meter ranging from Panned to Acclaim. The feature is enabled by default and can be disabled from the extension popup.
+
+---
+
 ### Descriptor Links on Release Pages
 
 Makes descriptors clickable so you can explore charts for each one.

@@ -4,6 +4,10 @@ export const pages = {
 	trackTime: "/release/",
 	releaseSubmission: "/releases/ac",
 	coverArt: "/images/upload",
+	discogsCarousel: "/release/",
+	referenceLinks: "/release/",
+	wikipedia: "/release/",
+	userReception: "/release/",
 	streamLinkSubmission: "/submit_media_link",
 	userCollection: "/collection",
 	filmCollection: "/film_collection",
@@ -31,6 +35,10 @@ export const pageLabels: Record<PageKey, string> = {
 	trackTime: "Release Length to Hours Conversion",
 	releaseSubmission: "Release Submission Helper",
 	coverArt: "Cover Art Submission Helper",
+	discogsCarousel: "Discogs Release Image Carousel",
+	referenceLinks: "WhoSampled Link",
+	wikipedia: "Wikipedia Search",
+	userReception: "User Reception",
 	streamLinkSubmission: "Media Links Submission Helper",
 	userCollection: "Music Collection Filters",
 	filmCollection: "Film Collection Filters",
@@ -69,9 +77,12 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 				"trackTime",
 				"releaseSubmission",
 				"coverArt",
+				"discogsCarousel",
 				"streamLinkSubmission",
 			],
 		],
+		["External reference links", ["referenceLinks", "wikipedia"]],
+		["Release insights", ["userReception"]],
 		[
 			"Library and user profiles",
 			[
@@ -100,6 +111,13 @@ export const pageHints: Record<PageKey, string> = {
 	releaseSubmission:
 		"Pre-fills the release submission form with data found on the provided page.",
 	coverArt: "Adds download controls to the cover art upload page.",
+	discogsCarousel:
+		"Adds an optional carousel of secondary Discogs release images to music release pages.",
+	referenceLinks:
+		"Adds a direct WhoSampled album link for the current release.",
+	wikipedia: "Adds a button to search for the current release on Wikipedia.",
+	userReception:
+		"Summarizes the release's rating distribution into a user reception meter and ranked categories.",
 	streamLinkSubmission:
 		"Assists with converting Soundcloud and Bandcamp links to embed codes on the media link submission page.",
 	userCollection: "Adds filters to your music collection page.",

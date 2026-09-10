@@ -10,11 +10,20 @@ export const backgroundFetch = async ({
 			urlObject.searchParams.append(key, value);
 	}
 
-	const responseBody = await fetch(urlObject.toString(), {
+	const response = await fetch(urlObject.toString(), {
 		method,
 		headers,
 		credentials,
-	}).then((response) => response.text());
+	});
+	const responseBody = await response.text();
 
-	return { id, type: "fetch", data: { body: responseBody } };
+	return {
+		id,
+		type: "fetch",
+		data: {
+			body: responseBody,
+			status: response.status,
+			statusText: response.statusText,
+		},
+	};
 };
