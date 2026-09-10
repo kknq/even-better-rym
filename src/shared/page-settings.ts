@@ -6,6 +6,7 @@ const defaultPageEnabled: Partial<Record<PageKey, boolean>> = {
 	hideCommentBoxes: false,
 	discogsCarousel: true,
 	referenceLinks: true,
+	userReception: true,
 };
 
 const legacyGenreChartControlKeys = [
