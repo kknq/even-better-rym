@@ -35,11 +35,25 @@
 }
 
 .ebr-reference-link--primary {
-	background: var(--gen-blue, #3d7ad8);
-	color: var(--mono-0, #fff);
+	background: #eff100;
+	border-color: #3c4043;
+	color: #3c4043;
 }
 
-.ebr-reference-link--secondary {
+.ebr-reference-link--primary:hover,
+.ebr-reference-link--primary:focus-visible {
+	border-color: #3c4043;
+	color: #3c4043;
+}
+
+.ebr-whosampled-logo {
+	display: block;
+	width: 1.15rem;
+	height: 1.15rem;
+	object-fit: contain;
+}
+
+.ebr-wikipedia-link {
 	background: transparent;
 	color: var(--mono-1, #d7d8d8);
 }

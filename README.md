@@ -34,9 +34,15 @@ On music release pages, looks up the selected release issue on Discogs using its
 
 ---
 
-### Reference Links
+### WhoSampled Link
 
-Adds direct external reference links for the current release: a WhoSampled album destination and a Wikipedia search action. The code is kept in a single release-page module so the user-facing behavior stays consistent and easy to maintain.
+Adds a direct WhoSampled album link for the current release. The feature can be enabled or disabled independently from the extension popup.
+
+---
+
+### Wikipedia Search
+
+Adds a button that searches Wikipedia for the current release using its album and artist names. The search runs only after you press the button, and the feature can be enabled or disabled independently from the extension popup.
 
 ---
 

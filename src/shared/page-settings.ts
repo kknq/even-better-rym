@@ -6,6 +6,7 @@ const defaultPageEnabled: Partial<Record<PageKey, boolean>> = {
 	hideCommentBoxes: false,
 	discogsCarousel: true,
 	referenceLinks: true,
+	wikipedia: true,
 	userReception: true,
 };
 
@@ -15,7 +16,7 @@ const legacyGenreChartControlKeys = [
 	"genrePageChartControls",
 ] as const;
 
-const legacyReferenceLinkKeys = ["whosampled", "wikipedia"] as const;
+const legacyReferenceLinkKeys = ["whosampled"] as const;
 
 const getLegacyGenreChartControlsEnabled = (
 	values: Record<string, unknown>,
@@ -35,7 +36,14 @@ export const getPageEnabled = async (key: PageKey): Promise<boolean> => {
 		return getLegacyGenreChartControlsEnabled(await storage.getAll());
 	}
 	if (key === "referenceLinks") {
-		return getLegacyReferenceLinksEnabled(await storage.getAll());
+		const values = await storage.getAll();
+		const enabled = values["pages.referenceLinks"];
+		return typeof enabled === "boolean"
+			? enabled
+			: getLegacyReferenceLinksEnabled(values);
+	}
+	if (key === "wikipedia") {
+		return (await storage.getAll())["pages.wikipedia"] !== false;
 	}
 
 	return defaultPageEnabled[key] ?? true;
@@ -54,7 +62,16 @@ export const getAllPageEnabled = async (): Promise<
 				return [key, getLegacyGenreChartControlsEnabled(values)];
 			}
 			if (key === "referenceLinks") {
-				return [key, getLegacyReferenceLinksEnabled(values)];
+				const enabled = values["pages.referenceLinks"];
+				return [
+					key,
+					typeof enabled === "boolean"
+						? enabled
+						: getLegacyReferenceLinksEnabled(values),
+				];
+			}
+			if (key === "wikipedia") {
+				return [key, values["pages.wikipedia"] !== false];
 			}
 			return [key, defaultPageEnabled[key] ?? true];
 		}),

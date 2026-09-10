@@ -4,7 +4,7 @@ import { getReleaseTitleData } from "~/shared/release-title";
 import { waitForElement } from "~/shared/utils/dom";
 import type { FetchRequest, FetchResponse } from "~/shared/utils/messaging";
 import { sendBackgroundMessage } from "~/shared/utils/messaging";
-
+import whoSampledLogo from "./assets/favicon.svg";
 import "./reference-links.css";
 
 type SearchResult = {
@@ -19,15 +19,55 @@ type SearchResponse = {
 	};
 };
 
-const normalize = (value: string): string =>
-	value.toLowerCase().replace(/[^a-z0-9]/g, "");
-
 const toSlug = (value: string): string =>
 	value
 		.trim()
 		.replace(/\s+/g, "-")
 		.replace(/-By-.*/i, "")
 		.replace(/-+$/g, "");
+
+const normalize = (value: string): string =>
+	value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const getReferenceContainer = (
+	submitLink: HTMLAnchorElement,
+): HTMLDivElement => {
+	const existing = document.querySelector<HTMLDivElement>(
+		".ebr-reference-links",
+	);
+	if (existing) return existing;
+
+	const container = document.createElement("div");
+	container.className = "ebr-reference-links";
+	submitLink.parentElement?.after(container);
+	return container;
+};
+
+const appendWhoSampledLink = (
+	submitLink: HTMLAnchorElement,
+	release: ReturnType<typeof getReleaseTitleData>,
+): void => {
+	if (!release) return;
+
+	const container = getReferenceContainer(submitLink);
+	if (container.querySelector(".ebr-whosampled-link")) return;
+
+	const whoSampled = document.createElement("a");
+	whoSampled.className =
+		"ebr-reference-link ebr-whosampled-link ebr-reference-link--primary";
+	whoSampled.href = `https://www.whosampled.com/album/${toSlug(release.artistName)}/${toSlug(release.albumTitle)}/`;
+	whoSampled.target = "_blank";
+	whoSampled.rel = "noreferrer";
+	const logo = document.createElement("img");
+	logo.className = "ebr-whosampled-logo";
+	logo.src = whoSampledLogo;
+	logo.alt = "WhoSampled";
+	const label = document.createElement("span");
+	label.textContent = "Search WhoSampled  ";
+	whoSampled.append(label, logo);
+
+	container.append(whoSampled);
+};
 
 const searchWikipedia = async (
 	artistName: string,
@@ -75,30 +115,24 @@ const searchWikipedia = async (
 		};
 		return score(b) - score(a);
 	})[0];
+
 	return result
 		? `https://en.wikipedia.org/wiki/${encodeURIComponent(result.title.replace(/ /g, "_"))}`
 		: undefined;
 };
 
-const appendReferenceLinks = (
+const appendWikipediaButton = (
 	submitLink: HTMLAnchorElement,
 	release: ReturnType<typeof getReleaseTitleData>,
 ): void => {
 	if (!release) return;
 
-	const container = document.createElement("div");
-	container.className = "ebr-reference-links";
-
-	const whoSampled = document.createElement("a");
-	whoSampled.className = "ebr-reference-link ebr-reference-link--primary";
-	whoSampled.href = `https://www.whosampled.com/album/${toSlug(release.artistName)}/${toSlug(release.albumTitle)}/`;
-	whoSampled.target = "_blank";
-	whoSampled.rel = "noreferrer";
-	whoSampled.textContent = "View on WhoSampled";
+	const container = getReferenceContainer(submitLink);
+	if (container.querySelector(".ebr-wikipedia-link")) return;
 
 	const wikipedia = document.createElement("button");
 	wikipedia.type = "button";
-	wikipedia.className = "ebr-reference-link ebr-reference-link--secondary";
+	wikipedia.className = "ebr-reference-link ebr-wikipedia-link";
 	wikipedia.textContent = "Search Wikipedia";
 	wikipedia.addEventListener("click", () => {
 		const previous = wikipedia.textContent;
@@ -120,8 +154,7 @@ const appendReferenceLinks = (
 			});
 	});
 
-	container.append(whoSampled, wikipedia);
-	submitLink.parentElement?.after(container);
+	container.append(wikipedia);
 };
 
 async function main(): Promise<void> {
@@ -136,7 +169,13 @@ async function main(): Promise<void> {
 		submitLinks.at(-1);
 	const release = getReleaseTitleData();
 	if (!submitLink || !release || !findReleaseIssue()) return;
-	appendReferenceLinks(submitLink, release);
+
+	void runPage("referenceLinks", () => {
+		appendWhoSampledLink(submitLink, release);
+	});
+	void runPage("wikipedia", () => {
+		appendWikipediaButton(submitLink, release);
+	});
 }
 
-void runPage("referenceLinks", main);
+void main();

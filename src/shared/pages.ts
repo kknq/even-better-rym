@@ -6,6 +6,7 @@ export const pages = {
 	coverArt: "/images/upload",
 	discogsCarousel: "/release/",
 	referenceLinks: "/release/",
+	wikipedia: "/release/",
 	userReception: "/release/",
 	streamLinkSubmission: "/submit_media_link",
 	userCollection: "/collection",
@@ -35,7 +36,8 @@ export const pageLabels: Record<PageKey, string> = {
 	releaseSubmission: "Release Submission Helper",
 	coverArt: "Cover Art Submission Helper",
 	discogsCarousel: "Discogs Release Image Carousel",
-	referenceLinks: "Reference Links",
+	referenceLinks: "WhoSampled Link",
+	wikipedia: "Wikipedia Search",
 	userReception: "User Reception",
 	streamLinkSubmission: "Media Links Submission Helper",
 	userCollection: "Music Collection Filters",
@@ -79,7 +81,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 				"streamLinkSubmission",
 			],
 		],
-		["External reference links", ["referenceLinks"]],
+		["External reference links", ["referenceLinks", "wikipedia"]],
 		["Release insights", ["userReception"]],
 		[
 			"Library and user profiles",
@@ -112,7 +114,8 @@ export const pageHints: Record<PageKey, string> = {
 	discogsCarousel:
 		"Adds an optional carousel of secondary Discogs release images to music release pages.",
 	referenceLinks:
-		"Adds a WhoSampled album link and a Wikipedia search action for the current release.",
+		"Adds a direct WhoSampled album link for the current release.",
+	wikipedia: "Adds a button to search for the current release on Wikipedia.",
 	userReception:
 		"Summarizes the release's rating distribution into a user reception meter and ranked categories.",
 	streamLinkSubmission:
