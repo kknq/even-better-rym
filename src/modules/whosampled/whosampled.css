@@ -1,0 +1,15 @@
+.ebr-whosampled-button-container {
+	text-align: center;
+	margin: 0.5em 0;
+	z-index: 3;
+}
+
+.ebr-whosampled-button {
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--gen-blue-darker, #356da8);
+	cursor: pointer;
+	font-size: 0.9em;
+	font-family: inherit;
+}

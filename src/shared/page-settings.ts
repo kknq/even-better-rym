@@ -4,6 +4,9 @@ import * as storage from "./utils/storage";
 const defaultPageEnabled: Partial<Record<PageKey, boolean>> = {
 	hideReviews: false,
 	hideCommentBoxes: false,
+	discogsCarousel: true,
+	whosampled: true,
+	wikipedia: true,
 };
 
 const legacyGenreChartControlKeys = [

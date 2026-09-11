@@ -1,0 +1,62 @@
+{
+  "pagination": {
+    "page": 1,
+    "pages": 1,
+    "per_page": 50,
+    "items": 2,
+    "urls": {}
+  },
+  "results": [
+    {
+      "country": "US",
+      "genre": ["Folk, World, & Country"],
+      "format": ["Cassette", "Album", "Reissue"],
+      "style": ["Country"],
+      "id": 15487164,
+      "label": ["RCA"],
+      "type": "release",
+      "barcode": [],
+      "master_id": 233097,
+      "master_url": "https://api.discogs.com/masters/233097",
+      "uri": "/release/15487164-Dolly-Parton-Jolene",
+      "catno": "AYK1-3898",
+      "title": "Dolly Parton - Jolene",
+      "thumb": "",
+      "cover_image": "",
+      "resource_url": "https://api.discogs.com/releases/15487164",
+      "community": { "want": 84, "have": 12 },
+      "format_quantity": 1,
+      "formats": [
+        { "name": "Cassette", "qty": "1", "descriptions": ["Album", "Reissue"] }
+      ]
+    },
+    {
+      "country": "US",
+      "genre": ["Folk, World, & Country"],
+      "format": ["Cassette", "Album", "Reissue"],
+      "style": ["Country"],
+      "id": 26205110,
+      "label": ["RCA"],
+      "type": "release",
+      "barcode": [],
+      "master_id": 233097,
+      "master_url": "https://api.discogs.com/masters/233097",
+      "uri": "/release/26205110-Dolly-Parton-Jolene",
+      "catno": "AYK1-3898",
+      "title": "Dolly Parton - Jolene",
+      "thumb": "",
+      "cover_image": "",
+      "resource_url": "https://api.discogs.com/releases/26205110",
+      "community": { "want": 26, "have": 4 },
+      "format_quantity": 1,
+      "formats": [
+        {
+          "name": "Cassette",
+          "qty": "1",
+          "text": "Red Text RCA",
+          "descriptions": ["Album", "Reissue"]
+        }
+      ]
+    }
+  ]
+}
