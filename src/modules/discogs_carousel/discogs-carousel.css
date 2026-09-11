@@ -1,0 +1,83 @@
+.ebr-discogs-carousel {
+	margin: 1em 0;
+	padding: 1em;
+	width: 100%;
+	max-width: 100%;
+	background: var(--surface-secondary, rgba(0, 0, 0, 0.08));
+	border: 1px solid var(--ui-divider-line, rgba(128, 128, 128, 0.3));
+}
+
+#even-better-rym-discogs-carousel-button {
+	text-align: center;
+	margin: 0.5em 0;
+	z-index: 3;
+}
+
+#even-better-rym-discogs-carousel {
+	position: absolute;
+	inset: 0;
+}
+
+.ebr-discogs-carousel {
+	display: flex;
+	flex-direction: column;
+	position: absolute;
+	inset: 0;
+	margin: 0;
+	padding: 0.5em;
+	background: var(--surface-secondary, rgba(0, 0, 0, 0.08));
+	z-index: 2;
+}
+
+.ebr-discogs-carousel-viewport {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	overflow: hidden;
+}
+
+.page_release_art_frame .ebr-discogs-carousel-viewport img {
+	display: block;
+	position: static;
+	max-width: 100%;
+	max-height: 100%;
+	width: auto;
+	height: auto;
+	object-fit: contain;
+}
+
+.ebr-discogs-carousel-controls {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	gap: 1em;
+	margin-top: 0.75em;
+}
+
+.ebr-discogs-carousel-controls button {
+	padding: 0.4em 0.8em;
+	border: 0;
+	border-radius: 0.3em;
+	background: var(--mono-8, #888);
+	color: var(--mono-f, #fff);
+	cursor: pointer;
+}
+
+.ebr-discogs-carousel-status {
+	text-align: center;
+	flex: 0 0 auto;
+	margin: 0.5em 0;
+}
+
+.ebr-discogs-carousel-status button {
+	padding: 0.5em 1em;
+	border: 0;
+	border-radius: 0.3em;
+	background: var(--mono-8, #888);
+	color: var(--mono-f, #fff);
+	cursor: pointer;
+}
