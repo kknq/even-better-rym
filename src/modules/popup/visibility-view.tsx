@@ -22,6 +22,7 @@ const pageLabels: Record<string, string> = {
 	collection: "Collection pages",
 	profile: "User profile pages",
 	review: "Review pages",
+	song: "Song pages",
 	home: "Home page",
 	newMusic: "New music pages",
 	genre: "Genre pages",

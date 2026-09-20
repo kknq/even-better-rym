@@ -28,7 +28,7 @@ const REVIEW_PAGES = new Set<string>([
 	"review",
 ]);
 
-const isReviewPage = (page: string): page is ReviewVisibilityPage =>
+export const isReviewPage = (page: string): page is ReviewVisibilityPage =>
 	REVIEW_PAGES.has(page);
 
 export const main = async (): Promise<void> => {

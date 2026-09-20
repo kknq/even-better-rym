@@ -1,17 +1,27 @@
 import { getPageEnabled } from "~/shared/page-settings";
 import { getReviewSettings } from "~/shared/visibility/settings";
 import { getRatingsPageType } from "../hide-ratings/page-type";
-import { insertGlobalReviewButton, main } from "./app";
+import { insertGlobalReviewButton, isReviewPage, main } from "./app";
 import { injectHideReviewStyles, removeHideReviewStyles } from "./styles";
 
-if (getRatingsPageType(globalThis.location.pathname)) {
+const page = getRatingsPageType(globalThis.location.pathname);
+
+if (page && isReviewPage(page)) {
+	document.documentElement.classList.add("ebr-reviews-pending");
 	injectHideReviewStyles();
 
-	if (await getPageEnabled("hideReviews")) {
-		await main();
-	} else {
-		const settings = await getReviewSettings();
-		if (settings.globalButton) insertGlobalReviewButton();
-		else removeHideReviewStyles();
+	try {
+		if (await getPageEnabled("hideReviews")) {
+			await main();
+		} else {
+			const settings = await getReviewSettings();
+			if (settings.globalButton) insertGlobalReviewButton();
+			else removeHideReviewStyles();
+		}
+	} finally {
+		document.documentElement.classList.remove("ebr-reviews-pending");
+		document.documentElement.classList.add("ebr-reviews-ready");
 	}
+} else {
+	document.documentElement.classList.add("ebr-reviews-ready");
 }
