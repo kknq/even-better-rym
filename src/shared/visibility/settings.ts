@@ -6,6 +6,7 @@ export const visibilityPages = [
 	"collection",
 	"profile",
 	"review",
+	"song",
 	"home",
 	"newMusic",
 	"genre",
