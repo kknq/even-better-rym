@@ -36,7 +36,7 @@ export const pageLabels: Record<PageKey, string> = {
 	userCollection: "Music Collection Filters",
 	filmCollection: "Film Collection Filters",
 	userPage: "User Page Enhancements",
-	voteHistoryGenres: "Enhancements for Genre Vote History",
+	voteHistoryGenres: "Enhancements for Music and Film Genre Vote History",
 	voteHistoryDescriptors: "Enhancements for Descriptor Vote History",
 	streamLinkMissing: 'Filtering in "Media Link You Know" List',
 	searchBar: "Search Bar Shortcuts",
@@ -109,9 +109,9 @@ export const pageHints: Record<PageKey, string> = {
 	filmCollection: "Adds filters to your film collection page.",
 	userPage: "Adds edit buttons for favorite artists and other comments.",
 	voteHistoryGenres:
-		"Adds a searchable genre selector dropdown to the genre vote history page.",
+		"Adds history navigation and a searchable genre selector dropdown to music and film genre vote history pages.",
 	voteHistoryDescriptors:
-		"Adds a searchable descriptor selector dropdown to the descriptor vote history page.",
+		"Adds history navigation and a searchable descriptor selector dropdown to the descriptor vote history page.",
 	streamLinkMissing:
 		'Adds filtering controls to the "Media Link You Know" submission list.',
 	searchBar: "Adds shortcuts to the site-wide search bar.",

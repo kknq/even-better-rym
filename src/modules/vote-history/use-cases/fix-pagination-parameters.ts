@@ -1,5 +1,7 @@
 import { waitForDocumentReady } from "~/shared/utils/dom";
 
+import { getPaginationUrl } from "./history-urls";
+
 export default async function fixPaginationParameters(): Promise<void> {
 	await waitForDocumentReady();
 
@@ -11,28 +13,47 @@ export default async function fixPaginationParameters(): Promise<void> {
 		"a.navlinknum",
 	)) {
 		const pageNumber = Number.parseInt(node.text, 10);
-
-		parameters.set("show", show.toString());
-		parameters.set("start", ((pageNumber - 1) * show).toString());
-
-		node.href = `${globalThis.location.pathname}?${parameters.toString()}`;
+		fixPaginationLink(node, (pageNumber - 1) * show);
 	}
 
 	for (const node of document.querySelectorAll<HTMLAnchorElement>(
 		"a.navlinkprev",
 	)) {
-		parameters.set("show", show.toString());
-		parameters.set("start", (start - show).toString());
-
-		node.href = `${globalThis.location.pathname}?${parameters.toString()}`;
+		fixPaginationLink(node, start - show);
 	}
 
 	for (const node of document.querySelectorAll<HTMLAnchorElement>(
 		"a.navlinknext",
 	)) {
-		parameters.set("show", show.toString());
-		parameters.set("start", (start + show).toString());
-
-		node.href = `${globalThis.location.pathname}?${parameters.toString()}`;
+		fixPaginationLink(node, start + show);
 	}
+}
+
+function fixPaginationLink(node: HTMLAnchorElement, start: number): void {
+	const href = getPaginationUrl(
+		globalThis.location.pathname,
+		globalThis.location.search,
+		start,
+	);
+	node.href = href;
+
+	node.addEventListener(
+		"click",
+		(event) => {
+			if (
+				event.button !== 0 ||
+				event.metaKey ||
+				event.ctrlKey ||
+				event.shiftKey ||
+				event.altKey
+			) {
+				return;
+			}
+
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			globalThis.location.href = href;
+		},
+		{ capture: true },
+	);
 }
