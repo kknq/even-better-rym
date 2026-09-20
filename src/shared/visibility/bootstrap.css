@@ -1,0 +1,136 @@
+html:not(.ebr-ratings-ready) body .avg_rating,
+html:not(.ebr-ratings-ready) body .avg_rating_friends,
+html:not(.ebr-ratings-ready) body .tr-ranking,
+html:not(.ebr-ratings-ready) body .track_rating,
+html:not(.ebr-ratings-ready) body .disco_avg_rating:not(.ebr-rating-visible),
+html:not(.ebr-ratings-ready) body .review_rating,
+html:not(.ebr-ratings-ready) body .catalog_rating,
+html:not(.ebr-ratings-ready)
+	body
+	.page_release_section_tracks_track_stats_scores,
+html:not(.ebr-ratings-ready) body .page_artist_tracks_track_stats_scores,
+html:not(.ebr-ratings-ready) body .component_discography_item_details_average,
+html:not(.ebr-ratings-ready) body .component_discography_item_header_average,
+html:not(.ebr-ratings-ready) body .newreleases_avg_rating_stat,
+html:not(.ebr-ratings-ready)
+	body
+	.page_charts_section_charts_item_stats_ratings
+	.metadata-star,
+html:not(.ebr-ratings-ready)
+	body
+	.page_charts_section_charts_item_stats_ratings
+	.metadata-star-bold,
+html:not(.ebr-ratings-ready)
+	body
+	.page_charts_section_charts_item_details_average_num,
+html:not(.ebr-ratings-ready)
+	body
+	.page_features_secondary_metadata_rating_final,
+html:not(.ebr-ratings-ready) body .page_review_feature_rating,
+html:not(.ebr-ratings-ready)
+	body
+	.page_section_main_info_music_rating_value_rating,
+html:not(.ebr-ratings-ready)
+	body
+	.page_song_header_info_rest
+	> .pipe_separated:has(a[href*="/charts/top/song/"]),
+html:not(.ebr-ratings-ready) body .or_q_rating_date_s,
+html:not(.ebr-ratings-ready) body .disco_ratings:not(.ebr-rating-visible),
+html:not(.ebr-ratings-ready) body .num_ratings,
+html:not(.ebr-ratings-ready) body .catalog_rating_system_comment,
+html:not(.ebr-ratings-ready) body .catalog_stats,
+html:not(.ebr-ratings-ready) body .rating_info_table,
+html:not(.ebr-ratings-ready) body .track_rating_hide > .tracks,
+html:not(.ebr-ratings-ready)
+	body
+	.page_charts_section_charts_item_stats_ratings,
+html:not(.ebr-ratings-ready)
+	body
+	.page_charts_section_charts_item_details_ratings,
+html:not(.ebr-ratings-ready) body .component_discography_item_details_ratings,
+html:not(.ebr-ratings-ready) body .component_discography_item_details_reviews,
+html:not(.ebr-ratings-ready) body .component_discography_item_header_ratings,
+html:not(.ebr-ratings-ready) body .component_discography_item_header_reviews,
+html:not(.ebr-ratings-ready) body .disco_header_num_reviews,
+html:not(.ebr-ratings-ready) body .disco_reviews,
+html:not(.ebr-ratings-ready) body .newreleases_ratings_stat,
+html:not(.ebr-ratings-ready) body .newreleases_wishlist_stat,
+html:not(.ebr-ratings-ready)
+	body
+	.page_section_main_info_music_rating_value_number,
+html:not(.ebr-ratings-ready)
+	body
+	.newreleases_info_header_items_right
+	.newreleases_info_header_item,
+html:not(.ebr-ratings-ready)
+	body
+	.frontpage_newreleases_info_header_items_right
+	.newreleases_info_header_item,
+html:not(.ebr-ratings-ready) body .trackratings,
+html:not(.ebr-ratings-ready) body .track_rating_header,
+html:not(.ebr-ratings-ready)
+	body
+	.page_charts_section_charts_item_details_reviews,
+html:not(.ebr-ratings-ready)
+	body
+	.section_suggestions
+	.page_discography_average,
+html:not(.ebr-ratings-ready)
+	body
+	.section_suggestions
+	.component_discography_item_details_average,
+html:not(.ebr-ratings-ready)
+	body
+	.section_suggestions
+	.component_discography_item_header_average,
+html:not(.ebr-ratings-ready)
+	body
+	.section_suggestions
+	.page_discography_ratings,
+html:not(.ebr-ratings-ready)
+	body
+	.section_suggestions
+	.page_discography_reviews,
+html:not(.ebr-ratings-ready)
+	body
+	.section_suggestions
+	.component_discography_item_details_ratings,
+html:not(.ebr-ratings-ready)
+	body
+	.section_suggestions
+	.component_discography_item_details_reviews,
+html:not(.ebr-ratings-ready)
+	body
+	.section_suggestions
+	.component_discography_item_header_ratings,
+html:not(.ebr-ratings-ready)
+	body
+	.section_suggestions
+	.component_discography_item_header_reviews,
+html:not(.ebr-ratings-ready) body .album_info tr:has(> th.info_hdr) > td,
+html:not(.ebr-ratings-ready) body .film_info tr:has(> th.info_hdr) > td {
+	opacity: 0 !important;
+}
+
+html:not(.ebr-reviews-ready) body .review_body,
+html:not(.ebr-reviews-ready) body .review_text,
+html:not(.ebr-reviews-ready) body .review_content,
+html:not(.ebr-reviews-ready) body .page_review_feature_author,
+html:not(.ebr-reviews-ready) body .page_review_feature_body,
+html:not(.ebr-reviews-ready) body .or_q_review_td,
+html:not(.ebr-reviews-ready) body .page_release_section_reviews .review,
+html:not(.ebr-reviews-ready) body .page_release_section_reviews .review_item,
+html:not(.ebr-reviews-ready) body .user_review,
+html:not(.ebr-reviews-ready) body .review_list_item {
+	opacity: 0 !important;
+}
+
+html:not(.ebr-reviews-ready) body .page_home_section_features,
+html:not(.ebr-reviews-ready) body .page_home_section_featured_content {
+	visibility: hidden !important;
+}
+
+html:not(.ebr-reviews-ready) body .section_reviews,
+html:not(.ebr-reviews-ready) body [id^="review_shell_"] {
+	visibility: hidden !important;
+}

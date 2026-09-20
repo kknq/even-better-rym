@@ -17,6 +17,15 @@ import { backgroundFetch } from "./fetch";
 import { script } from "./script";
 
 const CHART_PAGE_PATTERN = "*://*.rateyourmusic.com/charts/*";
+const CHANGELOG_PATH = "changelog.html";
+
+browser.runtime.onInstalled.addListener((details) => {
+	if (details.reason !== "update") return;
+
+	void browser.tabs.create({
+		url: browser.runtime.getURL(CHANGELOG_PATH),
+	});
+});
 
 const getResponse = (
 	message: unknown,
