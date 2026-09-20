@@ -67,7 +67,7 @@ export function formatCombo(
 	mac: boolean = isMacPlatform,
 ): string {
 	const parts = combo.split("+");
-	const code = parts[parts.length - 1];
+	const code = parts.at(-1) ?? "";
 	const modifiers = parts.slice(0, -1);
 	const labels = modifierLabels(mac);
 	const separator = mac ? " " : " + ";
@@ -85,12 +85,8 @@ export function isModifierOnlyCode(code: string): boolean {
 // least one of ctrl/alt/meta - otherwise a bare letter or shift+letter
 // binding would swallow keystrokes meant for that input.
 export function hasRequiredModifier(combo: string): boolean {
-	const modifiers = combo.split("+").slice(0, -1);
-	return (
-		modifiers.includes("ctrl") ||
-		modifiers.includes("alt") ||
-		modifiers.includes("meta")
-	);
+	const modifiers = new Set(combo.split("+").slice(0, -1));
+	return modifiers.has("ctrl") || modifiers.has("alt") || modifiers.has("meta");
 }
 
 export function findComboConflict(

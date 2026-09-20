@@ -18,6 +18,22 @@ type View =
 	| "hideReviews"
 	| "hideVotes";
 
+const viewTitles: Record<View, string> = {
+	features: "EvenBetterRYM",
+	chartShortcuts: "Chart Shortcuts",
+	hideRatings: "Hide Ratings",
+	hideReviews: "Hide Reviews",
+	hideVotes: "Hide Votes",
+};
+
+const viewSubtitles: Record<View, string> = {
+	features: "RateYourMusic Enhancements",
+	chartShortcuts: "Customize keyboard shortcuts",
+	hideRatings: "Configure visibility",
+	hideReviews: "Configure visibility",
+	hideVotes: "Configure visibility",
+};
+
 export function App() {
 	const [view, setView] = useState<View>("features");
 	const [features, setFeatures] = useState<FeatureState | null>(null);
@@ -36,6 +52,15 @@ export function App() {
 		await setPageEnabled(key, next);
 		setFeatures((prev) => prev && { ...prev, [key]: next });
 		setNeedsReload(true);
+	};
+
+	const toggleGroup = (label: string) => {
+		setExpandedGroups((current) => {
+			const next = new Set(current);
+			if (next.has(label)) next.delete(label);
+			else next.add(label);
+			return next;
+		});
 	};
 
 	return (
@@ -61,24 +86,8 @@ export function App() {
 					/>
 				)}
 				<div>
-					<div style={styles.title}>
-						{view === "chartShortcuts"
-							? "Chart Shortcuts"
-							: view === "hideRatings"
-								? "Hide Ratings"
-								: view === "hideReviews"
-									? "Hide Reviews"
-									: view === "hideVotes"
-										? "Hide Votes"
-										: "EvenBetterRYM"}
-					</div>
-					<div style={styles.subtitle}>
-						{view === "chartShortcuts"
-							? "Customize keyboard shortcuts"
-							: view === "features"
-								? "RateYourMusic Enhancements"
-								: "Configure visibility"}
-					</div>
+					<div style={styles.title}>{viewTitles[view]}</div>
+					<div style={styles.subtitle}>{viewSubtitles[view]}</div>
 				</div>
 			</header>
 			{needsReload && (
@@ -96,95 +105,146 @@ export function App() {
 					</button>
 				</div>
 			)}
-
-			{view === "chartShortcuts" ? (
-				<ShortcutView onSettingsChange={() => setNeedsReload(true)} />
-			) : view === "hideRatings" ? (
-				<RatingVisibilityView onSettingsChange={() => setNeedsReload(true)} />
-			) : view === "hideReviews" ? (
-				<ReviewVisibilityView onSettingsChange={() => setNeedsReload(true)} />
-			) : view === "hideVotes" ? (
-				<VoteVisibilityView onSettingsChange={() => setNeedsReload(true)} />
-			) : (
-				<main style={styles.list}>
-					{features === null ? (
-						<LoadingIndicator />
-					) : (
-						featureGroups.map(([label, keys]) => {
-							const expanded = expandedGroups.has(label);
-							return (
-								<div key={label} style={styles.card}>
-									<button
-										type="button"
-										aria-expanded={expanded}
-										onClick={() =>
-											setExpandedGroups((current) => {
-												const next = new Set(current);
-												if (next.has(label)) next.delete(label);
-												else next.add(label);
-												return next;
-											})
-										}
-										style={styles.groupHeader}
-									>
-										<span>{label}</span>
-										<span aria-hidden="true">{expanded ? "⌄" : "›"}</span>
-									</button>
-									{expanded &&
-										keys.map((key, i) => (
-											<label
-												key={key}
-												style={{
-													...styles.row,
-													...(i < keys.length - 1 ? styles.rowDivider : {}),
-												}}
-											>
-												<span style={styles.label}>
-													{pageLabels[key]}
-													<span class="ebr-hint">{pageHints[key]}</span>
-												</span>
-												{key === "chartShortcuts" && (
-													<button
-														type="button"
-														onClick={() => setView("chartShortcuts")}
-														style={styles.customizeButton}
-													>
-														Customize shortcuts
-													</button>
-												)}
-												{(key === "hideRatings" ||
-													key === "hideReviews" ||
-													key === "hideVotes") && (
-													<button
-														type="button"
-														onClick={() => setView(key)}
-														style={styles.customizeButton}
-													>
-														Configure
-													</button>
-												)}
-												<Toggle
-													checked={features[key]}
-													onChange={() => void toggle(key)}
-												/>
-											</label>
-										))}
-								</div>
-							);
-						})
-					)}
-				</main>
-			)}
+			<SettingsContent
+				view={view}
+				features={features}
+				expandedGroups={expandedGroups}
+				onSettingsChange={() => setNeedsReload(true)}
+				onToggleGroup={toggleGroup}
+				onToggleFeature={toggle}
+				onChangeView={setView}
+			/>
 		</div>
+	);
+}
+
+function SettingsContent({
+	view,
+	features,
+	expandedGroups,
+	onSettingsChange,
+	onToggleGroup,
+	onToggleFeature,
+	onChangeView,
+}: Readonly<{
+	view: View;
+	features: FeatureState | null;
+	expandedGroups: Set<string>;
+	onSettingsChange: () => void;
+	onToggleGroup: (label: string) => void;
+	onToggleFeature: (key: PageKey) => Promise<void>;
+	onChangeView: (view: View) => void;
+}>) {
+	switch (view) {
+		case "chartShortcuts":
+			return <ShortcutView onSettingsChange={onSettingsChange} />;
+		case "hideRatings":
+			return <RatingVisibilityView onSettingsChange={onSettingsChange} />;
+		case "hideReviews":
+			return <ReviewVisibilityView onSettingsChange={onSettingsChange} />;
+		case "hideVotes":
+			return <VoteVisibilityView onSettingsChange={onSettingsChange} />;
+		default:
+			return (
+				<FeatureList
+					features={features}
+					expandedGroups={expandedGroups}
+					onToggleGroup={onToggleGroup}
+					onToggleFeature={onToggleFeature}
+					onChangeView={onChangeView}
+				/>
+			);
+	}
+}
+
+function FeatureList({
+	features,
+	expandedGroups,
+	onToggleGroup,
+	onToggleFeature,
+	onChangeView,
+}: Readonly<{
+	features: FeatureState | null;
+	expandedGroups: Set<string>;
+	onToggleGroup: (label: string) => void;
+	onToggleFeature: (key: PageKey) => Promise<void>;
+	onChangeView: (view: View) => void;
+}>) {
+	if (features === null) {
+		return (
+			<main style={styles.list}>
+				<LoadingIndicator />
+			</main>
+		);
+	}
+
+	return (
+		<main style={styles.list}>
+			{featureGroups.map(([label, keys]) => {
+				const expanded = expandedGroups.has(label);
+				return (
+					<div key={label} style={styles.card}>
+						<button
+							type="button"
+							aria-expanded={expanded}
+							onClick={() => onToggleGroup(label)}
+							style={styles.groupHeader}
+						>
+							<span>{label}</span>
+							<span aria-hidden="true">{expanded ? "⌄" : "›"}</span>
+						</button>
+						{expanded &&
+							keys.map((key, i) => (
+								<label
+									key={key}
+									style={{
+										...styles.row,
+										...(i < keys.length - 1 ? styles.rowDivider : {}),
+									}}
+								>
+									<span style={styles.label}>
+										{pageLabels[key]}
+										<span class="ebr-hint">{pageHints[key]}</span>
+									</span>
+									{key === "chartShortcuts" && (
+										<button
+											type="button"
+											onClick={() => onChangeView("chartShortcuts")}
+											style={styles.customizeButton}
+										>
+											Customize shortcuts
+										</button>
+									)}
+									{(key === "hideRatings" ||
+										key === "hideReviews" ||
+										key === "hideVotes") && (
+										<button
+											type="button"
+											onClick={() => onChangeView(key)}
+											style={styles.customizeButton}
+										>
+											Configure
+										</button>
+									)}
+									<Toggle
+										checked={features[key]}
+										onChange={() => void onToggleFeature(key)}
+									/>
+								</label>
+							))}
+					</div>
+				);
+			})}
+		</main>
 	);
 }
 
 function LoadingIndicator() {
 	return (
-		<div style={styles.loading} role="status">
+		<output style={styles.loading}>
 			<span aria-hidden="true">⏳</span>
 			<span>Loading settings…</span>
-		</div>
+		</output>
 	);
 }
 

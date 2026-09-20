@@ -1,12 +1,8 @@
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
-	{
-		extends: [
-			...tseslint.configs.recommendedTypeChecked,
-			...tseslint.configs.stylisticTypeChecked,
-		],
-	},
+export default [
+	...tseslint.configs.recommendedTypeChecked,
+	...tseslint.configs.stylisticTypeChecked,
 	{
 		languageOptions: {
 			parserOptions: {
@@ -39,4 +35,4 @@ export default tseslint.config(
 			],
 		},
 	},
-);
+];
