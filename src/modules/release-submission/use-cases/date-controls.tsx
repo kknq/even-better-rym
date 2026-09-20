@@ -11,9 +11,28 @@ import { fillDate } from "../utils/fillers";
 export default async function injectDateControls() {
 	const yearInput = await waitForElement("#year");
 
-	const container = document.createElement("div");
-	yearInput.after(container);
-	render(<DateButton />, container);
+	const releaseDateContainer = document.createElement("span");
+	yearInput.after(releaseDateContainer);
+	render(<DateButton />, releaseDateContainer);
+
+	const recordingYearInput = await waitForElement("#rec_to_year");
+	const recordingDateContainer = document.createElement("div");
+	recordingYearInput.after(recordingDateContainer);
+	render(
+		<div style={{ marginTop: 4, textAlign: "right" }}>
+			<ClearButton
+				selectIds={[
+					"rec_from_month",
+					"rec_from_day",
+					"rec_from_year",
+					"rec_to_month",
+					"rec_to_day",
+					"rec_to_year",
+				]}
+			/>
+		</div>,
+		recordingDateContainer,
+	);
 }
 
 function DateButton() {
@@ -33,7 +52,8 @@ function DateButton() {
 	}, []);
 
 	return (
-		<div style={{ marginTop: 4 }}>
+		<span style={{ marginLeft: 4 }}>
+			<ClearButton selectIds={["month", "day", "year"]} />
 			{date && (!filledDate || !datesEqual(date, filledDate)) && (
 				<input
 					type="button"
@@ -52,7 +72,29 @@ function DateButton() {
 					style={{ fontSize: "14px !important" }}
 				/>
 			)}
-		</div>
+		</span>
+	);
+}
+
+function ClearButton({ selectIds }: { selectIds: string[] }) {
+	const clearDates = useCallback(() => {
+		for (const id of selectIds) {
+			const select = document.getElementById(id) as HTMLSelectElement | null;
+			if (!select) continue;
+
+			select.selectedIndex = 0;
+			select.dispatchEvent(new Event("change", { bubbles: true }));
+		}
+	}, [selectIds]);
+
+	return (
+		<input
+			type="button"
+			className="btn blue_btn"
+			value="Clear"
+			onClick={clearDates}
+			style={{ fontSize: "14px !important" }}
+		/>
 	);
 }
 
