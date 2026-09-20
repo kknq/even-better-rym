@@ -49,6 +49,17 @@ export function VoteVisibilityView({
 					/>
 				</div>
 			</div>
+			<div style={styles.card}>
+				<div style={{ ...styles.row }}>
+					<span style={styles.label}>Hide vote counts and percentages</span>
+					<Toggle
+						checked={settings.hideStats}
+						onChange={() =>
+							save({ ...settings, hideStats: !settings.hideStats })
+						}
+					/>
+				</div>
+			</div>
 		</main>
 	);
 }

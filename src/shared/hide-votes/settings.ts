@@ -3,6 +3,7 @@ const STORAGE_KEY = "brym.voteVisibilitySettings";
 export type VoteVisibilitySettings = {
 	genres: boolean;
 	descriptors: boolean;
+	hideStats: boolean;
 };
 
 type VoteVisibilitySettingsOverrides = Partial<VoteVisibilitySettings>;
@@ -10,6 +11,7 @@ type VoteVisibilitySettingsOverrides = Partial<VoteVisibilitySettings>;
 export const defaultVoteVisibilitySettings = (): VoteVisibilitySettings => ({
 	genres: true,
 	descriptors: true,
+	hideStats: false,
 });
 
 export const mergeVoteVisibilitySettings = (
