@@ -1,22 +1,23 @@
 import { eyeIcon } from "~/shared/icons/eye";
+import {
+	hasOwnReleaseRating,
+	observeOwnReleaseRating,
+} from "~/shared/visibility/release-rating";
 import type { RatingSettings } from "~/shared/visibility/settings";
 import { wireButton } from "./button";
-import { fireHide } from "./events";
+import { fireHide, fireShow } from "./events";
 
 export const setupReleasePage = (
 	settings: RatingSettings,
 	showButton: boolean,
 ): void => {
-	const ownRating = document.querySelector(
-		"#catalog_list .my_rating, .catalog_line.my_rating",
-	);
-
-	if (ownRating) {
-		document.body.classList.add("ebr-release-rated");
-	}
-
 	markRankingRow();
-	applyRatingPolicy(settings, Boolean(ownRating));
+	const updateRatingPolicy = (hasReleaseRating: boolean) => {
+		document.body.classList.toggle("ebr-release-rated", hasReleaseRating);
+		applyRatingPolicy(settings, hasReleaseRating);
+	};
+	updateRatingPolicy(hasOwnReleaseRating());
+	observeOwnReleaseRating(updateRatingPolicy);
 	if (settings.tracks === "after-track-rated") observeTrackRatings();
 	if (showButton) insertReleaseButton();
 	if (showButton) insertSuggestionButton();
@@ -27,6 +28,7 @@ const applyRatingPolicy = (
 	hasReleaseRating: boolean,
 ): void => {
 	if (settings.ratings === "always" || !hasReleaseRating) fireHide();
+	else fireShow();
 
 	document.body.classList.toggle(
 		"ebr-hide-all-ratings",

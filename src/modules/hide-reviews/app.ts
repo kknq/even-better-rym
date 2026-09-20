@@ -4,6 +4,10 @@ import { waitForDocumentReady } from "~/shared/utils/dom";
 import { isOwnProfile, isOwnUserPage } from "~/shared/utils/user";
 import { prepareCollectionRows } from "~/shared/visibility/collection";
 import {
+	hasOwnReleaseRating,
+	observeOwnReleaseRating,
+} from "~/shared/visibility/release-rating";
+import {
 	getSessionVisibility,
 	setSessionVisibility,
 } from "~/shared/visibility/session-state";
@@ -41,14 +45,22 @@ export const main = async (): Promise<void> => {
 	if (page === "collection" && isOwnUserPage()) return;
 	if (page === "collection") prepareCollectionRows();
 
-	const hasReleaseRating = Boolean(
-		document.querySelector("#catalog_list .my_rating, .catalog_line.my_rating"),
-	);
-	const shouldHide =
-		settings.reviews === "always" ||
-		(page !== "release" && page !== "film") ||
-		!hasReleaseRating;
-	document.body.classList.toggle("ebr-hide-reviews", shouldHide);
+	const applyReleaseRatingPolicy = (hasReleaseRating: boolean) => {
+		const shouldHide =
+			settings.reviews === "always" ||
+			(page !== "release" && page !== "film") ||
+			!hasReleaseRating;
+		document.body.classList.toggle("ebr-hide-reviews", shouldHide);
+		document.body.classList.toggle(
+			"ebr-show-friend-reviews",
+			shouldHide &&
+				(page === "release" || page === "film") &&
+				(settings.friends === "always" ||
+					(settings.friends === "after-release-rated" && hasReleaseRating)),
+		);
+	};
+	const hasReleaseRating = hasOwnReleaseRating();
+	applyReleaseRatingPolicy(hasReleaseRating);
 	const preserveVisibility = preservesListVisibility(
 		page,
 		globalThis.location.pathname,
@@ -60,13 +72,12 @@ export const main = async (): Promise<void> => {
 		document.body.classList.toggle("ebr-hide-reviews", !sessionVisibility);
 	}
 	injectHideReviewStyles();
-	document.body.classList.toggle(
-		"ebr-show-friend-reviews",
-		shouldHide &&
-			(page === "release" || page === "film") &&
-			(settings.friends === "always" ||
-				(settings.friends === "after-release-rated" && hasReleaseRating)),
-	);
+	if (
+		(page === "release" || page === "film") &&
+		!isReleaseReviewList(globalThis.location.pathname)
+	) {
+		observeOwnReleaseRating(applyReleaseRatingPolicy);
+	}
 	if (settings.globalButton) {
 		insertGlobalReviewButton();
 	}
@@ -155,9 +166,12 @@ const wireGlobalReviewButton = (button: HTMLElement): void => {
 	};
 
 	void update();
-	button.addEventListener("click", async () => {
+	const toggleModule = async (): Promise<void> => {
 		await setPageEnabled("hideReviews", !(await getPageEnabled("hideReviews")));
 		globalThis.location.reload();
+	};
+	button.addEventListener("click", () => {
+		void toggleModule();
 	});
 };
 
@@ -168,13 +182,12 @@ const wireReviewButton = (
 ): void => {
 	const update = (hidden: boolean) => {
 		button.dataset.hiding = String(hidden);
-		const label = global
-			? hidden
-				? "Disable Hide Reviews"
-				: "Enable Hide Reviews"
-			: hidden
-				? "Show Reviews"
-				: "Hide Reviews";
+		let label: string;
+		if (global) {
+			label = hidden ? "Disable Hide Reviews" : "Enable Hide Reviews";
+		} else {
+			label = hidden ? "Show Reviews" : "Hide Reviews";
+		}
 		button.innerHTML = `${eyeIcon(hidden)}<span>${label}</span>`;
 		button.setAttribute("aria-label", label);
 	};
