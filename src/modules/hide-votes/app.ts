@@ -1,6 +1,8 @@
 import { getVoteVisibilitySettings } from "~/shared/hide-votes/settings";
 import { waitForDocumentReady } from "~/shared/utils/dom";
 
+import { formatVoteHeader, hideVoteStatsHtml } from "./vote-header";
+
 const STYLE = `
 	.ebr-hide-votes-button {
 		margin-left: 8px;
@@ -24,8 +26,8 @@ function extractVoteCount(html: string): number {
 	// Match the number after "voted for:" or "voted against:" and before the parenthesis
 	// For descriptor pages: "(321 / <span..." or "(7):"
 	// For genre pages: "(22) :"
-	const match = /<b>voted (?:for|against):<\/b>\s*\((\d+)/.exec(html);
-	return match ? Number.parseInt(match[1], 10) : 0;
+	const match = /<b>voted (?:for|against):<\/b>\s*\(([\d,]+)/.exec(html);
+	return match ? Number.parseInt(match[1].replaceAll(",", ""), 10) : 0;
 }
 
 function addHideButton(
@@ -33,10 +35,13 @@ function addHideButton(
 	voteForCount: number,
 	voteAgainstCount: number,
 	hiddenByDefault: boolean,
+	hideStats: boolean,
 ): void {
 	if (spanElement.querySelector(".ebr-hide-votes-button")) return;
 
-	const html = spanElement.innerHTML;
+	const html = hideStats
+		? hideVoteStatsHtml(spanElement.innerHTML)
+		: spanElement.innerHTML;
 	const match = VOTE_HEADER_PATTERN.exec(html);
 
 	let before: string;
@@ -53,29 +58,13 @@ function addHideButton(
 		userListHtml = html;
 	}
 
-	// Calculate percentage
-	const totalVotes = voteForCount + voteAgainstCount;
-	const isVoteFor = html.includes("voted for:");
-	const currentCount = isVoteFor ? voteForCount : voteAgainstCount;
-	const percentage =
-		totalVotes > 0 ? ((currentCount / totalVotes) * 100).toFixed(1) : "0.0";
-
-	// Insert percentage after the vote count in the header
-	// For descriptor pages with score section, append percentage after the colon
-	// For genre pages without score section, replace the vote count with percentage
-	const hasScoreSection = html.includes('title="unweighted degree average"');
-	let updatedBefore: string;
-
-	if (hasScoreSection) {
-		// Descriptor page: append percentage after the colon
-		updatedBefore = `${before} ${currentCount}/${totalVotes}, ${percentage}%`;
-	} else {
-		// Genre page: replace the vote count with percentage
-		updatedBefore = before.replace(
-			/\((\d+)\)/,
-			`($1/${totalVotes}, ${percentage}%)`,
-		);
-	}
+	const updatedBefore = formatVoteHeader(
+		before,
+		voteForCount,
+		voteAgainstCount,
+		html,
+		hideStats,
+	);
 
 	spanElement.innerHTML =
 		updatedBefore +
@@ -159,7 +148,7 @@ function getVoteCounts(containerSpans: HTMLElement[]) {
 	return { voteForCount, voteAgainstCount };
 }
 
-function processVoteSpans(hiddenByDefault: boolean): void {
+function processVoteSpans(hiddenByDefault: boolean, hideStats: boolean): void {
 	const spans = document.querySelectorAll("span.small");
 
 	const containerMap = collectVoteSpans(spans);
@@ -168,7 +157,13 @@ function processVoteSpans(hiddenByDefault: boolean): void {
 		const { voteForCount, voteAgainstCount } = getVoteCounts(containerSpans);
 
 		for (const span of containerSpans) {
-			addHideButton(span, voteForCount, voteAgainstCount, hiddenByDefault);
+			addHideButton(
+				span,
+				voteForCount,
+				voteAgainstCount,
+				hiddenByDefault,
+				hideStats,
+			);
 		}
 	}
 }
@@ -277,7 +272,7 @@ export async function main(): Promise<void> {
 
 	// Wait for loading to complete, then process vote spans
 	await waitForLoadingComplete();
-	processVoteSpans(hiddenByDefault);
+	processVoteSpans(hiddenByDefault, settings.hideStats);
 
 	// Set up MutationObserver to handle dynamic content changes
 	let refreshScheduled = false;
@@ -301,7 +296,7 @@ export async function main(): Promise<void> {
 								refreshScheduled = true;
 								queueMicrotask(() => {
 									refreshScheduled = false;
-									processVoteSpans(hiddenByDefault);
+									processVoteSpans(hiddenByDefault, settings.hideStats);
 								});
 							}
 							break;

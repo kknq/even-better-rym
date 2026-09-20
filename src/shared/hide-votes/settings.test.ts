@@ -6,10 +6,11 @@ import {
 } from "./settings";
 
 describe("vote visibility settings", () => {
-	it("hides genre and descriptor votes by default", () => {
+	it("hides genre and descriptor votes while showing vote statistics by default", () => {
 		expect(defaultVoteVisibilitySettings()).toEqual({
 			genres: true,
 			descriptors: true,
+			hideStats: false,
 		});
 	});
 
@@ -17,6 +18,7 @@ describe("vote visibility settings", () => {
 		expect(mergeVoteVisibilitySettings({ genres: false })).toEqual({
 			genres: false,
 			descriptors: true,
+			hideStats: false,
 		});
 	});
 });
