@@ -280,6 +280,7 @@ export async function main(): Promise<void> {
 	processVoteSpans(hiddenByDefault);
 
 	// Set up MutationObserver to handle dynamic content changes
+	let refreshScheduled = false;
 	const observer = new MutationObserver((mutations) => {
 		for (const mutation of mutations) {
 			if (mutation.type === "childList") {
@@ -296,11 +297,13 @@ export async function main(): Promise<void> {
 								".genrea, .genred, .descriptora, .descriptord",
 							)
 						) {
-							// Re-process vote spans when new content is added
-							// TODO: add a mechanism to trigger that based on the page changes instead of being time-based.
-							setTimeout(() => {
-								processVoteSpans(hiddenByDefault);
-							}, 500);
+							if (!refreshScheduled) {
+								refreshScheduled = true;
+								queueMicrotask(() => {
+									refreshScheduled = false;
+									processVoteSpans(hiddenByDefault);
+								});
+							}
 							break;
 						}
 					}
