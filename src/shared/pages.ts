@@ -21,6 +21,7 @@ export const pages = {
 	hideReviews: "/",
 	hideCommentBoxes: "/release/",
 	chartShortcuts: "/charts/",
+	imageCropper: "/admin/imaq/crop",
 } as const;
 
 export type PageKey = keyof typeof pages;
@@ -48,6 +49,7 @@ export const pageLabels: Record<PageKey, string> = {
 	hideReviews: "Hide Reviews",
 	hideCommentBoxes: "Hide Comment Boxes",
 	chartShortcuts: "Chart Shortcuts",
+	imageCropper: "Image Cropper Controls",
 };
 
 export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
@@ -68,6 +70,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 				"streamLinks",
 				"trackTime",
 				"releaseSubmission",
+				"imageCropper",
 				"coverArt",
 				"streamLinkSubmission",
 			],
@@ -127,6 +130,7 @@ export const pageHints: Record<PageKey, string> = {
 	hideCommentBoxes: "Hides comment boxes on release pages.",
 	chartShortcuts:
 		"Adds keyboard shortcuts for applying genre/descriptor matches, toggling sub-genre and 'must contain all' options, and updating the chart to chart pages.",
+	imageCropper: "Adds +/- 10 and 50 pixel controls to the image crop editor.",
 };
 
 // Page keys whose features are global and should not affect the toolbar icon
