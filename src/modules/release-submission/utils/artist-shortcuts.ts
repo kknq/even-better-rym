@@ -2,7 +2,6 @@ import { arrayToArtists } from "~/shared/utils/string";
 
 const TRACK_TITLE_ID_PATTERN = /^track_track_title\d+$/;
 const ARTIST_SEPARATOR = " - ";
-const ARTIST_LIST_DELIMITER = /\s*&\s*|\s*,\s*/;
 const ARTIST_LINK_PATTERN = /\[Artist\d+]/;
 
 export const isTrackTitleFieldId = (id: string): boolean =>
@@ -10,6 +9,13 @@ export const isTrackTitleFieldId = (id: string): boolean =>
 
 export const buildArtistToken = (assocId: string, text?: string): string =>
 	text ? `[Artist${assocId},${text}]` : `[Artist${assocId}]`;
+
+const splitArtistList = (artistList: string): string[] =>
+	artistList
+		.replaceAll("&", ",")
+		.split(",")
+		.map((artist) => artist.trim())
+		.filter((artist) => artist.length > 0);
 
 // Appends artistToken to the field's existing linked artist list (if any),
 // leaving the track name and any unlinked artist text untouched.
@@ -32,9 +38,7 @@ export const insertArtistShortcut = (
 	const trackNamePart = currentValue.slice(
 		separatorIndex + ARTIST_SEPARATOR.length,
 	);
-	const artists = artistListPart
-		.split(ARTIST_LIST_DELIMITER)
-		.filter((artist) => artist.length > 0);
+	const artists = splitArtistList(artistListPart);
 	artists.push(artistToken);
 
 	return `${arrayToArtists(artists)}${ARTIST_SEPARATOR}${trackNamePart}`;

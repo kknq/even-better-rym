@@ -70,32 +70,32 @@ function Dropdown({ label, queryParameter, items }: Readonly<DropdownProps>) {
 				</>
 			)}
 			<div style={{ display: "flex", marginLeft: "8px" }}>
-				{histories.map((history) => {
-					const selected = history.path === currentPath;
-
-					return (
-						<button
-							type="button"
-							className="btn darkgray_btn btn_small"
-							disabled={selected}
-							aria-pressed={selected}
-							onClick={() => {
-								globalThis.location.href = getVoteHistoryUrl(
-									history.path,
-									globalThis.location.search,
-								);
-							}}
-							style={{
-								background: selected ? "var(--mono-4)" : "var(--mono-7)",
-								color: "var(--text-primary)",
-								borderColor: "var(--ui-detail-neutral)",
-								opacity: "1",
-							}}
-						>
-							{history.label}
-						</button>
-					);
-				})}
+				{histories.map((history) => (
+					<button
+						key={history.path}
+						type="button"
+						className="btn darkgray_btn btn_small"
+						disabled={history.path === currentPath}
+						aria-pressed={history.path === currentPath}
+						onClick={() => {
+							globalThis.location.href = getVoteHistoryUrl(
+								history.path,
+								globalThis.location.search,
+							);
+						}}
+						style={{
+							background:
+								history.path === currentPath
+									? "var(--mono-4)"
+									: "var(--mono-7)",
+							color: "var(--text-primary)",
+							borderColor: "var(--ui-detail-neutral)",
+							opacity: "1",
+						}}
+					>
+						{history.label}
+					</button>
+				))}
 			</div>
 		</div>
 	);

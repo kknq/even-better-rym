@@ -2,6 +2,14 @@ import { eyeIcon } from "~/shared/icons/eye";
 
 import { fireHide, fireShow } from "./events";
 
+const getButtonLabel = (global: boolean, hidden: boolean): string => {
+	if (global) {
+		return hidden ? "Disable Hide Ratings" : "Enable Hide Ratings";
+	}
+
+	return hidden ? "Show Ratings" : "Hide Ratings";
+};
+
 export const wireButton = (
 	button: HTMLElement,
 	global = false,
@@ -21,13 +29,7 @@ export const wireButton = (
 
 	const update = (hidden: boolean) => {
 		button.dataset.hiding = String(hidden);
-		const label = global
-			? hidden
-				? "Disable Hide Ratings"
-				: "Enable Hide Ratings"
-			: hidden
-				? "Show Ratings"
-				: "Hide Ratings";
+		const label = getButtonLabel(global, hidden);
 		button.innerHTML = `${eyeIcon(hidden)}<span>${label}</span>`;
 		button.setAttribute("aria-label", label);
 		button.setAttribute("title", label);

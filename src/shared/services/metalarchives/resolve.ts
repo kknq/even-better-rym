@@ -21,8 +21,9 @@ const normalizeOrdinalDay = (day: string): string =>
 const stringToDate = (dateString: string) => {
 	const value = dateString.trim();
 
-	const fullMatch =
-		/^([A-Za-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?,\s*(\d{4})$/i.exec(value);
+	const fullMatch = /^([a-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?,\s*(\d{4})$/i.exec(
+		value,
+	);
 	if (fullMatch) {
 		return {
 			year: Number.parseInt(fullMatch[3], 10),
@@ -31,7 +32,7 @@ const stringToDate = (dateString: string) => {
 		};
 	}
 
-	const monthYearMatch = /^([A-Za-z]+)\s+(\d{4})$/i.exec(value);
+	const monthYearMatch = /^([a-z]+)\s+(\d{4})$/i.exec(value);
 	if (monthYearMatch) {
 		return {
 			year: Number.parseInt(monthYearMatch[2], 10),
@@ -173,7 +174,7 @@ const parseFormat = (document_: Document, data: ResolveData) => {
 
 const parseDescription = (document_: Document, data: ResolveData) => {
 	const coloredVinylRegex =
-		/\b(?:[A-Za-z]+(?:[ /-][A-Za-z]+)*)\s+(?:colou?red\s+vinyl|vinyl)\b/i;
+		/\b(?:[a-z]+(?:[ /-][a-z]+)*)\s+(?:colou?red\s+vinyl|vinyl)\b/i;
 	const descriptionString = document_
 		.querySelector("#album_info dl.float_left dd:nth-child(8)")
 		?.textContent?.trim();

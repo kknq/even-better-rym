@@ -35,6 +35,9 @@ const REVIEW_PAGES = new Set<string>([
 export const isReviewPage = (page: string): page is ReviewVisibilityPage =>
 	REVIEW_PAGES.has(page);
 
+const isReleaseOrFilmPage = (page: ReviewVisibilityPage): boolean =>
+	page === "release" || page === "film";
+
 export const main = async (): Promise<void> => {
 	const settings = await getReviewSettings();
 	const page = getRatingsPageType(globalThis.location.pathname);
@@ -48,13 +51,13 @@ export const main = async (): Promise<void> => {
 	const applyReleaseRatingPolicy = (hasReleaseRating: boolean) => {
 		const shouldHide =
 			settings.reviews === "always" ||
-			(page !== "release" && page !== "film") ||
+			!isReleaseOrFilmPage(page) ||
 			!hasReleaseRating;
 		document.body.classList.toggle("ebr-hide-reviews", shouldHide);
 		document.body.classList.toggle(
 			"ebr-show-friend-reviews",
 			shouldHide &&
-				(page === "release" || page === "film") &&
+				isReleaseOrFilmPage(page) &&
 				(settings.friends === "always" ||
 					(settings.friends === "after-release-rated" && hasReleaseRating)),
 		);
@@ -73,7 +76,7 @@ export const main = async (): Promise<void> => {
 	}
 	injectHideReviewStyles();
 	if (
-		(page === "release" || page === "film") &&
+		isReleaseOrFilmPage(page) &&
 		!isReleaseReviewList(globalThis.location.pathname)
 	) {
 		observeOwnReleaseRating(applyReleaseRatingPolicy);
@@ -83,7 +86,7 @@ export const main = async (): Promise<void> => {
 	}
 	if (settings.buttons) {
 		if (
-			(page === "release" || page === "film") &&
+			isReleaseOrFilmPage(page) &&
 			!isReleaseReviewList(globalThis.location.pathname)
 		) {
 			insertReleaseReviewButton();

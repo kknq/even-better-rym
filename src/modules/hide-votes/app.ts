@@ -168,6 +168,26 @@ function processVoteSpans(hiddenByDefault: boolean, hideStats: boolean): void {
 	}
 }
 
+function containsVoteContainer(node: Node): boolean {
+	if (node.nodeType !== Node.ELEMENT_NODE) {
+		return false;
+	}
+
+	const element = node as Element;
+	return (
+		element.matches(VOTE_CONTAINER_SELECTOR) ||
+		element.querySelector(VOTE_CONTAINER_SELECTOR) !== null
+	);
+}
+
+function hasNewVoteContainers(mutations: MutationRecord[]): boolean {
+	return mutations.some(
+		(mutation) =>
+			mutation.type === "childList" &&
+			Array.from(mutation.addedNodes).some(containsVoteContainer),
+	);
+}
+
 function addCollapseAllButton(hiddenByDefault: boolean): void {
 	const url = globalThis.location.href;
 	const isGenrePage = url.includes("/rgenre/");
@@ -277,34 +297,15 @@ export async function main(): Promise<void> {
 	// Set up MutationObserver to handle dynamic content changes
 	let refreshScheduled = false;
 	const observer = new MutationObserver((mutations) => {
-		for (const mutation of mutations) {
-			if (mutation.type === "childList") {
-				// Check if new genrea, genred, descriptora, or descriptord elements were added
-				for (const node of mutation.addedNodes) {
-					if (node.nodeType === Node.ELEMENT_NODE) {
-						const element = node as Element;
-						if (
-							element.classList?.contains("genrea") ||
-							element.classList?.contains("genred") ||
-							element.classList?.contains("descriptora") ||
-							element.classList?.contains("descriptord") ||
-							element.querySelector?.(
-								".genrea, .genred, .descriptora, .descriptord",
-							)
-						) {
-							if (!refreshScheduled) {
-								refreshScheduled = true;
-								queueMicrotask(() => {
-									refreshScheduled = false;
-									processVoteSpans(hiddenByDefault, settings.hideStats);
-								});
-							}
-							break;
-						}
-					}
-				}
-			}
+		if (refreshScheduled || !hasNewVoteContainers(mutations)) {
+			return;
 		}
+
+		refreshScheduled = true;
+		queueMicrotask(() => {
+			refreshScheduled = false;
+			processVoteSpans(hiddenByDefault, settings.hideStats);
+		});
 	});
 
 	// Start observing the document body for changes

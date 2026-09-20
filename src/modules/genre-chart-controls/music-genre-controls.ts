@@ -22,6 +22,19 @@ const RELEASE_TYPE_LABELS: Record<string, string> = {
 	additional: "Additional Release",
 };
 
+const ALL_RELEASE_TYPES = [
+	"album",
+	"ep",
+	"mixtape",
+	"djmix",
+	"single",
+	"comp",
+	"video",
+	"unauth",
+	"musicvideo",
+	"additional",
+];
+
 type RYMChartState = {
 	chart_type?: string;
 	chart_object?: string;
@@ -157,9 +170,11 @@ function updateFrameClass(state: RYMChartState): void {
 		}
 	}
 
-	query.classList.add(`chart_type_${state.chart_type ?? "top"}`);
-	query.classList.add(`object_${state.chart_object ?? "release"}`);
-	query.classList.add(`date_type_${state.chart_date_range_type ?? "all_time"}`);
+	query.classList.add(
+		`chart_type_${state.chart_type ?? "top"}`,
+		`object_${state.chart_object ?? "release"}`,
+		`date_type_${state.chart_date_range_type ?? "all_time"}`,
+	);
 }
 
 function updateReleaseTypeValue(state: RYMChartState): void {
@@ -219,6 +234,18 @@ function setSelectedReleaseTypes(types: string[], state: RYMChartState): void {
 	updateReleaseTypeValue(state);
 }
 
+function getDateRangeLabel(startYear: number, endYear: number): string {
+	if (startYear === endYear) {
+		return String(startYear);
+	}
+
+	if (startYear % 10 === 0 && endYear === startYear + 9) {
+		return `${startYear}s`;
+	}
+
+	return `${startYear} - ${endYear}`;
+}
+
 function selectDateRange(
 	state: RYMChartState,
 	startYear: number,
@@ -251,12 +278,7 @@ function selectDateRange(
 		"page_chart_query_item_chart_date_type_title",
 	);
 	if (title) {
-		title.textContent =
-			startYear === endYear
-				? String(startYear)
-				: startYear % 10 === 0 && endYear === startYear + 9
-					? `${startYear}s`
-					: `${startYear} - ${endYear}`;
+		title.textContent = getDateRangeLabel(startYear, endYear);
 	}
 }
 
@@ -290,7 +312,7 @@ function ensureRYMChartController(initialState: RYMChartState): RYMChartLike {
 			if (title) title.textContent = element.dataset.description ?? "Top";
 			controller._updateFrameClass?.();
 			controller.closeChartTypeSelect?.();
-			return false;
+			return true;
 		},
 		openObjectTypeSelect: () =>
 			showChartMenu("page_chart_query_item_chart_object_select", () =>
@@ -312,7 +334,7 @@ function ensureRYMChartController(initialState: RYMChartState): RYMChartLike {
 			} else {
 				controller._updateReleaseTypeValue?.();
 			}
-			return false;
+			return true;
 		},
 		openDateSelect: () =>
 			showChartMenu("page_chart_query_item_date_select", () =>
@@ -335,7 +357,7 @@ function ensureRYMChartController(initialState: RYMChartState): RYMChartLike {
 				if (title) title.textContent = "All-time";
 				controller.closeDateSelect?.();
 			}
-			return false;
+			return true;
 		},
 		toggleReleaseType: (type) => {
 			const button = document.getElementById(`release_type_btn_${type}`);
@@ -534,6 +556,43 @@ function getDatePath(state: RYMChartState): string {
 	return `${startYear}-${endYear}`;
 }
 
+function getReleaseTypeTarget(selectedReleaseTypes: string[]): {
+	mediaType: string;
+	buttonLabel: string;
+} {
+	if (selectedReleaseTypes.length === 1 && selectedReleaseTypes[0] === "song") {
+		return { mediaType: "song", buttonLabel: "Song" };
+	}
+
+	const releaseTypes = selectedReleaseTypes.filter((type) => type !== "song");
+	const allReleasesSelected =
+		releaseTypes.length === ALL_RELEASE_TYPES.length &&
+		ALL_RELEASE_TYPES.every((type) => releaseTypes.includes(type));
+
+	if (allReleasesSelected) {
+		return { mediaType: "release", buttonLabel: "Releases" };
+	}
+
+	if (releaseTypes.length === 1) {
+		const mediaType = releaseTypes[0] ?? "album";
+		return {
+			mediaType,
+			buttonLabel: RELEASE_TYPE_LABELS[mediaType] ?? "Release",
+		};
+	}
+
+	if (releaseTypes.length > 1) {
+		const labels = releaseTypes.map(
+			(type) => RELEASE_TYPE_LABELS[type] ?? type,
+		);
+		const buttonLabel =
+			labels.length === 2 ? `${labels[0]} and ${labels[1]}` : labels.join(", ");
+		return { mediaType: releaseTypes.join(","), buttonLabel };
+	}
+
+	return { mediaType: "album", buttonLabel: "Album" };
+}
+
 function updateSeeChartButton(seeChartButton: HTMLAnchorElement): void {
 	const rymChart = getRYMChart();
 	const state = rymChart?.state ?? parseInitialChartState(seeChartButton);
@@ -551,55 +610,7 @@ function updateSeeChartButton(seeChartButton: HTMLAnchorElement): void {
 	const suffix = suffixMatch?.[1] ?? "";
 	const chartType = state.chart_type ?? "top";
 	const datePath = getDatePath(state);
-
-	const allReleaseTypes = [
-		"album",
-		"ep",
-		"mixtape",
-		"djmix",
-		"single",
-		"comp",
-		"video",
-		"unauth",
-		"musicvideo",
-		"additional",
-	];
-
-	let mediaType = "album";
-	let buttonLabel = "Album";
-
-	if (selectedReleaseTypes.length === 1 && selectedReleaseTypes[0] === "song") {
-		mediaType = "song";
-		buttonLabel = "Song";
-	} else {
-		const releaseTypes = selectedReleaseTypes.filter((type) => type !== "song");
-
-		const allReleasesSelected =
-			releaseTypes.length === allReleaseTypes.length &&
-			allReleaseTypes.every((type) => releaseTypes.includes(type));
-
-		if (allReleasesSelected) {
-			mediaType = "release";
-			buttonLabel = "Releases";
-		} else if (releaseTypes.length === 1) {
-			mediaType = releaseTypes[0];
-			buttonLabel = RELEASE_TYPE_LABELS[releaseTypes[0]] ?? "Release";
-		} else if (releaseTypes.length > 1) {
-			mediaType = releaseTypes.join(",");
-
-			const labels = releaseTypes.map(
-				(type) => RELEASE_TYPE_LABELS[type] ?? type,
-			);
-
-			buttonLabel =
-				labels.length === 2
-					? `${labels[0]} and ${labels[1]}`
-					: labels.join(", ");
-		} else {
-			mediaType = "album";
-			buttonLabel = "Album";
-		}
-	}
+	const { mediaType, buttonLabel } = getReleaseTypeTarget(selectedReleaseTypes);
 
 	const releaseTypeTitle = document
 		.getElementById("page_chart_query_item_chart_object_title")
@@ -866,7 +877,7 @@ export async function mainMusicGenre(): Promise<void> {
 	 * right-aligned group inside the existing chart header.
 	 */
 	if (originalButtonParent) {
-		originalButtonParent.insertAdjacentElement("beforebegin", controlsRow);
+		originalButtonParent.before(controlsRow);
 	} else {
 		header.appendChild(controlsRow);
 	}

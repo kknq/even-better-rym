@@ -57,6 +57,17 @@ function dateLabel(state: FilmChartState): string {
 	return path === "all-time" ? "All-time" : path;
 }
 
+function dateHelpText(dateMode: DateMode): string {
+	switch (dateMode) {
+		case "all_time":
+			return "Charts include films from all years.";
+		case "year_range":
+			return "Choose the first year or decade, then choose the second.";
+		case "year_decade":
+			return "Choose a single year or an entire decade.";
+	}
+}
+
 function makeYearChooser(): string {
 	const newestDecade = Math.floor(MAX_YEAR / 10) * 10;
 	const oldestDecade = Math.floor(MIN_YEAR / 10) * 10;
@@ -187,12 +198,7 @@ function updateControls(
 
 	const help = document.getElementById("ebr-film-chart-date-help");
 	if (help) {
-		help.textContent =
-			state.dateMode === "all_time"
-				? "Charts include films from all years."
-				: state.dateMode === "year_range"
-					? "Choose the first year or decade, then choose the second."
-					: "Choose a single year or an entire decade.";
+		help.textContent = dateHelpText(state.dateMode);
 	}
 
 	document

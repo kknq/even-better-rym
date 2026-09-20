@@ -4,6 +4,12 @@ import {
 	latLonToSmallMapCoords,
 } from "./geocode";
 
+type DataElement = Element & { dataset: DOMStringMap };
+
+function hasDataset(element: Element): element is DataElement {
+	return "dataset" in element;
+}
+
 function findSvgWithLocs(): SVGSVGElement | null {
 	const svgs = Array.from(document.querySelectorAll("svg"));
 
@@ -68,7 +74,9 @@ function applyCityNameMatches(textCandidates: HTMLElement[]): void {
 		const child = Array.from(svg.querySelectorAll("[id], [data-name]")).find(
 			(candidate) => {
 				const id = candidate.getAttribute("id") ?? "";
-				const dataName = candidate.getAttribute("data-name") ?? "";
+				const dataName = hasDataset(candidate)
+					? (candidate.dataset.name ?? "")
+					: "";
 
 				return (
 					id.toLowerCase().includes(txt.toLowerCase()) ||
