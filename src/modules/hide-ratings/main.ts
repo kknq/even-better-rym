@@ -10,14 +10,22 @@ import {
 } from "./styles";
 
 if (getRatingsPageType(globalThis.location.pathname)) {
+	document.documentElement.classList.add("ebr-ratings-pending");
 	injectHideStyles();
 	injectUnboldStyles();
 
-	if (await getPageEnabled("hideRatings")) {
-		await main();
-	} else {
-		const settings = await getRatingSettings();
-		if (settings.globalButton) insertGlobalRatingButton();
-		else removeHideStyles();
+	try {
+		if (await getPageEnabled("hideRatings")) {
+			await main();
+		} else {
+			const settings = await getRatingSettings();
+			if (settings.globalButton) insertGlobalRatingButton();
+			else removeHideStyles();
+		}
+	} finally {
+		document.documentElement.classList.remove("ebr-ratings-pending");
+		document.documentElement.classList.add("ebr-ratings-ready");
 	}
+} else {
+	document.documentElement.classList.add("ebr-ratings-ready");
 }

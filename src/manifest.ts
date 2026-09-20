@@ -51,6 +51,7 @@ const sharedManifest = {
 		},
 		{
 			js: ["src/modules/hide-ratings/main.ts"],
+			css: ["src/shared/visibility/bootstrap.css"],
 			matches: ["*://*.rateyourmusic.com/*"],
 			run_at: "document_start",
 		},
