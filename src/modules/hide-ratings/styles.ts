@@ -16,6 +16,8 @@ const SCORE_SELECTORS = [
 	".page_charts_section_charts_item_details_average_num",
 	".page_features_secondary_metadata_rating_final",
 	".page_review_feature_rating",
+	".page_section_main_info_music_rating_value_rating",
+	".page_song_header_info_rest > .pipe_separated:has(a[href*='/charts/top/song/'])",
 	".or_q_rating_date_s",
 ];
 
@@ -36,6 +38,7 @@ const COUNT_SELECTORS = [
 	".disco_reviews",
 	".newreleases_ratings_stat",
 	".newreleases_wishlist_stat",
+	".page_section_main_info_music_rating_value_number",
 	".newreleases_info_header_items_right .newreleases_info_header_item",
 	".frontpage_newreleases_info_header_items_right .newreleases_info_header_item",
 	".trackratings",

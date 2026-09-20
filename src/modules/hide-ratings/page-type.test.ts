@@ -17,6 +17,7 @@ describe("getRatingsPageType", () => {
 		["/~example/reviews", "profile"],
 		["/music-review/example/album/1", "review"],
 		["/latest", "review"],
+		["/song/example/example", "song"],
 		["/new-music/", "newMusic"],
 		["/genre/downtempo", "genre"],
 		["/genres/", null],
