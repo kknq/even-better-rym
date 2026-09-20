@@ -114,7 +114,10 @@ const sharedManifest = {
 		},
 		{
 			js: ["src/modules/vote-history/genres.ts"],
-			matches: ["*://*.rateyourmusic.com/rgenre/vote_history*"],
+			matches: [
+				"*://*.rateyourmusic.com/rgenre/vote_history*",
+				"*://*.rateyourmusic.com/rgenre/film_vote_history*",
+			],
 			run_at: "document_start",
 		},
 		{
