@@ -16,7 +16,7 @@ export const MONTHS = [
 	"December",
 ] as const;
 
-const DURATION_PATTERN = /^(?:(\d+):)?(\d+):(\d{2})$/;
+const DURATION_PATTERN = /^(?:(\d+):)?(\d+):(\d{1,2})$/;
 
 export const MONTH_NAMES: Readonly<Record<string, number>> = Object.fromEntries(
 	MONTHS.map((month, index) => [month.toLowerCase(), index + 1]),
