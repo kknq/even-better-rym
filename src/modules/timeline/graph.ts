@@ -88,9 +88,12 @@ export function buildMarkersOverlayHtml(
 function buildMemberStripes(
 	roles: string[],
 	colorMap: Map<string, string>,
+	memberName: string,
+	memberColorMap: Map<string, string>,
 ): string {
 	if (!roles.length) {
-		return `<div class="rymmt-stripe rymmt-stripe-neutral"></div>`;
+		const color = memberColorMap.get(memberName) ?? "transparent";
+		return `<div class="rymmt-stripe" style="background:${color}"></div>`;
 	}
 	const allRolesTitle = escapeHtml(roles.join(", "));
 	return roles
@@ -186,8 +189,14 @@ function buildMemberRowHtml(
 	axisMax: number,
 	total: number,
 	colorMap: Map<string, string>,
+	memberColorMap: Map<string, string>,
 ): string {
-	const stripes = buildMemberStripes(member.roles ?? [], colorMap);
+	const stripes = buildMemberStripes(
+		member.roles ?? [],
+		colorMap,
+		member.name,
+		memberColorMap,
+	);
 
 	const fallbackStart =
 		Number.isFinite(member.startYear) && member.startYear != null
@@ -362,6 +371,12 @@ export function buildGraph(
 	).toSorted((a, b) => a.localeCompare(b));
 
 	const chartColorMap = buildChartRoleColorMap(roleList, isDarkTheme);
+	const memberColorMap = buildChartRoleColorMap(
+		normalizedMembers
+			.filter((member) => !member.roles.length)
+			.map((member) => member.name),
+		isDarkTheme,
+	);
 	const legendHtml = buildRoleLegendHtml(roleList, chartColorMap);
 
 	const releasesLegendHtml = buildReleasesLegendHtml(opts.markers);
@@ -384,7 +399,14 @@ export function buildGraph(
 
 	const rowsHtml = normalizedMembers
 		.map((member) =>
-			buildMemberRowHtml(member, axisMin, axisMax, total, chartColorMap),
+			buildMemberRowHtml(
+				member,
+				axisMin,
+				axisMax,
+				total,
+				chartColorMap,
+				memberColorMap,
+			),
 		)
 		.join("\n");
 
