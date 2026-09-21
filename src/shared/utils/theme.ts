@@ -1,8 +1,8 @@
-interface RGB {
+type RGB = {
 	r: number;
 	g: number;
 	b: number;
-}
+};
 
 function isTransparent(color: string): boolean {
 	if (!color) return true;

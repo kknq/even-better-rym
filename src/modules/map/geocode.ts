@@ -23,6 +23,11 @@ let offlineLocationsLoaded = false;
 const SMALL_MAP_LON_SCALE = 1.388888888888889;
 const SMALL_MAP_LAT_SCALE = 1.3951903508002714;
 
+type NominatimResult = {
+	lat: string;
+	lon: string;
+};
+
 async function delay(ms: number) {
 	return new Promise((r) => setTimeout(r, ms));
 }
@@ -104,8 +109,8 @@ export async function geocodeCity(city: string): Promise<CityPoint | null> {
 		});
 		lastRequestAt = Date.now();
 		if (!res.ok) return null;
-		const arr = await res.json();
-		if (!arr?.length) return null;
+		const arr = (await res.json()) as NominatimResult[];
+		if (!arr.length) return null;
 		const first = arr[0];
 		const point: CityPoint = {
 			name: city,

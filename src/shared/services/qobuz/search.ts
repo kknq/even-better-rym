@@ -17,7 +17,5 @@ export const search: SearchFunction = async ({ artist, title }) => {
 
 	const href = firstLink.getAttribute("href") ?? "";
 	const album_id = href.substring(href.lastIndexOf("/"));
-	const streaming_url = `https://open.qobuz.com/album${album_id}`;
-
-	return streaming_url;
+	return `https://open.qobuz.com/album${album_id}`;
 };
