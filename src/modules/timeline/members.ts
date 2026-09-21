@@ -183,7 +183,17 @@ export function parseMembersFromText(
 		);
 	}
 
-	const members = Array.from(memberMap.values());
+	let members = Array.from(memberMap.values());
+	if (!members.length && sourceString) {
+		for (const name of sourceString
+			.split(",")
+			.map((part) => part.trim())
+			.filter(Boolean)) {
+			mergeIntoMemberMap(memberMap, name, "", [], [], urlsByName, titlesByName);
+		}
+		members = Array.from(memberMap.values());
+	}
+
 	resolveUnknownEnds(members);
 	return { members, maxYearMentioned };
 }
