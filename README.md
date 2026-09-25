@@ -28,6 +28,18 @@ Download cover art from a supported service with a pasted link. The artwork sour
 
 ---
 
+### WhoSampled Link
+
+Adds a direct WhoSampled album link for the current release. The feature can be enabled or disabled independently from the extension popup.
+
+---
+
+### Wikipedia Search
+
+Adds a button that searches Wikipedia for the current release using its album and artist names. The search runs only after you press the button, and the feature can be enabled or disabled independently from the extension popup.
+
+---
+
 ### Descriptor Links on Release Pages
 
 Makes descriptors clickable so you can explore charts for each one.

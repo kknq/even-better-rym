@@ -30,6 +30,7 @@ const hostsArray = [
 	"https://livemixtapes.com/*",
 	"https://*.metal-archives.com/*",
 	"https://metal-archives.com/*",
+	"https://en.wikipedia.org/*",
 ];
 
 const sharedManifest = {
@@ -96,6 +97,12 @@ const sharedManifest = {
 		},
 		{
 			js: ["src/modules/stream-links/main.ts"],
+			matches: ["*://*.rateyourmusic.com/release/*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/reference-links/main.ts"],
+			css: ["src/modules/reference-links/reference-links.css"],
 			matches: ["*://*.rateyourmusic.com/release/*"],
 			run_at: "document_start",
 		},

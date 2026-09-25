@@ -4,6 +4,8 @@ export const pages = {
 	trackTime: "/release/",
 	releaseSubmission: "/releases/ac",
 	coverArt: "/images/upload",
+	referenceLinks: "/release/",
+	wikipedia: "/release/",
 	streamLinkSubmission: "/submit_media_link",
 	userCollection: "/collection",
 	filmCollection: "/film_collection",
@@ -32,6 +34,8 @@ export const pageLabels: Record<PageKey, string> = {
 	trackTime: "Release Length to Hours Conversion",
 	releaseSubmission: "Release Submission Helper",
 	coverArt: "Cover Art Submission Helper",
+	referenceLinks: "WhoSampled Link",
+	wikipedia: "Wikipedia Search",
 	streamLinkSubmission: "Media Links Submission Helper",
 	userCollection: "Music Collection Filters",
 	filmCollection: "Film Collection Filters",
@@ -75,6 +79,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 				"streamLinkSubmission",
 			],
 		],
+		["External reference links", ["referenceLinks", "wikipedia"]],
 		[
 			"Library and user profiles",
 			[
@@ -103,6 +108,9 @@ export const pageHints: Record<PageKey, string> = {
 	releaseSubmission:
 		"Pre-fills the release submission form with data found on the provided page.",
 	coverArt: "Adds download controls to the cover art upload page.",
+	referenceLinks:
+		"Adds a direct WhoSampled album link for the current release.",
+	wikipedia: "Adds a button to search for the current release on Wikipedia.",
 	streamLinkSubmission:
 		"Assists with converting Soundcloud and Bandcamp links to embed codes on the media link submission page.",
 	userCollection: "Adds filters to your music collection page.",
