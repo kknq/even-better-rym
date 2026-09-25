@@ -28,6 +28,12 @@ Download cover art from a supported service with a pasted link. The artwork sour
 
 ---
 
+### Discogs Release Image Carousel
+
+On music release pages, looks up the selected release issue on Discogs using its catalogue number and displays the matching secondary release images in a navigable carousel. The feature is enabled by default and can be disabled from the extension popup. Requests use Discogs' public API; releases without matching secondary images show an empty state.
+
+---
+
 ### Descriptor Links on Release Pages
 
 Makes descriptors clickable so you can explore charts for each one.
