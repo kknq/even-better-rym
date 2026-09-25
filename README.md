@@ -28,6 +28,12 @@ Download cover art from a supported service with a pasted link. The artwork sour
 
 ---
 
+### User Reception
+
+Adds a release-page summary based on RYM's rating distribution. Ratings are grouped into six reception categories and shown with a ranked breakdown plus a positive-reception meter ranging from Panned to Acclaim. The feature is enabled by default and can be disabled from the extension popup.
+
+---
+
 ### Descriptor Links on Release Pages
 
 Makes descriptors clickable so you can explore charts for each one.

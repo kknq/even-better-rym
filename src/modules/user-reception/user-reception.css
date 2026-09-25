@@ -1,0 +1,84 @@
+.ebr-user-reception {
+	margin-top: 1em;
+	padding: 0.75em 0;
+	border-top: 1px solid var(--mono-d);
+	line-height: 1.8;
+}
+
+.ebr-user-reception-meter {
+	display: flex;
+	align-items: center;
+	gap: 0.75em;
+	margin-top: 0.75em;
+	padding: 0.75em;
+	border-radius: 0.5em;
+	color: var(--mono-f);
+	box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
+}
+
+.ebr-user-reception-meter__percentage {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 3.5em;
+	height: 3.5em;
+	flex: 0 0 3.5em;
+	border-radius: 50%;
+	background: rgb(0 0 0 / 18%);
+	font-size: 1.25em;
+	font-weight: 700;
+}
+
+.ebr-user-reception-meter__label {
+	font-size: 1.05em;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.ebr-user-reception-meter--acclaim {
+	background: radial-gradient(circle at 30% 30%, #ffd700, #d4af37);
+}
+
+.ebr-user-reception-meter--very-positive {
+	background: radial-gradient(circle at 30% 30%, #2e8b57, #006400);
+}
+
+.ebr-user-reception-meter--positive {
+	background: radial-gradient(circle at 30% 30%, #32cd32, #228b22);
+}
+
+.ebr-user-reception-meter--mixed {
+	background: radial-gradient(circle at 30% 30%, #ffa500, #ff8c00);
+}
+
+.ebr-user-reception-meter--negative {
+	background: radial-gradient(circle at 30% 30%, #ff4500, #b22222);
+}
+
+.ebr-user-reception-meter--panned {
+	background: radial-gradient(circle at 30% 30%, #555, #000);
+}
+
+.ebr-user-reception-list {
+	margin-top: 0.75em;
+}
+
+.ebr-user-reception-list__item {
+	display: flex;
+	align-items: center;
+	font-family: var(--font-family-sans-serif);
+	font-size: 0.95em;
+	opacity: 0.9;
+}
+
+.ebr-user-reception-list__item--top {
+	margin-bottom: 0.25em;
+	font-size: 1.1em;
+	font-weight: 700;
+	opacity: 1;
+}
+
+.ebr-user-reception-emoji {
+	margin-right: 0.5em;
+	font-size: 1.2em;
+}
