@@ -4,6 +4,8 @@ import * as storage from "./utils/storage";
 const defaultPageEnabled: Partial<Record<PageKey, boolean>> = {
 	hideReviews: false,
 	hideCommentBoxes: false,
+	referenceLinks: true,
+	wikipedia: true,
 };
 
 const legacyGenreChartControlKeys = [
@@ -12,10 +14,17 @@ const legacyGenreChartControlKeys = [
 	"genrePageChartControls",
 ] as const;
 
+const legacyReferenceLinkKeys = ["whosampled"] as const;
+
 const getLegacyGenreChartControlsEnabled = (
 	values: Record<string, unknown>,
 ): boolean =>
 	legacyGenreChartControlKeys.every((key) => values[`pages.${key}`] !== false);
+
+const getLegacyReferenceLinksEnabled = (
+	values: Record<string, unknown>,
+): boolean =>
+	legacyReferenceLinkKeys.every((key) => values[`pages.${key}`] !== false);
 
 export const getPageEnabled = async (key: PageKey): Promise<boolean> => {
 	const enabled = await storage.get<boolean>(`pages.${key}`);
@@ -23,6 +32,16 @@ export const getPageEnabled = async (key: PageKey): Promise<boolean> => {
 
 	if (key === "genreChartControls") {
 		return getLegacyGenreChartControlsEnabled(await storage.getAll());
+	}
+	if (key === "referenceLinks") {
+		const values = await storage.getAll();
+		const enabled = values["pages.referenceLinks"];
+		return typeof enabled === "boolean"
+			? enabled
+			: getLegacyReferenceLinksEnabled(values);
+	}
+	if (key === "wikipedia") {
+		return (await storage.getAll())["pages.wikipedia"] !== false;
 	}
 
 	return defaultPageEnabled[key] ?? true;
@@ -39,6 +58,18 @@ export const getAllPageEnabled = async (): Promise<
 			if (typeof enabled === "boolean") return [key, enabled];
 			if (key === "genreChartControls") {
 				return [key, getLegacyGenreChartControlsEnabled(values)];
+			}
+			if (key === "referenceLinks") {
+				const enabled = values["pages.referenceLinks"];
+				return [
+					key,
+					typeof enabled === "boolean"
+						? enabled
+						: getLegacyReferenceLinksEnabled(values),
+				];
+			}
+			if (key === "wikipedia") {
+				return [key, values["pages.wikipedia"] !== false];
 			}
 			return [key, defaultPageEnabled[key] ?? true];
 		}),
