@@ -100,6 +100,15 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/user-reception/main.ts"],
+			css: ["src/modules/user-reception/user-reception.css"],
+			matches: [
+				"*://*.rateyourmusic.com/release/*",
+				"*://*.rateyourmusic.com/film/*",
+			],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/user-collection/main.ts"],
 			matches: [
 				"*://*.rateyourmusic.com/collection*",
