@@ -41,16 +41,23 @@ export const usePageData = (): PageDataState => {
 };
 
 type PageData = {
-	metadata: { artist: string; title: string };
+	metadata: {
+		artist: string;
+		title: string;
+		serviceRegions?: StreamingPreferences["service_regions"];
+	};
 	links: Links;
 };
 async function getPageData(): Promise<PageData> {
-	const [artist, title, links] = await Promise.all([
+	const [artist, title, linksData] = await Promise.all([
 		getArtist(),
 		getTitle(),
 		getLinks(),
 	]);
-	return { metadata: { artist, title }, links };
+	return {
+		metadata: { artist, title, serviceRegions: linksData.serviceRegions },
+		links: linksData.links,
+	};
 }
 
 async function getArtist() {
@@ -65,27 +72,41 @@ async function getTitle() {
 	return titleElement.content;
 }
 
-async function getLinks(): Promise<Links> {
+async function getLinks(): Promise<{
+	links: Links;
+	serviceRegions?: StreamingPreferences["service_regions"];
+}> {
 	await waitForDocumentReady();
 
 	const streamingPreferences = await getStreamingPreferences();
-	if (!streamingPreferences) return EMPTY_LINKS;
+	if (!streamingPreferences)
+		return { links: EMPTY_LINKS, serviceRegions: undefined };
+	const serviceRegions = streamingPreferences.service_regions ?? {};
+	const normalizedPreferences = { service_regions: serviceRegions };
 
 	const element_ = document.querySelector<HTMLElement>(
 		"#media_link_button_container_top",
 	);
-	if (!element_) return EMPTY_LINKS;
+	if (!element_)
+		return {
+			links: EMPTY_LINKS,
+			serviceRegions,
+		};
 
 	const linksString = element_.dataset.links;
-	if (!linksString) return EMPTY_LINKS;
+	if (!linksString)
+		return {
+			links: EMPTY_LINKS,
+			serviceRegions,
+		};
 
 	const linksData = JSON.parse(linksString) as PageLinksData;
 
 	const links = Object.fromEntries(
 		Object.entries(linksData).map(([service, linkData]) => {
-			const r = getLinkData(service, linkData, streamingPreferences);
+			const r = getLinkData(service, linkData, normalizedPreferences);
 			if (r) {
-				const link = getFullLink(service, r);
+				const link = getFullLink(service, r, normalizedPreferences);
 				return [service, link];
 			}
 
@@ -93,9 +114,12 @@ async function getLinks(): Promise<Links> {
 		}),
 	);
 
-	return Object.fromEntries(
-		SEARCHABLES.map(({ id }) => [id, links[id]]),
-	) as Record<ServiceId, string | undefined>;
+	return {
+		links: Object.fromEntries(
+			SEARCHABLES.map(({ id }) => [id, links[id]]),
+		) as Record<ServiceId, string | undefined>,
+		serviceRegions,
+	};
 }
 
 type Links = Record<ServiceId, string | undefined>;
@@ -107,11 +131,16 @@ const EMPTY_LINKS = Object.fromEntries(
 const getStreamingPreferences = async (): Promise<
 	StreamingPreferences | undefined
 > => {
-	const promise = new Promise<StreamingPreferences>((resolve) => {
+	const promise = new Promise<StreamingPreferences | undefined>((resolve) => {
 		const listener = (e: Event) => {
-			const streamingPreferences =
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-				(e as CustomEvent).detail.streamingPreferences as StreamingPreferences;
+			const detail = (e as CustomEvent<unknown>).detail;
+			const candidate =
+				detail && typeof detail === "object" && "streamingPreferences" in detail
+					? (detail as { streamingPreferences?: unknown }).streamingPreferences
+					: undefined;
+			const streamingPreferences = isStreamingPreferences(candidate)
+				? candidate
+				: undefined;
 
 			document.removeEventListener("StreamingPreferencesEvent", listener);
 
@@ -142,12 +171,32 @@ type PageLinksData = Record<
 	>
 >;
 
-type StreamingPreferences = { service_regions: Record<string, string> };
+type StreamingPreferences = {
+	service_regions?: Record<string, string>;
+};
+type NormalizedStreamingPreferences = {
+	service_regions: Record<string, string>;
+};
+
+const isStreamingPreferences = (
+	value: unknown,
+): value is StreamingPreferences => {
+	if (!value || typeof value !== "object") return false;
+
+	const serviceRegions = (value as { service_regions?: unknown })
+		.service_regions;
+	if (serviceRegions === undefined) return true;
+	if (!serviceRegions || typeof serviceRegions !== "object") return false;
+
+	return Object.values(serviceRegions).every(
+		(region) => typeof region === "string",
+	);
+};
 
 function getLinkData(
 	service: string,
 	linkData: PageLinksData[string],
-	streamingPreferences: StreamingPreferences,
+	streamingPreferences: NormalizedStreamingPreferences,
 ): LinkData | null {
 	let bestLinkData = null;
 	let bestMediaId = null;
@@ -181,7 +230,11 @@ function getLinkData(
 	return null;
 }
 
-function getFullLink(service: string, linkData: LinkData) {
+function getFullLink(
+	service: string,
+	linkData: LinkData,
+	streamingPreferences: NormalizedStreamingPreferences,
+) {
 	switch (service) {
 		case "spotify": {
 			const data = linkData as SpotifyLinkData;
@@ -212,7 +265,8 @@ function getFullLink(service: string, linkData: LinkData) {
 
 		case "deezer": {
 			const data = linkData as DeezerLinkData;
-			return `https://www.deezer.com/us/album/${data.media_id}`;
+			const region = streamingPreferences.service_regions.deezer ?? "us";
+			return `https://www.deezer.com/${region.toLowerCase()}/album/${data.media_id}`;
 		}
 
 		case "qobuz": {
