@@ -20,6 +20,7 @@ export type FetchResponse = {
 		body: string;
 		status: number;
 		statusText: string;
+		error?: string;
 	};
 };
 

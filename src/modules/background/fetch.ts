@@ -10,20 +10,34 @@ export const backgroundFetch = async ({
 			urlObject.searchParams.append(key, value);
 	}
 
-	const response = await fetch(urlObject.toString(), {
-		method,
-		headers,
-		credentials,
-	});
-	const responseBody = await response.text();
+	try {
+		const response = await fetch(urlObject.toString(), {
+			method,
+			headers,
+			credentials,
+		});
+		const responseBody = await response.text();
 
-	return {
-		id,
-		type: "fetch",
-		data: {
-			body: responseBody,
-			status: response.status,
-			statusText: response.statusText,
-		},
-	};
+		return {
+			id,
+			type: "fetch",
+			data: {
+				body: responseBody,
+				status: response.status,
+				statusText: response.statusText,
+			},
+		};
+	} catch (error) {
+		return {
+			id,
+			type: "fetch",
+			data: {
+				body: "",
+				status: 0,
+				statusText: "Network error",
+				error:
+					error instanceof Error ? error.message : "The fetch request failed.",
+			},
+		};
+	}
 };
