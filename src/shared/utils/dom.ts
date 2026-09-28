@@ -31,6 +31,33 @@ export const waitForElement = <E extends Element>(query: string): Promise<E> =>
 		return document.querySelector<E>(query) ?? undefined;
 	});
 
+export const waitForOptionalElement = <E extends Element>(
+	query: string,
+): Promise<E | undefined> =>
+	new Promise((resolve) => {
+		const find = () => document.querySelector<E>(query) ?? undefined;
+		const existing = find();
+		if (existing) return resolve(existing);
+		if (isDocumentReady()) return resolve(undefined);
+
+		let observer: MutationObserver | undefined;
+		const finish = (element: E | undefined) => {
+			observer?.disconnect();
+			document.removeEventListener("DOMContentLoaded", check);
+			resolve(element);
+		};
+		const check = () => {
+			const element = find();
+			if (element) finish(element);
+			else if (isDocumentReady()) finish(undefined);
+		};
+
+		observer = new MutationObserver(check);
+		observer.observe(document, { childList: true, subtree: true });
+		document.addEventListener("DOMContentLoaded", check, { once: true });
+		check();
+	});
+
 export const waitForCallback = <T>(callback: () => T | undefined): Promise<T> =>
 	new Promise((resolve, reject) => {
 		if (isDocumentReady()) {

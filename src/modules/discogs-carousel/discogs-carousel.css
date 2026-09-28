@@ -1,21 +1,7 @@
-.ebr-discogs-carousel {
-	margin: 1em 0;
-	padding: 1em;
-	width: 100%;
-	max-width: 100%;
-	background: var(--surface-secondary, rgba(0, 0, 0, 0.08));
-	border: 1px solid var(--ui-divider-line, rgba(128, 128, 128, 0.3));
-}
-
-#even-better-rym-discogs-carousel-button {
-	text-align: center;
-	margin: 0.5em 0;
-	z-index: 3;
-}
-
 #even-better-rym-discogs-carousel {
 	position: absolute;
 	inset: 0;
+	pointer-events: none;
 }
 
 .ebr-discogs-carousel {
@@ -27,6 +13,7 @@
 	padding: 0.5em;
 	background: var(--surface-secondary, rgba(0, 0, 0, 0.08));
 	z-index: 2;
+	pointer-events: auto;
 }
 
 .ebr-discogs-carousel-viewport {
@@ -55,10 +42,12 @@
 	align-items: center;
 	justify-content: center;
 	gap: 1em;
-	margin-top: 0.75em;
+	margin: 0.75em 0;
+	padding: 0;
 }
 
-.ebr-discogs-carousel-controls button {
+.ebr-discogs-carousel-controls button,
+#even-better-rym-discogs-carousel-button {
 	padding: 0.4em 0.8em;
 	border: 0;
 	border-radius: 0.3em;
@@ -67,17 +56,17 @@
 	cursor: pointer;
 }
 
-.ebr-discogs-carousel-status {
-	text-align: center;
-	flex: 0 0 auto;
-	margin: 0.5em 0;
+#even-better-rym-discogs-carousel-button {
+	display: block;
+	margin: 0.5em auto;
 }
 
-.ebr-discogs-carousel-status button {
-	padding: 0.5em 1em;
-	border: 0;
-	border-radius: 0.3em;
-	background: var(--mono-8, #888);
-	color: var(--mono-f, #fff);
-	cursor: pointer;
+.ebr-discogs-carousel-controls button {
+	margin: 0;
+}
+
+.ebr-discogs-carousel-status {
+	text-align: center;
+	margin: 0.5em 0;
+	font-size: 0.9em;
 }

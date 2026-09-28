@@ -22,6 +22,5 @@ export const search: SearchFunction = async ({
 			headers: { Authorization: `Bearer ${token.access_token}` },
 		}),
 	) as AlbumSearchObject;
-	console.log(response);
 	return response.albums.items[0]?.external_urls.spotify;
 };

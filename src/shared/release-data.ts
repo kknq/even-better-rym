@@ -3,6 +3,8 @@ export type ReleaseIssue = {
 	country: string;
 	format: string;
 	label: string;
+	artist: string;
+	title: string;
 	year: number | undefined;
 };
 
@@ -29,9 +31,19 @@ const readIssue = (element: Element): ReleaseIssue | undefined => {
 				.querySelector<HTMLElement>(".issue_formats")
 				?.getAttribute("title") ?? "",
 		label: separator < 0 ? "" : labelText.slice(0, separator).trim(),
+		artist:
+			document.querySelector<HTMLAnchorElement>("a.artist")?.text.trim() ?? "",
+		title:
+			document
+				.querySelector<HTMLMetaElement>('meta[itemprop="name"]')
+				?.content.trim() ?? "",
 		year: getYear(element.querySelector(".issue_year") ?? element),
 	};
 };
+
+export const isSupportedReleasePagePath = (pathname: string): boolean =>
+	pathname.startsWith("/release/") &&
+	!/\/reviews\/?$/.test(pathname.replace(/\/+$/, "/"));
 
 export const findReleaseIssue = (): ReleaseIssue | undefined => {
 	const issues = Array.from(

@@ -100,8 +100,8 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
-			js: ["src/modules/discogs_carousel/main.tsx"],
-			css: ["src/modules/discogs_carousel/discogs-carousel.css"],
+			js: ["src/modules/discogs-carousel/main.tsx"],
+			css: ["src/modules/discogs-carousel/discogs-carousel.css"],
 			matches: ["*://*.rateyourmusic.com/release/*"],
 			run_at: "document_start",
 		},
