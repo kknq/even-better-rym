@@ -30,7 +30,7 @@ Download cover art from a supported service with a pasted link. The artwork sour
 
 ### User Reception
 
-Adds a release-page summary based on RYM's rating distribution. Ratings are grouped into six reception categories and shown with a ranked breakdown plus a positive-reception meter ranging from Panned to Acclaim. The feature is enabled by default and can be disabled from the extension popup.
+Adds a summary between the rating distribution and rating trend on release pages. Ratings are grouped into six reception categories and shown with a ranked breakdown plus a positive-reception meter ranging from Panned to Acclaim.
 
 ---
 
@@ -266,7 +266,10 @@ src/
   manifest.ts              # Extension manifest definition
   shared/                  # Code shared across all modules
     pages.ts               # Page URL patterns, labels, and global page key set (pure data, no I/O)
-    page-settings.ts       # Storage helpers (getPageEnabled / setPageEnabled) and runPage orchestrator
+    page-settings.ts       # Module enablement helpers and runModule orchestrator
+    chart-shortcuts/       # Reusable chart shortcut bindings, actions, and settings
+    release-data.ts        # Release issue details and supported release paths
+    release-title.ts       # Release title and artist extraction
     use-release-info.ts    # useReleaseInfo hook (shared by cover-art and release-submission)
     components/            # Shared Preact components (ServiceLinkForm, ServiceSelector, etc.)
     icons/                 # Generic icons
@@ -278,6 +281,7 @@ src/
       discogs/
       livemixtapes/
       melon/
+      metalarchives/
       qobuz/
       soundcloud/
       spotify/
@@ -287,15 +291,22 @@ src/
       types.ts             # Service, Searchable, Resolvable, Embeddable types
     utils/                 # DOM helpers, storage, cache, messaging, fetch wrappers, etc.
       messaging.ts         # Background messaging types, codecs, and sendBackgroundMessage (flat file)
+    visibility/            # Shared rating and review policies, session state, and bootstrap CSS
   modules/                 # One directory per feature
     background/            # Service worker (message routing, tab icon management)
     popup/                 # Extension popup (feature toggle UI)
+    chart-shortcuts/
     cover-art/
     descriptor-links/
-    film-genre/
+    discogs-carousel/
+    genre-chart-controls/
+    hide-comment-boxes/
     hide-ratings/
+    hide-reviews/
     hide-votes/
+    image-cropper/
     map/
+    reference-links/
     release-submission/
     search-bar/
     stream-link-missing/
@@ -306,13 +317,14 @@ src/
     track-time/
     user-collection/
     user-page/
+    user-reception/
     vote-history/
 ```
 
-Each module follows the same pattern:
+Most page modules follow this pattern:
 
-- `main.ts` - entry point; uses top-level `await runPage('key', async () => { await fn() })` to guard execution behind the feature toggle. `runPage` is imported from `~/shared/page-settings`.
-- `app.ts` / `app.tsx` - the actual logic or root Preact component for the feature.
+- `main.ts` or `main.tsx` - entry point that uses `runModule("key", callback)` from `~/shared/page-settings` to guard execution behind the feature toggle.
+- `app.ts` / `app.tsx` or feature-specific files - the logic or root Preact component for the feature.
 
 Service icons are co-located with their service (`services/spotify/icon.tsx`, `icon-found.tsx`, `icon-notfound.tsx`) rather than in a flat shared icons directory. Only generic UI icons (check, loader, x, info) live in `shared/icons/`.
 

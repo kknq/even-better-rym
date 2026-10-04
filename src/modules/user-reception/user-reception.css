@@ -1,62 +1,60 @@
 .ebr-user-reception {
 	margin-top: 1em;
-	padding: 0.75em 0;
+	padding-top: 0.75em;
 	border-top: 1px solid var(--mono-d);
-	line-height: 1.8;
+}
+
+body.ebr-hide-ratings .ebr-user-reception {
+	display: none !important;
 }
 
 .ebr-user-reception-meter {
-	display: flex;
-	align-items: center;
-	gap: 0.75em;
 	margin-top: 0.75em;
-	padding: 0.75em;
-	border-radius: 0.5em;
-	color: var(--mono-f);
-	box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
+	padding: 0.6em 0.75em;
+	border-radius: 0.2em;
 }
 
-.ebr-user-reception-meter__percentage {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 3.5em;
-	height: 3.5em;
-	flex: 0 0 3.5em;
-	border-radius: 50%;
-	background: rgb(0 0 0 / 18%);
-	font-size: 1.25em;
-	font-weight: 700;
-}
-
-.ebr-user-reception-meter__label {
-	font-size: 1.05em;
-	font-weight: 700;
-	text-transform: uppercase;
-}
-
-.ebr-user-reception-meter--acclaim {
-	background: radial-gradient(circle at 30% 30%, #ffd700, #d4af37);
-}
-
-.ebr-user-reception-meter--very-positive {
-	background: radial-gradient(circle at 30% 30%, #2e8b57, #006400);
-}
-
+.ebr-user-reception-meter--acclaim,
+.ebr-user-reception-meter--very-positive,
 .ebr-user-reception-meter--positive {
-	background: radial-gradient(circle at 30% 30%, #32cd32, #228b22);
+	background: var(--gen-bg-lightgreen);
 }
 
 .ebr-user-reception-meter--mixed {
-	background: radial-gradient(circle at 30% 30%, #ffa500, #ff8c00);
+	background: var(--gen-bg-yellow);
 }
 
-.ebr-user-reception-meter--negative {
-	background: radial-gradient(circle at 30% 30%, #ff4500, #b22222);
-}
-
+.ebr-user-reception-meter--negative,
 .ebr-user-reception-meter--panned {
-	background: radial-gradient(circle at 30% 30%, #555, #000);
+	background: var(--gen-bg-lightred);
+}
+
+.ebr-user-reception-meter__summary {
+	display: flex;
+	justify-content: space-between;
+	gap: 1em;
+	align-items: baseline;
+}
+
+.ebr-user-reception-meter__label {
+	font-weight: 700;
+}
+
+.ebr-user-reception-meter__percentage,
+.ebr-user-reception-list__percentage {
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+.ebr-user-reception-meter__track {
+	height: 0.4em;
+	margin-top: 0.5em;
+	background: var(--mono-e8);
+}
+
+.ebr-user-reception-meter__fill {
+	height: 100%;
+	background: var(--mono-7);
 }
 
 .ebr-user-reception-list {
@@ -65,20 +63,39 @@
 
 .ebr-user-reception-list__item {
 	display: flex;
-	align-items: center;
-	font-family: var(--font-family-sans-serif);
-	font-size: 0.95em;
-	opacity: 0.9;
+	position: relative;
+	justify-content: space-between;
+	gap: 1em;
+	padding: 0.25em 0;
+	border-top: 1px solid var(--mono-e8);
 }
 
 .ebr-user-reception-list__item--top {
-	margin-bottom: 0.25em;
-	font-size: 1.1em;
 	font-weight: 700;
-	opacity: 1;
 }
 
-.ebr-user-reception-emoji {
-	margin-right: 0.5em;
-	font-size: 1.2em;
+.ebr-user-reception-list__name {
+	cursor: help;
+}
+
+.ebr-user-reception-list__tooltip {
+	position: absolute;
+	z-index: 1;
+	right: 0;
+	bottom: 100%;
+	left: 0;
+	padding: 0.4em 0.6em;
+	border: 1px solid var(--mono-c);
+	background: var(--mono-f);
+	color: var(--text-primary);
+	font-size: 0.9em;
+	font-weight: normal;
+	line-height: 1.4;
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.ebr-user-reception-list__item:hover .ebr-user-reception-list__tooltip,
+.ebr-user-reception-list__item:focus-within .ebr-user-reception-list__tooltip {
+	visibility: visible;
 }
