@@ -1,6 +1,6 @@
 import browser from "webextension-polyfill";
 
-import { getPageEnabled } from "~/shared/page-settings";
+import { getModuleEnabled } from "~/shared/page-settings";
 import type { PageKey } from "~/shared/pages";
 import { globalPageKeys, pages } from "~/shared/pages";
 import type {
@@ -103,7 +103,7 @@ browser.tabs.onUpdated.addListener((id, _changeInfo, tab) => {
 
 	if (matchingKeys.length === 0) return;
 
-	void Promise.all(matchingKeys.map((key) => getPageEnabled(key))).then(
+	void Promise.all(matchingKeys.map((key) => getModuleEnabled(key))).then(
 		(results) => {
 			const enabled = results.some(Boolean);
 			setTabIcon(id, enabled);

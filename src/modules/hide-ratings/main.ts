@@ -1,4 +1,4 @@
-import { getPageEnabled } from "~/shared/page-settings";
+import { getModuleEnabled } from "~/shared/page-settings";
 import { getRatingSettings } from "~/shared/visibility/settings";
 import { main } from "./app";
 import { insertGlobalRatingButton } from "./generic-page";
@@ -15,7 +15,7 @@ if (getRatingsPageType(globalThis.location.pathname)) {
 	injectUnboldStyles();
 
 	try {
-		if (await getPageEnabled("hideRatings")) {
+		if (await getModuleEnabled("hideRatings")) {
 			await main();
 		} else {
 			const settings = await getRatingSettings();

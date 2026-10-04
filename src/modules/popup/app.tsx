@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import browser from "webextension-polyfill";
 
-import { getAllPageEnabled, setPageEnabled } from "~/shared/page-settings";
+import { getAllModulesEnabled, setModuleEnabled } from "~/shared/page-settings";
 import type { PageKey } from "~/shared/pages";
 import { featureGroups, pageHints, pageLabels } from "~/shared/pages";
 
@@ -43,13 +43,13 @@ export function App() {
 	const [needsReload, setNeedsReload] = useState(false);
 
 	useEffect(() => {
-		void getAllPageEnabled().then(setFeatures);
+		void getAllModulesEnabled().then(setFeatures);
 	}, []);
 
 	const toggle = async (key: PageKey) => {
 		if (!features) return;
 		const next = !features[key];
-		await setPageEnabled(key, next);
+		await setModuleEnabled(key, next);
 		setFeatures((prev) => prev && { ...prev, [key]: next });
 		setNeedsReload(true);
 	};

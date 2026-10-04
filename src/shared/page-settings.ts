@@ -1,23 +1,19 @@
 import { type PageKey, pages } from "./pages";
 import * as storage from "./utils/storage";
 
-const defaultPageEnabled: Partial<Record<PageKey, boolean>> = {
-	hideReviews: false,
-	hideCommentBoxes: false,
-	userReception: true,
-	whoSampled: true,
-	wikipedia: true,
-	discogsCarousel: true,
-};
+const modulesDisabledByDefault = new Set<PageKey>([
+	"hideReviews",
+	"hideCommentBoxes",
+]);
 
-export const getPageEnabled = async (key: PageKey): Promise<boolean> => {
+export const getModuleEnabled = async (key: PageKey): Promise<boolean> => {
 	const enabled = await storage.get<boolean>(`pages.${key}`);
 	if (enabled !== undefined) return enabled;
 
-	return defaultPageEnabled[key] ?? true;
+	return !modulesDisabledByDefault.has(key);
 };
 
-export const getAllPageEnabled = async (): Promise<
+export const getAllModulesEnabled = async (): Promise<
 	Record<PageKey, boolean>
 > => {
 	const values = await storage.getAll();
@@ -26,18 +22,18 @@ export const getAllPageEnabled = async (): Promise<
 		(Object.keys(pages) as PageKey[]).map((key) => {
 			const enabled = values[`pages.${key}`];
 			if (typeof enabled === "boolean") return [key, enabled];
-			return [key, defaultPageEnabled[key] ?? true];
+			return [key, !modulesDisabledByDefault.has(key)];
 		}),
 	) as Record<PageKey, boolean>;
 };
 
-export const setPageEnabled = async (
+export const setModuleEnabled = async (
 	key: PageKey,
 	enabled: boolean,
 ): Promise<void> => storage.set(`pages.${key}`, enabled);
 
-export const runPage = async (key: PageKey, callback: () => unknown) => {
-	const enabled = await getPageEnabled(key);
+export const runModule = async (key: PageKey, callback: () => unknown) => {
+	const enabled = await getModuleEnabled(key);
 	if (!enabled) return;
 
 	callback();

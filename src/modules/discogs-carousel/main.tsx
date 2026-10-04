@@ -1,5 +1,5 @@
 import { render } from "preact";
-import { runPage } from "~/shared/page-settings";
+import { runModule } from "~/shared/page-settings";
 import {
 	findReleaseIssue,
 	isSupportedReleasePagePath,
@@ -111,4 +111,4 @@ async function main(): Promise<void> {
 	);
 }
 
-void runPage("discogsCarousel", main);
+void runModule("discogsCarousel", main);

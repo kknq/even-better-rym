@@ -1,4 +1,4 @@
-import { runPage } from "~/shared/page-settings";
+import { runModule } from "~/shared/page-settings";
 import { getReleaseTitleData } from "~/shared/release-title";
 import { waitForDocumentReady } from "~/shared/utils/dom";
 import type { FetchRequest, FetchResponse } from "~/shared/utils/messaging";
@@ -168,10 +168,10 @@ async function main(): Promise<void> {
 	const release = getReleaseTitleData();
 	if (!titleElement || !release) return;
 
-	void runPage("whoSampled", () => {
+	void runModule("whoSampled", () => {
 		appendWhoSampledLink(titleElement, release);
 	});
-	void runPage("wikipedia", () => {
+	void runModule("wikipedia", () => {
 		appendWikipediaButton(titleElement, release);
 	});
 }

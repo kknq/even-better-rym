@@ -1,4 +1,4 @@
-import { getPageEnabled } from "~/shared/page-settings";
+import { getModuleEnabled } from "~/shared/page-settings";
 import { getReviewSettings } from "~/shared/visibility/settings";
 import { getRatingsPageType } from "../hide-ratings/page-type";
 import { insertGlobalReviewButton, isReviewPage, main } from "./app";
@@ -11,7 +11,7 @@ if (page && isReviewPage(page)) {
 	injectHideReviewStyles();
 
 	try {
-		if (await getPageEnabled("hideReviews")) {
+		if (await getModuleEnabled("hideReviews")) {
 			await main();
 		} else {
 			const settings = await getReviewSettings();

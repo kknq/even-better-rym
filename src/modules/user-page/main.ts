@@ -1,7 +1,7 @@
-import { runPage } from "~/shared/page-settings";
+import { runModule } from "~/shared/page-settings";
 
 import { main } from "./app";
 
-await runPage("userPage", async () => {
+await runModule("userPage", async () => {
 	await main();
 });

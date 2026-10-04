@@ -1,5 +1,5 @@
 import { eyeIcon } from "~/shared/icons/eye";
-import { getPageEnabled, setPageEnabled } from "~/shared/page-settings";
+import { getModuleEnabled, setModuleEnabled } from "~/shared/page-settings";
 import { waitForDocumentReady } from "~/shared/utils/dom";
 import { isOwnProfile, isOwnUserPage } from "~/shared/utils/user";
 import { prepareCollectionRows } from "~/shared/visibility/collection";
@@ -162,7 +162,7 @@ export const insertGlobalReviewButton = (): void => insertReviewButton(true);
 
 const wireGlobalReviewButton = (button: HTMLElement): void => {
 	const update = async () => {
-		const enabled = await getPageEnabled("hideReviews");
+		const enabled = await getModuleEnabled("hideReviews");
 		const label = enabled ? "Disable Hide Reviews" : "Enable Hide Reviews";
 		button.innerHTML = `<span>${label}</span>`;
 		button.setAttribute("aria-label", label);
@@ -170,7 +170,10 @@ const wireGlobalReviewButton = (button: HTMLElement): void => {
 
 	void update();
 	const toggleModule = async (): Promise<void> => {
-		await setPageEnabled("hideReviews", !(await getPageEnabled("hideReviews")));
+		await setModuleEnabled(
+			"hideReviews",
+			!(await getModuleEnabled("hideReviews")),
+		);
 		globalThis.location.reload();
 	};
 	button.addEventListener("click", () => {

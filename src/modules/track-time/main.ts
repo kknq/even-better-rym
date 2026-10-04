@@ -1,7 +1,7 @@
-import { runPage } from "~/shared/page-settings";
+import { runModule } from "~/shared/page-settings";
 
 import { main } from "./app";
 
-await runPage("trackTime", async () => {
+await runModule("trackTime", async () => {
 	await main();
 });

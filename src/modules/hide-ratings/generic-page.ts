@@ -1,4 +1,4 @@
-import { getPageEnabled, setPageEnabled } from "~/shared/page-settings";
+import { getModuleEnabled, setModuleEnabled } from "~/shared/page-settings";
 import {
 	getSessionVisibility,
 	setSessionVisibility,
@@ -44,7 +44,7 @@ export const insertGlobalRatingButton = (): void => {
 	);
 
 	const update = async () => {
-		const enabled = await getPageEnabled("hideRatings");
+		const enabled = await getModuleEnabled("hideRatings");
 		const label = enabled ? "Disable Hide Ratings" : "Enable Hide Ratings";
 		button.innerHTML = `<span>${label}</span>`;
 		button.setAttribute("aria-label", label);
@@ -53,7 +53,10 @@ export const insertGlobalRatingButton = (): void => {
 
 	void update();
 	button.addEventListener("click", async () => {
-		await setPageEnabled("hideRatings", !(await getPageEnabled("hideRatings")));
+		await setModuleEnabled(
+			"hideRatings",
+			!(await getModuleEnabled("hideRatings")),
+		);
 		globalThis.location.reload();
 	});
 	document.body.appendChild(button);

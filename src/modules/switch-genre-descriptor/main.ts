@@ -1,5 +1,5 @@
-import { runPage } from "~/shared/page-settings";
+import { runModule } from "~/shared/page-settings";
 
 import { main } from "./app";
 
-await runPage("switchGenreDescriptor", main);
+await runModule("switchGenreDescriptor", main);

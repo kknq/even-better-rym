@@ -1,7 +1,7 @@
-import { runPage } from "~/shared/page-settings";
+import { runModule } from "~/shared/page-settings";
 
 import { main } from "./app";
 
-await runPage("streamLinkMissing", async () => {
+await runModule("streamLinkMissing", async () => {
 	await main();
 });

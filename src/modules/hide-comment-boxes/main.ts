@@ -1,4 +1,4 @@
-import { getPageEnabled } from "~/shared/page-settings";
+import { getModuleEnabled } from "~/shared/page-settings";
 import { waitForDocumentReady } from "~/shared/utils/dom";
 
 import {
@@ -8,7 +8,7 @@ import {
 
 injectHideCommentBoxStyles();
 
-if (await getPageEnabled("hideCommentBoxes")) {
+if (await getModuleEnabled("hideCommentBoxes")) {
 	await waitForDocumentReady();
 	document.body.classList.add("ebr-hide-comment-boxes");
 } else {

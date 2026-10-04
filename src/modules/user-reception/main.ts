@@ -1,4 +1,4 @@
-import { runPage } from "~/shared/page-settings";
+import { runModule } from "~/shared/page-settings";
 import { waitForElement } from "~/shared/utils/dom";
 
 import "./user-reception.css";
@@ -192,4 +192,4 @@ async function main(): Promise<void> {
 	appendReception(statsContainer, entries);
 }
 
-void runPage("userReception", main);
+void runModule("userReception", main);
