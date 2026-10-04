@@ -31,8 +31,6 @@ type PagingObject<C> = {
 	total: number;
 };
 
-export type AlbumSearchObject = { albums: PagingObject<SimplifiedAlbumObject> };
-
 export type SimplifiedTrackObject = {
 	disc_number: number;
 	duration_ms: number;

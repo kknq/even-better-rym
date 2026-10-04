@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 
 import { SEARCHABLES } from "~/shared/services";
-import type { ServiceId } from "~/shared/services/types";
+import type { ReleaseType, ServiceId } from "~/shared/services/types";
 import {
 	runScript,
 	waitForDocumentReady,
@@ -15,6 +15,8 @@ import {
 	isInitial,
 	loading,
 } from "~/shared/utils/one-shot";
+
+import { getReleaseTypeFromPath } from "./release-type";
 
 export type PageDataState = OneShot<Error, PageData>;
 
@@ -44,6 +46,7 @@ type PageData = {
 	metadata: {
 		artist: string;
 		title: string;
+		releaseType?: ReleaseType;
 		serviceRegions?: StreamingPreferences["service_regions"];
 	};
 	links: Links;
@@ -55,7 +58,12 @@ async function getPageData(): Promise<PageData> {
 		getLinks(),
 	]);
 	return {
-		metadata: { artist, title, serviceRegions: linksData.serviceRegions },
+		metadata: {
+			artist,
+			title,
+			releaseType: getReleaseTypeFromPath(location.pathname),
+			serviceRegions: linksData.serviceRegions,
+		},
 		links: linksData.links,
 	};
 }

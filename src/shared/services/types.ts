@@ -28,6 +28,7 @@ export type Icon = FunctionComponent<SVGAttributes<SVGSVGElement>>;
 export type SearchFunction = (metadata: {
 	artist: string;
 	title: string;
+	releaseType?: ReleaseType;
 	serviceRegions?: Partial<Record<ServiceId, string>>;
 }) => Promise<string | undefined>;
 export type Searchable = {

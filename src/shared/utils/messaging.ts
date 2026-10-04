@@ -54,6 +54,22 @@ export type ScriptResponse = {
 	type: "script";
 };
 
+export type SpotifySearchRequest = {
+	id: string;
+	type: "spotifySearch";
+	data: {
+		artist: string;
+		title: string;
+		releaseType?: "single" | "music video";
+	};
+};
+
+export type SpotifySearchResponse = {
+	id: string;
+	type: "spotifySearch";
+	data: { url?: string; error?: string };
+};
+
 // One-way messages (not a request/response pair, no `id`) for broadcasting a
 // chart-shortcut rebind to any already-open chart page, so it takes effect
 // without a refresh. Popup -> background -> matching tabs.
@@ -87,11 +103,16 @@ export const isKeybindingsUpdatedMessage = (
 	"type" in o &&
 	o.type === "keybindingsUpdated";
 
-export type BackgroundRequest = FetchRequest | DownloadRequest | ScriptRequest;
+export type BackgroundRequest =
+	| FetchRequest
+	| DownloadRequest
+	| ScriptRequest
+	| SpotifySearchRequest;
 export type BackgroundResponse =
 	| FetchResponse
 	| DownloadResponse
-	| ScriptResponse;
+	| ScriptResponse
+	| SpotifySearchResponse;
 
 export const isBackgroundRequest = (o: unknown): o is BackgroundRequest =>
 	typeof o === "object" && o !== null && "id" in o && "type" in o;

@@ -15,6 +15,7 @@ import {
 import { download } from "./download";
 import { backgroundFetch } from "./fetch";
 import { script } from "./script";
+import { spotifySearch } from "./spotify-search";
 
 const CHART_PAGE_PATTERN = "*://*.rateyourmusic.com/charts/*";
 const CHANGELOG_PATH = "changelog.html";
@@ -35,6 +36,7 @@ const getResponse = (
 		if (message.type === "fetch") return backgroundFetch(message);
 		if (message.type === "download") return download(message);
 		if (message.type === "script") return script(message, tabId);
+		if (message.type === "spotifySearch") return spotifySearch(message);
 	}
 	throw new Error(`Invalid message: ${JSON.stringify(message)}`);
 };
