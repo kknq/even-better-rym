@@ -1,0 +1,40 @@
+.ebr-reference-links {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	max-width: 100%;
+	margin-left: 0.5rem;
+	vertical-align: middle;
+}
+
+.album_title .ebr-reference-link.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.3em;
+	margin: 0;
+	font-size: 0.9rem;
+}
+
+.album_title .ebr-reference-link:disabled {
+	cursor: wait;
+	background: var(--btn-primary-background-disabled);
+	color: var(--btn-primary-text-disabled);
+}
+
+.ebr-whosampled-logo,
+.ebr-wikipedia-logo {
+	display: block;
+	width: 1.15rem;
+	height: 1.15rem;
+	object-fit: contain;
+}
+
+.ebr-whosampled-logo {
+	filter: grayscale(1);
+}
+
+.ebr-wikipedia-logo {
+	height: 0.75rem;
+	filter: invert(1);
+}

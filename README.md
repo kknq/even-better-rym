@@ -6,7 +6,7 @@ Most of the credit goes to [jgchk](https://github.com/jgchk) and all the beautif
 
 ## Features
 
-Turn each feature on or off from the extension popup. Settings are grouped by purpose: Search and navigation, Charts, Release and submission tools, Library and user profiles, Artist profiles, and Content visibility.
+Turn each feature on or off from the extension popup. Settings are grouped by purpose: Search and navigation, Charts, Release and submission tools, Release insights, External reference links, Library and user profiles, Artist profiles, and Content visibility.
 
 ---
 
@@ -31,6 +31,24 @@ Download cover art from a supported service with a pasted link. The artwork sour
 ### User Reception
 
 Adds a release-page summary based on RYM's rating distribution. Ratings are grouped into six reception categories and shown with a ranked breakdown plus a positive-reception meter ranging from Panned to Acclaim. The feature is enabled by default and can be disabled from the extension popup.
+
+---
+
+### WhoSampled Link
+
+Adds a direct WhoSampled album link for the current release.
+
+---
+
+### Wikipedia Search
+
+Adds a button to the right of the release title that searches Wikipedia using the album and artist names.
+
+---
+
+### Discogs Release Image Carousel
+
+On music release pages, looks up the selected release issue on Discogs using its catalogue number and displays the matching secondary release images in a navigable carousel. The feature is enabled by default and can be disabled from the extension popup. Requests use Discogs' public API; releases without matching secondary images show an empty state.
 
 ---
 

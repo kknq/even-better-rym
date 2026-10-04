@@ -6,6 +6,7 @@ export const fetch = async (data: FetchRequest["data"]): Promise<string> => {
 		type: "fetch",
 		data,
 	});
+	if (response.data.error) throw new Error(response.data.error);
 	return response.data.body;
 };
 
