@@ -1,62 +1,40 @@
 .ebr-reference-links {
-	display: flex;
+	display: inline-flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
-	justify-content: center;
-	margin: 0.75rem 0 0;
+	max-width: 100%;
+	margin-left: 0.5rem;
+	vertical-align: middle;
 }
 
-.ebr-reference-link {
-	appearance: none;
+.album_title .ebr-reference-link.btn {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding: 0.5rem 0.9rem;
-	border: 1px solid var(--mono-4, rgba(255, 255, 255, 0.2));
-	border-radius: 999px;
-	font-size: 0.8rem;
-	font-weight: 600;
-	line-height: 1.2;
-	cursor: pointer;
-	text-decoration: none;
-	transition:
-		opacity 0.2s ease,
-		border-color 0.2s ease,
-		background-color 0.2s ease,
-		transform 0.2s ease;
+	gap: 0.3em;
+	margin: 0;
+	font-size: 0.9rem;
 }
 
-.ebr-reference-link:hover,
-.ebr-reference-link:focus-visible {
-	border-color: var(--gen-blue, #3d7ad8);
-	transform: translateY(-1px);
-}
-
-.ebr-reference-link:disabled {
+.album_title .ebr-reference-link:disabled {
 	cursor: wait;
-	opacity: 0.7;
+	background: var(--btn-primary-background-disabled);
+	color: var(--btn-primary-text-disabled);
 }
 
-.ebr-reference-link--primary {
-	background: #eff100;
-	border-color: #3c4043;
-	color: #3c4043;
-}
-
-.ebr-reference-link--primary:hover,
-.ebr-reference-link--primary:focus-visible {
-	border-color: #3c4043;
-	color: #3c4043;
-}
-
-.ebr-whosampled-logo {
+.ebr-whosampled-logo,
+.ebr-wikipedia-logo {
 	display: block;
 	width: 1.15rem;
 	height: 1.15rem;
 	object-fit: contain;
 }
 
-.ebr-wikipedia-link {
-	background: transparent;
-	color: var(--mono-1, #d7d8d8);
+.ebr-whosampled-logo {
+	filter: grayscale(1);
+}
+
+.ebr-wikipedia-logo {
+	height: 0.75rem;
+	filter: invert(1);
 }
