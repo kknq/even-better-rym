@@ -10,6 +10,7 @@ export const visibilityPages = [
 	"home",
 	"newMusic",
 	"genre",
+	"recommendations",
 ] as const;
 
 export type VisibilityPage = (typeof visibilityPages)[number];
@@ -50,26 +51,12 @@ export type ReviewSettings = {
 	globalButton: boolean;
 };
 
-type RatingSettingsOverrides = Omit<
-	Partial<RatingSettings>,
-	"friends" | "pages"
-> & {
-	friends?: FriendRatingVisibility | "hide";
-	pages?: Partial<VisibilityPageSettings> & {
-		discovery?: boolean;
-		other?: boolean;
-	};
+type RatingSettingsOverrides = Omit<Partial<RatingSettings>, "pages"> & {
+	pages?: Partial<VisibilityPageSettings>;
 };
 
-type ReviewSettingsOverrides = Omit<
-	Partial<ReviewSettings>,
-	"friends" | "pages"
-> & {
-	friends?: FriendReviewVisibility;
-	pages?: Partial<ReviewPageSettings> & {
-		discovery?: boolean;
-		other?: boolean;
-	};
+type ReviewSettingsOverrides = Omit<Partial<ReviewSettings>, "pages"> & {
+	pages?: Partial<ReviewPageSettings>;
 };
 
 const RATINGS_STORAGE_KEY = "brym.visibility.ratings";
@@ -108,22 +95,12 @@ export function mergeRatingSettings(
 	overrides: RatingSettingsOverrides = {},
 ): RatingSettings {
 	const defaults = defaultRatingSettings();
-	const { discovery, other: _other, ...pages } = overrides.pages ?? {};
 	return {
 		...defaults,
 		...overrides,
-		friends:
-			overrides.friends === "always" || overrides.friends === "never"
-				? overrides.friends
-				: defaults.friends,
 		pages: {
 			...defaults.pages,
-			home: discovery ?? defaults.pages.home,
-			newMusic:
-				pages.newMusic ?? pages.home ?? discovery ?? defaults.pages.newMusic,
-			genre: discovery ?? defaults.pages.genre,
-			film: pages.film ?? pages.release ?? defaults.pages.film,
-			...pages,
+			...overrides.pages,
 		},
 	};
 }
@@ -132,19 +109,12 @@ export function mergeReviewSettings(
 	overrides: ReviewSettingsOverrides = {},
 ): ReviewSettings {
 	const defaults = defaultReviewSettings();
-	const { discovery, other: _other, ...pages } = overrides.pages ?? {};
 	return {
 		...defaults,
 		...overrides,
-		friends:
-			overrides.friends === "always" || overrides.friends === "never"
-				? overrides.friends
-				: defaults.friends,
 		pages: {
 			...defaults.pages,
-			home: discovery ?? defaults.pages.home,
-			film: pages.film ?? pages.release ?? defaults.pages.film,
-			...pages,
+			...overrides.pages,
 		},
 	};
 }

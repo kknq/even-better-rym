@@ -20,6 +20,7 @@ describe("getRatingsPageType", () => {
 		["/song/example/example", "song"],
 		["/new-music/", "newMusic"],
 		["/genre/downtempo", "genre"],
+		["/recommendations/kknq/release/", "recommendations"],
 		["/genres/", null],
 		["/", "home"],
 		["/account/login", null],

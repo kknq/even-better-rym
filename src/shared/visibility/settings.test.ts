@@ -17,7 +17,7 @@ describe("visibility settings", () => {
 		);
 	});
 
-	it("uses the requested rating and review defaults", () => {
+	it("uses the rating and review defaults", () => {
 		expect(defaultRatingSettings()).toMatchObject({
 			ratings: "unrated",
 			counts: "scores",
@@ -47,7 +47,7 @@ describe("visibility settings", () => {
 		expect(settings.buttons).toBe(true);
 		expect(settings.globalButton).toBe(false);
 		expect(settings.pages.release).toBe(false);
-		expect(settings.pages.film).toBe(false);
+		expect(settings.pages.film).toBe(true);
 		expect(settings.pages.chart).toBe(true);
 	});
 
@@ -63,27 +63,38 @@ describe("visibility settings", () => {
 		expect(settings.reviews).toBe("always");
 	});
 
-	it("migrates the former discovery setting to home and genre pages", () => {
-		const settings = mergeRatingSettings({ pages: { discovery: false } });
+	it("adds recommendations to existing rating settings without changing choices", () => {
+		const settings = mergeRatingSettings({
+			pages: { release: false, home: false },
+		});
 
+		expect(settings.pages.recommendations).toBe(true);
+		expect(settings.pages.release).toBe(false);
 		expect(settings.pages.home).toBe(false);
-		expect(settings.pages.newMusic).toBe(false);
-		expect(settings.pages.genre).toBe(false);
-	});
-
-	it("uses the former shared release setting for the new film setting", () => {
-		expect(mergeRatingSettings({ pages: { release: false } }).pages.film).toBe(
-			false,
-		);
-		expect(mergeReviewSettings({ pages: { release: false } }).pages.film).toBe(
-			false,
-		);
-	});
-
-	it("preserves a separately configured film setting", () => {
 		expect(
-			mergeRatingSettings({ pages: { release: false, film: true } }).pages,
-		).toMatchObject({ release: false, film: true });
+			mergeRatingSettings({ pages: { recommendations: false } }).pages
+				.recommendations,
+		).toBe(false);
+		expect(defaultReviewSettings().pages).not.toHaveProperty("recommendations");
+	});
+
+	it("keeps release and film page settings independent", () => {
+		for (const merge of [mergeRatingSettings, mergeReviewSettings]) {
+			expect(merge({ pages: { release: false } }).pages).toMatchObject({
+				release: false,
+				film: true,
+			});
+			expect(merge({ pages: { film: false } }).pages).toMatchObject({
+				release: true,
+				film: false,
+			});
+		}
+	});
+
+	it("keeps home, new music, and genre page settings independent", () => {
+		expect(mergeRatingSettings({ pages: { home: false } }).pages).toMatchObject(
+			{ home: false, newMusic: true, genre: true },
+		);
 	});
 
 	it("keeps review pages limited to supported review locations", () => {
@@ -93,16 +104,12 @@ describe("visibility settings", () => {
 		expect(settings.pages).not.toHaveProperty("newMusic");
 	});
 
-	it("replaces the removed friend hide policy with the default", () => {
-		const settings = mergeRatingSettings({
-			friends: "hide",
-		});
-
-		expect(settings.friends).toBe("after-release-rated");
-	});
-
-	it("preserves the independent friend hide policy", () => {
-		expect(mergeRatingSettings({ friends: "never" }).friends).toBe("never");
-		expect(mergeReviewSettings({ friends: "never" }).friends).toBe("never");
+	it.each([
+		"always",
+		"after-release-rated",
+		"never",
+	] as const)("preserves the %s friend visibility policy", (friends) => {
+		expect(mergeRatingSettings({ friends }).friends).toBe(friends);
+		expect(mergeReviewSettings({ friends }).friends).toBe(friends);
 	});
 });

@@ -26,6 +26,7 @@ const pageLabels: Record<string, string> = {
 	home: "Home page",
 	newMusic: "New music pages",
 	genre: "Genre pages",
+	recommendations: "Automatic Recommendations pages",
 };
 
 function PageToggles<Page extends string>({

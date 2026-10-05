@@ -12,6 +12,7 @@ export const getRatingsPageType = (pathname: string): VisibilityPage | null => {
 	if (pathname.startsWith("/song/")) return "song";
 	if (/^\/new-music(?:\/|$)/.test(pathname)) return "newMusic";
 	if (/^\/(?:genre|film_genre)(?:\/|$)/.test(pathname)) return "genre";
+	if (/^\/recommendations(?:\/|$)/.test(pathname)) return "recommendations";
 	if (pathname === "/") return "home";
 	return null;
 };
