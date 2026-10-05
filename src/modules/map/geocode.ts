@@ -1,13 +1,13 @@
+import * as storage from "~/shared/utils/storage";
 import offlineGeoCsv from "./cities.csv?raw";
 import type { CityPoint } from "./types";
 
-// Simple Nominatim geocode helper with localStorage caching and basic rate-limiting.
+// Simple Nominatim geocode helper with extension storage caching and basic rate-limiting.
 // Notes: Nominatim is free and reliable for light use but rate-limited for heavy traffic.
 
 const CACHE_KEY = "rymmt_geocode_cache_v1";
-const cache: Record<string, CityPoint> = JSON.parse(
-	localStorage.getItem(CACHE_KEY) ?? "{}",
-) as Record<string, CityPoint>;
+const getCacheKey = (city: string) =>
+	`${CACHE_KEY}:${city.trim().toLowerCase()}`;
 let lastRequestAt = 0;
 const MIN_DELAY = 1100; // 1.1s between requests to be polite to Nominatim
 
@@ -86,12 +86,12 @@ export function latLonToSmallMapCoords(lat: number, lon: number) {
 export async function geocodeCity(city: string): Promise<CityPoint | null> {
 	const key = city.trim().toLowerCase();
 	if (!key) return null;
-	if (cache[key]) return cache[key];
+	const cached = await storage.get<CityPoint>(getCacheKey(city));
+	if (cached) return cached;
 
 	const offline = findOfflineLocation(city);
 	if (offline) {
-		cache[key] = offline;
-		localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+		await storage.set(getCacheKey(city), offline);
 		return offline;
 	}
 
@@ -103,6 +103,7 @@ export async function geocodeCity(city: string): Promise<CityPoint | null> {
 	const q = encodeURIComponent(city);
 	// User-agent and email are recommended by Nominatim usage policy; include minimal info.
 	const url = `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`;
+	let point: CityPoint;
 	try {
 		const res = await fetch(url, {
 			headers: { "Accept-Language": "en-US,en;q=0.9" },
@@ -112,28 +113,28 @@ export async function geocodeCity(city: string): Promise<CityPoint | null> {
 		const arr = (await res.json()) as NominatimResult[];
 		if (!arr.length) return null;
 		const first = arr[0];
-		const point: CityPoint = {
+		point = {
 			name: city,
 			lat: Number(first.lat),
 			lon: Number(first.lon),
 		};
-		cache[key] = point;
-		localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-		return point;
 	} catch (e) {
 		console.warn("geocodeCity error", e);
 		return null;
 	}
+	await storage.set(getCacheKey(city), point);
+	return point;
 }
 
-export function seedLocalGeocode(list: CityPoint[]) {
-	for (const p of list) {
-		cache[p.name.trim().toLowerCase()] = p;
-	}
-	localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+export async function seedLocalGeocode(list: CityPoint[]): Promise<void> {
+	await Promise.all(
+		list.map((point) => storage.set(getCacheKey(point.name), point)),
+	);
 }
 
-export function getCachedCity(city: string): CityPoint | null {
-	const key = city.trim().toLowerCase();
-	return cache[key] ?? findOfflineLocation(city);
+export async function getCachedCity(city: string): Promise<CityPoint | null> {
+	return (
+		(await storage.get<CityPoint>(getCacheKey(city))) ??
+		findOfflineLocation(city)
+	);
 }

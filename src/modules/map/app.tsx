@@ -130,7 +130,7 @@ async function appendCityPoints(
 			continue;
 		}
 
-		const cached = getCachedCity(city);
+		const cached = await getCachedCity(city);
 		if (cached) {
 			points.push(cached);
 			continue;
