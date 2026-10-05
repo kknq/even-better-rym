@@ -1,10 +1,26 @@
+.album_title.ebr-reference-title {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	column-gap: 0.5rem;
+}
+
+.ebr-reference-title > .album_shortcut {
+	order: 1;
+	margin-left: auto;
+}
+
+.ebr-reference-title > .album_artist_small {
+	order: 2;
+	flex-basis: 100%;
+}
+
 .ebr-reference-links {
 	display: inline-flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
 	max-width: 100%;
-	margin-left: 0.5rem;
-	vertical-align: middle;
+	transform: translateY(0.08em);
 }
 
 .album_title .ebr-reference-link.btn {

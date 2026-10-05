@@ -26,6 +26,7 @@ const getReferenceContainer = (titleElement: HTMLElement): HTMLDivElement => {
 
 	const container = document.createElement("div");
 	container.className = "ebr-reference-links";
+	titleElement.classList.add("ebr-reference-title");
 	titleElement.insertBefore(
 		container,
 		titleElement.querySelector(":scope > .album_artist_small"),
