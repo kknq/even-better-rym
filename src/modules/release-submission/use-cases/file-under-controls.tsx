@@ -9,13 +9,20 @@ export default async function injectFileUnderControls() {
 	const fileUnder = await waitForElement("#filed_underperformerlist");
 	const unknownArtistDiv = document.createElement("div");
 	fileUnder.after(unknownArtistDiv);
-	render(<UnknownArtist target="filedunder" />, unknownArtistDiv);
+	render(<UnknownArtist />, unknownArtistDiv);
 }
 
-function UnknownArtist({ target }: Readonly<{ target: string }>) {
+function UnknownArtist() {
 	const handleClick = useCallback(
-		() => selectShortcut("a", 250714, "[unknown artist]", target),
-		[target],
+		() =>
+			selectShortcut(
+				"a",
+				250714,
+				"[unknown artist]",
+				"filedunderperformer",
+				"performer",
+			),
+		[],
 	);
 
 	return (

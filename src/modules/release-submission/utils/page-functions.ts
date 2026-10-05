@@ -8,9 +8,10 @@ export const selectShortcut = (
 	id: number,
 	name: string,
 	target: string,
+	label = "",
 ): void =>
 	void runScript(
-		`selectShortcut(\`${type}\`, ${id}, \`${name}\`, \`${target}\`)`,
+		`selectShortcut(${JSON.stringify(type)}, ${id}, ${JSON.stringify(name)}, ${JSON.stringify(target)}, ${JSON.stringify(label)})`,
 	);
 
 // window.parent.goInfobox(897)
