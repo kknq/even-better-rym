@@ -104,6 +104,12 @@ main {
 	text-transform: uppercase;
 }
 
+.badge-hotfix {
+	color: #9a3412;
+	background: #fff7ed;
+	border-color: #fdba74;
+}
+
 .change-title {
 	margin: 1px 0 4px;
 	color: #2a2a2a;
