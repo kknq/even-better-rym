@@ -96,5 +96,11 @@ export type Video = {
  * SEARCH
  */
 export type SearchObject = {
-	results: [{ collectionViewUrl: string }];
+	results: {
+		artistId: number;
+		artistName: string;
+		collectionName?: string;
+		collectionViewUrl?: string;
+	}[];
+	errorMessage?: string;
 };

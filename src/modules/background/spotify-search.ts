@@ -226,12 +226,28 @@ export const spotifySearch = async ({
 						func: readSpotifySearchPage,
 						args: [artist, title, category, releaseType ?? null],
 					});
-					if (results.length === 0)
+					const injection = results[0];
+					if (!injection)
 						throw new Error("Spotify search script did not return a result");
-					const result: unknown = results[0]?.result;
-					if (result !== undefined && typeof result !== "string")
+					if ("error" in injection) {
+						const error: unknown = injection.error;
+						if (
+							error &&
+							typeof error === "object" &&
+							"message" in error &&
+							typeof error.message === "string"
+						)
+							throw new Error(error.message);
+						throw new Error(`Spotify search script failed: ${String(error)}`);
+					}
+					const result: unknown = injection.result;
+					if (
+						result !== undefined &&
+						result !== null &&
+						typeof result !== "string"
+					)
 						throw new Error("Spotify search returned an invalid link");
-					return result;
+					return result ?? undefined;
 				} catch (error) {
 					if (
 						attempt !== 0 ||

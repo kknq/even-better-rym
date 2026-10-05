@@ -16,6 +16,7 @@ import {
 	loading,
 } from "~/shared/utils/one-shot";
 
+import { getSearchArtistName } from "./metadata";
 import { getReleaseTypeFromPath } from "./release-type";
 
 export type PageDataState = OneShot<Error, PageData>;
@@ -70,7 +71,10 @@ async function getPageData(): Promise<PageData> {
 
 async function getArtist() {
 	const artistElement = await waitForElement<HTMLAnchorElement>("a.artist");
-	return artistElement.text;
+	return getSearchArtistName(
+		artistElement.text,
+		artistElement.querySelector(".subtext")?.textContent,
+	);
 }
 
 async function getTitle() {
