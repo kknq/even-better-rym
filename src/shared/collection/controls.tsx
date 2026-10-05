@@ -49,7 +49,7 @@ export function CollectionSettingsControls({
 		);
 	}
 
-	if (kind === "film") return null;
+	if (kind === "film" || !settings.columnManagement) return null;
 
 	const selected = settings.columns ?? defaultCollectionColumns(kind);
 	const available = Object.keys(collectionColumns).filter(
@@ -135,3 +135,26 @@ const arrowStyle = (disabled: boolean) => ({
 });
 
 import { Checkbox } from "~/shared/components/checkbox";
+
+export function ColumnManagementControl({
+	settings,
+	onChange,
+}: Readonly<{
+	settings: CollectionSettings;
+	onChange: (settings: CollectionSettings) => void;
+}>) {
+	return (
+		<label style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+			<Checkbox
+				checked={settings.columnManagement}
+				onChange={() =>
+					onChange({
+						...settings,
+						columnManagement: !settings.columnManagement,
+					})
+				}
+			/>
+			Enable column management
+		</label>
+	);
+}

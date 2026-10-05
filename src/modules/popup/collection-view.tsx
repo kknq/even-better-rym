@@ -1,4 +1,7 @@
-import { CollectionSettingsControls } from "~/shared/collection/controls";
+import {
+	CollectionSettingsControls,
+	ColumnManagementControl,
+} from "~/shared/collection/controls";
 import { PageSizeControl } from "~/shared/collection/page-size-control";
 import type { CollectionKind } from "~/shared/collection/settings";
 import { useCollectionSettings } from "~/shared/collection/use-settings";
@@ -24,6 +27,8 @@ export function CollectionView({
 					: "Page-size changes"}{" "}
 				are saved for your next navigation. They do not refresh an open
 				collection.
+				{kind === "music" &&
+					" Toggling column management refreshes open music collections immediately."}
 			</p>
 			<div style={{ ...styles.card, padding: "12px" }}>
 				<PageSizeControl
@@ -35,8 +40,26 @@ export function CollectionView({
 					}}
 				/>
 			</div>
+			{kind === "music" && (
+				<div style={{ ...styles.card, padding: "12px" }}>
+					<ColumnManagementControl
+						settings={settings}
+						onChange={(next) => {
+							void save(next).then(onSettingsChange).catch(console.error);
+						}}
+					/>
+					<p>
+						Disable to remove custom columns from the current URL. Enable to
+						apply your saved columns. Your column choices are kept.
+					</p>
+				</div>
+			)}
 			{(["filters", "columns"] as const)
-				.filter((section) => kind === "music" || section !== "columns")
+				.filter(
+					(section) =>
+						section !== "columns" ||
+						(kind === "music" && settings.columnManagement),
+				)
 				.map((section) => (
 					<div key={section} style={styles.card}>
 						<div style={styles.groupHeader}>
@@ -53,6 +76,22 @@ export function CollectionView({
 									void save(next).then(onSettingsChange).catch(console.error);
 								}}
 							/>
+							{section === "columns" && (
+								<>
+									<button
+										type="button"
+										style={styles.customizeButton}
+										onClick={() => {
+											void save({ ...settings, columns: null })
+												.then(onSettingsChange)
+												.catch(console.error);
+										}}
+									>
+										Restore defaults
+									</button>
+									<p>Clear saved columns and use RYM's default columns.</p>
+								</>
+							)}
 						</div>
 					</div>
 				))}

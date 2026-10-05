@@ -1,7 +1,10 @@
 import { render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 
-import { CollectionSettingsControls } from "~/shared/collection/controls";
+import {
+	CollectionSettingsControls,
+	ColumnManagementControl,
+} from "~/shared/collection/controls";
 import { collectionSearchTypes } from "~/shared/collection/options";
 import { PageSizeControl } from "~/shared/collection/page-size-control";
 import type {
@@ -13,7 +16,12 @@ import { waitForDocumentReady } from "~/shared/utils/dom";
 
 import { FilterButtons } from "./filter-buttons";
 import { alignPagination } from "./pagination";
-import { collectionUrl, parseCollectionUrl, savedCollectionUrl } from "./url";
+import {
+	collectionUrl,
+	columnManagementUrl,
+	parseCollectionUrl,
+	savedCollectionUrl,
+} from "./url";
 
 export async function injectCollectionFilterButtons() {
 	await waitForDocumentReady();
@@ -68,10 +76,29 @@ function CollectionApp({ kind }: Readonly<{ kind: CollectionKind }>) {
 	const [section, setSection] = useState<"filters" | "columns" | null>(null);
 	const [draft, setDraft] = useState<CollectionSettings | null>(null);
 	const [savingColumns, setSavingColumns] = useState(false);
+	const [restoring, setRestoring] = useState(false);
 	const menu = useRef<HTMLDivElement>(null);
 	const menuButton = useRef<HTMLButtonElement>(null);
+	const previousColumnManagement = useRef<boolean | null>(null);
 	const current = parseCollectionUrl(location.href);
 	const isTag = current.modifiers.includes("stag");
+
+	useEffect(() => {
+		if (!settings || kind !== "music") return;
+		const previous = previousColumnManagement.current;
+		previousColumnManagement.current = settings.columnManagement;
+		if (previous === null || previous === settings.columnManagement) return;
+		const target = columnManagementUrl(location.href, settings);
+		if (new URL(target, location.href).href === location.href)
+			location.reload();
+		else location.assign(target);
+	}, [settings, kind]);
+
+	useEffect(() => {
+		if (settings && !settings.columnManagement && section === "columns") {
+			setSection(null);
+		}
+	}, [settings, section]);
 
 	useEffect(() => {
 		if (!open) return;
@@ -119,6 +146,14 @@ function CollectionApp({ kind }: Readonly<{ kind: CollectionKind }>) {
 					<div class="ebr-collection-menu-panel">
 						{section === null ? (
 							<div style={{ display: "grid", gap: "6px" }}>
+								{kind === "music" && (
+									<ColumnManagementControl
+										settings={settings}
+										onChange={(next) => {
+											void save(next).catch(console.error);
+										}}
+									/>
+								)}
 								<button
 									type="button"
 									class="btn"
@@ -126,7 +161,7 @@ function CollectionApp({ kind }: Readonly<{ kind: CollectionKind }>) {
 								>
 									Manage filters
 								</button>
-								{kind === "music" && (
+								{kind === "music" && settings.columnManagement && (
 									<button
 										type="button"
 										class="btn"
@@ -171,39 +206,67 @@ function CollectionApp({ kind }: Readonly<{ kind: CollectionKind }>) {
 										else void save(next).catch(console.error);
 									}}
 								/>
-								{kind === "music" && section === "columns" && (
-									<>
-										{current.view !== "default" && (
-											<p>
-												Custom columns apply only to the Default view. This view
-												keeps its native layout.
-											</p>
-										)}
-										<div class="ebr-collection-menu-actions">
-											<button
-												type="button"
-												class="btn blue_btn"
-												disabled={isTag || savingColumns}
-												onClick={() => {
-													if (!draft) return;
-													setSavingColumns(true);
-													const next = { ...settings, columns: draft.columns };
-													void save(next)
-														.then(() =>
-															location.assign(
-																savedCollectionUrl(location.href, next) ??
-																	location.href,
-															),
-														)
-														.catch(console.error)
-														.finally(() => setSavingColumns(false));
-												}}
-											>
-												Save columns
-											</button>
-										</div>
-									</>
-								)}
+								{kind === "music" &&
+									settings.columnManagement &&
+									section === "columns" && (
+										<>
+											{current.view !== "default" && (
+												<p>
+													Custom columns apply only to the Default view. This
+													view keeps its native layout.
+												</p>
+											)}
+											<div class="ebr-collection-menu-actions">
+												<button
+													type="button"
+													class="btn"
+													disabled={restoring || savingColumns}
+													onClick={() => {
+														setRestoring(true);
+														const next = { ...settings, columns: null };
+														void save(next)
+															.then(() => {
+																setDraft(next);
+																location.assign(
+																	collectionUrl(location.href, {
+																		columns: [],
+																		preservePage: true,
+																	}),
+																);
+															})
+															.catch(console.error)
+															.finally(() => setRestoring(false));
+													}}
+												>
+													Restore defaults
+												</button>
+												<button
+													type="button"
+													class="btn blue_btn"
+													disabled={isTag || savingColumns || restoring}
+													onClick={() => {
+														if (!draft) return;
+														setSavingColumns(true);
+														const next = {
+															...settings,
+															columns: draft.columns,
+														};
+														void save(next)
+															.then(() =>
+																location.assign(
+																	savedCollectionUrl(location.href, next) ??
+																		location.href,
+																),
+															)
+															.catch(console.error)
+															.finally(() => setSavingColumns(false));
+													}}
+												>
+													Save columns
+												</button>
+											</div>
+										</>
+									)}
 								{isTag && (
 									<p>
 										RYM tag views cannot be combined with filters or custom
@@ -330,7 +393,9 @@ function PageSize({ kind }: Readonly<{ kind: CollectionKind }>) {
 					collectionUrl(location.href, {
 						family: "pageSize",
 						value: pageSize === null ? "" : `n${pageSize}`,
-						columns: settings.columns ?? undefined,
+						columns: settings.columnManagement
+							? (settings.columns ?? undefined)
+							: undefined,
 					}),
 				);
 			}}

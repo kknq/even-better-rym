@@ -111,6 +111,20 @@ export function collectionUrl(
 	return `${path}/${current.url.search}${current.url.hash}`;
 }
 
+export function columnManagementUrl(
+	href: string,
+	settings: CollectionSettings,
+) {
+	const current = parseCollectionUrl(href);
+	return collectionUrl(href, {
+		columns:
+			settings.columnManagement && !current.modifiers.includes("stag")
+				? (settings.columns ?? [])
+				: [],
+		preservePage: true,
+	});
+}
+
 export function savedCollectionUrl(href: string, settings: CollectionSettings) {
 	const current = parseCollectionUrl(href);
 	if (current.modifiers.includes("stag")) return null;
@@ -119,6 +133,7 @@ export function savedCollectionUrl(href: string, settings: CollectionSettings) {
 			? current.columns.length > 0
 			: Boolean(
 					current.view === "default" &&
+						settings.columnManagement &&
 						settings.columns?.length &&
 						settings.columns.join(",") !== current.columns.join(","),
 				);

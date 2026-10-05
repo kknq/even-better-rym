@@ -100,7 +100,12 @@ function ViewButtons({ settings }: Readonly<{ settings: CollectionSettings }>) {
 					}}
 					href={collectionUrl(location.href, {
 						view,
-						columns: view === "default" ? (settings.columns ?? []) : undefined,
+						columns:
+							view === "default"
+								? settings.columnManagement
+									? (settings.columns ?? [])
+									: []
+								: undefined,
 					})}
 				>
 					{collectionViews[view]}

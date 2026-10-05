@@ -17,6 +17,7 @@ export {
 export type CollectionSettings = {
 	filters: Record<CollectionFilter, boolean>;
 	columns: CollectionColumn[] | null;
+	columnManagement: boolean;
 	pageSize: number | null;
 };
 type CollectionSettingsOverrides = Omit<
@@ -54,6 +55,7 @@ export function mergeCollectionSettings(
 				? null
 				: (settings?.columns?.filter((column) => column in collectionColumns) ??
 					null),
+		columnManagement: kind === "music" && (settings?.columnManagement ?? true),
 		pageSize: isCollectionPageSize(settings?.pageSize)
 			? settings.pageSize
 			: null,
