@@ -6,7 +6,7 @@ import { waitForElement } from "~/shared/utils/dom";
 import { goInfobox } from "../utils/page-functions";
 
 export default async function injectLabelControls() {
-	const clearButton = await waitForElement("input[value=Clear]");
+	const clearButton = await waitForElement("#labeltext ~ input[value='Clear']");
 	const container = document.createElement("span");
 	clearButton.after(container);
 	clearButton.remove();
