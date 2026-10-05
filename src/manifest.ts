@@ -36,6 +36,12 @@ const hostsArray = [
 const sharedManifest = {
 	content_scripts: [
 		{
+			js: ["src/modules/spotify-search/main.ts"],
+			matches: ["https://open.spotify.com/search/*"],
+			all_frames: true,
+			run_at: "document_idle",
+		},
+		{
 			js: ["src/modules/cover-art/main.ts"],
 			matches: ["*://*.rateyourmusic.com/images/upload*"],
 			run_at: "document_start",
@@ -216,7 +222,12 @@ const ManifestV2 = {
 		scripts: ["src/modules/background/index.ts"],
 	},
 	browser_action: browserAction,
-	permissions: [...sharedManifest.permissions, ...hostsArray],
+	permissions: [
+		...sharedManifest.permissions,
+		...hostsArray,
+		"webRequest",
+		"webRequestBlocking",
+	],
 };
 
 const ManifestV3 = {
@@ -226,6 +237,12 @@ const ManifestV3 = {
 		service_worker: "src/modules/background/index.ts",
 	},
 	host_permissions: hostsArray,
+	permissions: [
+		...sharedManifest.permissions,
+		"offscreen",
+		"declarativeNetRequestWithHostAccess",
+	] satisfies chrome.runtime.ManifestPermissions[],
+	minimum_chrome_version: "116",
 };
 
 export function getManifest(

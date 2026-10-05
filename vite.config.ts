@@ -18,6 +18,14 @@ export default defineConfig(({ mode }) => {
 			preact(),
 			webExtension({
 				manifest: getManifest(Number(env.MANIFEST_VERSION) || 3),
+				additionalInputs: {
+					html: [
+						{
+							fileName: "src/modules/spotify-search/offscreen.html",
+							webAccessible: false,
+						},
+					],
+				},
 			}),
 		],
 		resolve: {
