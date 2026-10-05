@@ -392,6 +392,8 @@ const parseCountries = (countries: string) => {
 				country.toLowerCase() === "us"
 			) {
 				return "United States";
+			} else if (country.toLowerCase() === "russia") {
+				return "Russian Federation";
 			}
 			return country;
 		})
