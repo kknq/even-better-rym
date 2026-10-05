@@ -123,6 +123,10 @@ const sharedManifest = {
 		},
 		{
 			js: ["src/modules/user-collection/main.ts"],
+			css: [
+				"src/modules/user-collection/collection.css",
+				"src/shared/components/checkbox.css",
+			],
 			matches: [
 				"*://*.rateyourmusic.com/collection*",
 				"*://*.rateyourmusic.com/film_collection*",

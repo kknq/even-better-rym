@@ -1,6 +1,9 @@
 import type { FunctionComponent } from "preact";
 import { useMemo } from "preact/hooks";
 
+import { collectionUrl, parseCollectionUrl } from "./url";
+
+export { splitCollectionModifiers } from "./url";
 export const FilterButton: FunctionComponent<{
 	name: string;
 	base: string;
@@ -16,37 +19,14 @@ export const FilterButton: FunctionComponent<{
 };
 
 function makeUrl(base: string, modifier: string) {
-	const path = globalThis.location.pathname.split("/");
-	const collectionIndex = path.findIndex(
-		(element) =>
-			element.toLowerCase() === "collection" ||
-			element.toLowerCase() === "film_collection",
-	);
-	const modifiers = [
-		...splitCollectionModifiers(path[collectionIndex + 2] || "").filter(
-			(module) => !module.startsWith(base),
-		),
-		filterApplied(modifier) ? "" : modifier,
-	]
-		.filter((s) => s.length > 0)
-		.join(",");
-	path[collectionIndex + 2] = modifiers;
-	const newPath = path.filter((s) => s.length > 0).join("/");
-	return `/${newPath}`;
+	return collectionUrl(globalThis.location.href, {
+		family: base === "typ" ? "type" : "rating",
+		value: filterApplied(modifier) ? "" : modifier,
+	});
 }
 
 function filterApplied(modifier: string) {
-	const path = globalThis.location.pathname.split("/");
-	const collectionIndex = path.findIndex(
-		(element) =>
-			element.toLowerCase() === "collection" ||
-			element.toLowerCase() === "film_collection",
-	);
-	return splitCollectionModifiers(path[collectionIndex + 2] || "").includes(
+	return parseCollectionUrl(globalThis.location.href).modifiers.includes(
 		modifier,
 	);
-}
-
-export function splitCollectionModifiers(modifiers: string) {
-	return modifiers.split(/\s*(?:,|%2c)\s*/i);
 }

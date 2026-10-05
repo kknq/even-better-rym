@@ -41,8 +41,8 @@ export const pageLabels: Record<PageKey, string> = {
 	wikipedia: "Wikipedia Search",
 	discogsCarousel: "Discogs Release Image Carousel",
 	streamLinkSubmission: "Media Links Submission Helper",
-	userCollection: "Music Collection Filters",
-	filmCollection: "Film Collection Filters",
+	userCollection: "Music Collection Enhancements",
+	filmCollection: "Film Collection Enhancements",
 	userPage: "User Page Enhancements",
 	voteHistoryGenres: "Enhancements for Music and Film Genre Vote History",
 	voteHistoryDescriptors: "Enhancements for Descriptor Vote History",
@@ -122,8 +122,10 @@ export const pageHints: Record<PageKey, string> = {
 		"Adds an optional carousel of secondary Discogs release images to music release pages.",
 	streamLinkSubmission:
 		"Assists with converting Soundcloud and Bandcamp links to embed codes on the media link submission page.",
-	userCollection: "Adds filters to your music collection page.",
-	filmCollection: "Adds filters to your film collection page.",
+	userCollection:
+		"Adds configurable filters, columns, and page-size controls to music collections.",
+	filmCollection:
+		"Adds configurable filters, columns, and page-size controls to film collections.",
 	userPage: "Adds edit buttons for favorite artists and other comments.",
 	voteHistoryGenres:
 		"Adds history navigation and a searchable genre selector dropdown to music and film genre vote history pages.",

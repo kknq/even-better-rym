@@ -76,9 +76,11 @@ Helps turn supported music-service links into the embed codes needed for media-l
 
 ---
 
-### Music/Film Collection Filters
+### Music/Film Collection Enhancements
 
-Adds one-click filters for status, rating, and release type to your music and film collections.
+Adds search, ownership, and rating filters to music and film collections. Music collections also support release-type and format filters, custom columns, and alternate views. Use the rating buttons for a single score or **Use Range** for a range.
+
+The three-dot menu lets you choose which filters to show and, for music, select and reorder columns. You can also choose a preset or custom number of items per page. Settings are saved and shared with the extension popup, separately for music and film.
 
 ---
 
@@ -137,6 +139,7 @@ Hides community rating values while preserving page layout. Configure the suppor
 - **Release pages** (`/release/*`, `/film/*`) — Ratings remain visible when you have rated the release; otherwise, averages, rankings, review ratings, and track scores are hidden.
 - **Artist pages** (`/artist/*`) — Ratings remain visible only for releases you have rated. Lazy-loaded discography entries follow the current toggle state.
 - **Charts, homepage, and new releases** — Available rating values are hidden because the page does not provide per-release rating status for the current user.
+- **Automatic Recommendations** (`/recommendations/*`)
 - **Profiles, collections, and collection reviews** — Ratings remain visible for your own pages and are hidden on other users' pages.
 
 ---

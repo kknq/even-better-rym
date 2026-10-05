@@ -5,6 +5,7 @@ import { getAllModulesEnabled, setModuleEnabled } from "~/shared/page-settings";
 import type { PageKey } from "~/shared/pages";
 import { featureGroups, pageHints, pageLabels } from "~/shared/pages";
 
+import { CollectionView } from "./collection-view";
 import { ShortcutView } from "./shortcut-view";
 import { styles } from "./styles";
 import { RatingVisibilityView, ReviewVisibilityView } from "./visibility-view";
@@ -16,7 +17,9 @@ type View =
 	| "chartShortcuts"
 	| "hideRatings"
 	| "hideReviews"
-	| "hideVotes";
+	| "hideVotes"
+	| "userCollection"
+	| "filmCollection";
 
 const viewTitles: Record<View, string> = {
 	features: "EvenBetterRYM",
@@ -24,6 +27,8 @@ const viewTitles: Record<View, string> = {
 	hideRatings: "Hide Ratings",
 	hideReviews: "Hide Reviews",
 	hideVotes: "Hide Votes",
+	userCollection: "Music Collection",
+	filmCollection: "Film Collection",
 };
 
 const viewSubtitles: Record<View, string> = {
@@ -32,6 +37,8 @@ const viewSubtitles: Record<View, string> = {
 	hideRatings: "Configure visibility",
 	hideReviews: "Configure visibility",
 	hideVotes: "Configure visibility",
+	userCollection: "Customize filters and columns",
+	filmCollection: "Customize filters and columns",
 };
 
 export function App() {
@@ -136,6 +143,14 @@ function SettingsContent({
 	onChangeView: (view: View) => void;
 }>) {
 	switch (view) {
+		case "userCollection":
+		case "filmCollection":
+			return (
+				<CollectionView
+					kind={view === "userCollection" ? "music" : "film"}
+					onSettingsChange={onSettingsChange}
+				/>
+			);
 		case "chartShortcuts":
 			return <ShortcutView onSettingsChange={onSettingsChange} />;
 		case "hideRatings":
@@ -217,7 +232,9 @@ function FeatureList({
 									)}
 									{(key === "hideRatings" ||
 										key === "hideReviews" ||
-										key === "hideVotes") && (
+										key === "hideVotes" ||
+										key === "userCollection" ||
+										key === "filmCollection") && (
 										<button
 											type="button"
 											onClick={() => onChangeView(key)}
