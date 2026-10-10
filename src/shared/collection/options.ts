@@ -46,6 +46,7 @@ export function isCollectionFilterSupported(
 
 export const collectionViews = {
 	default: "Default",
+	recent: "Recent",
 	visual: "Visual",
 	tracks: "Tracks",
 	reviews: "Reviews",

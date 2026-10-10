@@ -377,16 +377,13 @@ function CollectionSearch({ kind }: Readonly<{ kind: CollectionKind }>) {
 function PageSize({ kind }: Readonly<{ kind: CollectionKind }>) {
 	const { settings, save, error } = useCollectionSettings(kind);
 	const current = parseCollectionUrl(location.href);
-	if (current.modifiers.includes("stag")) return null;
 	if (!settings) return <span role="status">{error || "Loading..."}</span>;
 	const currentSize = current.modifiers.find((modifier) =>
 		/^n\d+$/.test(modifier),
 	);
 	return (
 		<PageSizeControl
-			value={
-				settings.pageSize ?? (currentSize ? Number(currentSize.slice(1)) : null)
-			}
+			value={currentSize ? Number(currentSize.slice(1)) : settings.pageSize}
 			onChange={async (pageSize) => {
 				await save({ ...settings, pageSize });
 				location.assign(
