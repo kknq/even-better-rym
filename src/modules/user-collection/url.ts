@@ -32,7 +32,12 @@ export function parseCollectionUrl(href: string) {
 		base: parts.slice(0, index + 2).join("/"),
 		modifiers: tokens,
 		columns,
-		view: tokens.find(isNamedCollectionView) ?? "default",
+		view:
+			tokens.find(
+				(token): token is Exclude<CollectionView, "default" | "recent"> =>
+					token !== "recent" && isNamedCollectionView(token),
+			) ??
+			(tokens.includes("recent") && !columns.length ? "recent" : "default"),
 		tail: parts.slice(index + 3).filter(Boolean),
 		user: decodeURIComponent(parts[index + 1]),
 	};
@@ -60,7 +65,10 @@ export function collectionUrl(
 	const modifiers = current.modifiers.filter(
 		(modifier) =>
 			(!changes.family || !patterns[changes.family].test(modifier)) &&
-			!isNamedCollectionView(modifier),
+			(!isNamedCollectionView(modifier) ||
+				(modifier === "recent" &&
+					changes.view === undefined &&
+					current.view !== "recent")),
 	);
 	if (changes.family && changes.value) modifiers.push(changes.value);
 	const view = changes.view ?? current.view;
@@ -89,10 +97,14 @@ export function collectionUrl(
 			modifiers.push(type === "g" ? "stag" : `strm_${type}`);
 			tail = [encodeURIComponent(query.trim()).replace(/%20/g, "+")];
 		}
-		// RYM tag views cannot be combined with other view options.
-		if (type === "g" && query.trim()) {
-			return `${current.base}/stag/${tail[0]}/${current.url.search}${current.url.hash}`;
-		}
+	}
+	// Tag searches support page size, but not custom columns or other views.
+	if (modifiers.includes("stag")) {
+		const pageSize = modifiers.filter((modifier) => /^n\d+$/.test(modifier));
+		const path = [current.base, [...pageSize, "stag"].join(","), ...tail].join(
+			"/",
+		);
+		return `${path}/${current.url.search}${current.url.hash}`;
 	}
 	const search = modifiers.filter((modifier) =>
 		/^(?:strm_|stag$)/.test(modifier),
@@ -127,19 +139,20 @@ export function columnManagementUrl(
 
 export function savedCollectionUrl(href: string, settings: CollectionSettings) {
 	const current = parseCollectionUrl(href);
-	if (current.modifiers.includes("stag")) return null;
+	const isTag = current.modifiers.includes("stag");
 	const columnsChanged =
-		current.kind === "film"
+		!isTag &&
+		(current.kind === "film"
 			? current.columns.length > 0
 			: Boolean(
 					current.view === "default" &&
 						settings.columnManagement &&
 						settings.columns?.length &&
 						settings.columns.join(",") !== current.columns.join(","),
-				);
+				));
 	const pageSizeChanged =
 		settings.pageSize !== null &&
-		!current.modifiers.includes(`n${settings.pageSize}`);
+		!current.modifiers.some((modifier) => /^n\d+$/.test(modifier));
 	if (!columnsChanged && !pageSizeChanged) return null;
 	return collectionUrl(href, {
 		columns: columnsChanged
