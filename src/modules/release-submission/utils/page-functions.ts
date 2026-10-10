@@ -18,6 +18,23 @@ export const selectShortcut = (
 export const goInfobox = (id: number): void =>
 	void runScript(`goInfobox(${id})`);
 
+// Opens RYM's "Insert link" popup beside anchorId.
+export const openArtistLinkPopup = (anchorId: string): void =>
+	void runScript(
+		`openShortcut(document.getElementById(${JSON.stringify(anchorId)}));`,
+	);
+
+// Closes RYM's "Insert link" popup.
+export const closeShortcutPopup = (): void => void runScript("closeShortcut()");
+
+// Switches RYM's tracklist editor to its advanced (text) mode.
+export const showAdvancedTracklist = (): Promise<void> =>
+	runScript(`document.querySelector('#goAdvancedBtn').click()`);
+
+// Switches RYM's tracklist editor back to its simple (per-row) mode.
+export const showSimpleTracklist = (): Promise<void> =>
+	runScript(`document.querySelector('#goSimpleBtn').click()`);
+
 // window.currentElement isn't visible to the content script's isolated
 // world, so window.createShortcut has to be wrapped from injected page-world
 // code; it polls because this content script runs at document_start, before

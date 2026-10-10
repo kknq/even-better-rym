@@ -5,7 +5,7 @@ import {
 } from "../utils/artist-shortcuts";
 import { patchCreateShortcut } from "../utils/page-functions";
 
-export default async function injectArtistLinkFormatting() {
+export default function injectArtistLinkFormatting() {
 	document.addEventListener("EbrArtistShortcutInsertedEvent", (event) => {
 		const { type, assocId, text, targetId, previousValue } = event.detail;
 		if (type !== "a") return;

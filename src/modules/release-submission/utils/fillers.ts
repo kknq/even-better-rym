@@ -8,15 +8,16 @@ import type {
 	ResolveData,
 	Track,
 } from "~/shared/services/types";
-import {
-	forceQuerySelector,
-	runScript,
-	waitForResult,
-} from "~/shared/utils/dom";
+import { forceQuerySelector } from "~/shared/utils/dom";
 
 import type { FillData } from "../dom";
 import type { CapitalizationType } from "./capitalization";
 import { capitalize } from "./capitalization";
+import {
+	clearFiledUnderEntries,
+	switchAwayFromSameAsParent,
+} from "./filed-under";
+import { editAdvancedTracklist } from "./simple-tracklist";
 import { formatTracks, getTrackDurations } from "./tracklist";
 import type { ReleaseOptions } from "./types";
 
@@ -24,17 +25,14 @@ export async function fill(
 	data: ResolveData,
 	options: ReleaseOptions,
 ): Promise<void> {
-	await fillCoreFields(data, options);
+	fillCoreFields(data, options);
 	await fillExtraFields(data, options);
 }
 
-async function fillCoreFields(
-	data: ResolveData,
-	options: ReleaseOptions,
-): Promise<void> {
-	if (data.artists != null && options.fillFields.artists) {
-		await fillArtists(data.artists);
-	}
+function fillCoreFields(data: ResolveData, options: ReleaseOptions): void {
+	// Always runs, so the release-artist picker drops the previous import's
+	// artists even when this import fills none.
+	fillArtists(options.fillFields.artists ? (data.artists ?? []) : []);
 	if (data.type != null && options.fillFields.type) {
 		fillType(data.type);
 	}
@@ -77,39 +75,20 @@ async function fillExtraFields(
 	}
 }
 
-async function fillArtists(artists: string[]) {
-	if (artists[0]?.toLowerCase() === "various artists") {
-		// Various Artists release
+// Ticks "Various Artists" for a VA release; otherwise hands the artists to
+// the release-artist picker.
+function fillArtists(artists: string[]) {
+	const isVariousArtists = artists[0]?.toLowerCase() === "various artists";
+	if (isVariousArtists) {
 		forceQuerySelector<HTMLInputElement>(document)("#cat_va").click();
-	} else {
-		// Regular release
-		if (document.querySelector(".sortable_filed_under_performer") !== null)
-			return;
-
-		for (const artist of artists) await fillArtist(artist);
+		switchAwayFromSameAsParent();
+		void clearFiledUnderEntries();
 	}
-}
-
-async function fillArtist(artist: string) {
-	// Enter search term
-	forceQuerySelector<HTMLInputElement>(document)(
-		"#filed_under_searchterm",
-	).value = artist;
-
-	// Click search button
-	forceQuerySelector<HTMLInputElement>(document)(
-		"#section_filed_under .gosearch input[type=button]",
-	).click();
-
-	// Wait for results
-	const topResult = await waitForResult(
-		forceQuerySelector<HTMLIFrameElement>(document)(
-			"#filed_underperformerlist",
-		),
+	document.dispatchEvent(
+		new CustomEvent<string[]>("releaseArtistsEvent", {
+			detail: isVariousArtists ? [] : artists,
+		}),
 	);
-
-	// Click the top result if there is one
-	topResult?.click();
 }
 
 function fillType(type: ReleaseType) {
@@ -196,17 +175,12 @@ async function fillTracks(
 	capitalization: CapitalizationType,
 	preserveTrackLengths: boolean,
 ) {
-	// Use runScript (page world) to click the javascript: href buttons - calling
-	// .click() directly in a content script is blocked by CSP.
-	await runScript(`document.querySelector('#goAdvancedBtn').click()`);
-	const trackInput =
-		forceQuerySelector<HTMLTextAreaElement>(document)("#track_advanced");
-	const existingDurations = preserveTrackLengths
-		? getTrackDurations(trackInput.value)
-		: undefined;
-
-	trackInput.value = formatTracks(tracks, capitalization, existingDurations);
-	await runScript(`document.querySelector('#goSimpleBtn').click()`);
+	await editAdvancedTracklist((text) => {
+		const existingDurations = preserveTrackLengths
+			? getTrackDurations(text)
+			: undefined;
+		return formatTracks(tracks, capitalization, existingDurations);
+	});
 }
 
 function fillSource(url: string) {
