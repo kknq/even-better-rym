@@ -1,5 +1,6 @@
 import browser from "webextension-polyfill";
 
+import { spotifyPageDiagnostics } from "./diagnostics";
 import { isFrameRequest, type SearchResult } from "./messages";
 import { readSpotifySearchPage } from "./read-results";
 
@@ -29,7 +30,14 @@ if (window.parent !== window) {
 			result = {
 				status: "error",
 				message: error instanceof Error ? error.message : String(error),
+				diagnostics: [
+					{
+						stage: "page-reader-failed",
+						details: spotifyPageDiagnostics(),
+					},
+				],
 			};
+			console.warn("[EvenBetterRYM Spotify]", { id, category, ...result });
 		}
 		window.parent.postMessage(
 			{ type: "ebr-spotify-result", id, result },
