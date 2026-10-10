@@ -120,12 +120,22 @@ let queue = Promise.resolve();
 export const spotifySearch = (
 	request: SpotifySearchRequest,
 ): Promise<SpotifySearchResponse> => {
+	console.info("[EvenBetterRYM Spotify] queued", { requestId: request.id });
 	const lookup = queue.then(async (): Promise<SpotifySearchResponse> => {
+		console.info("[EvenBetterRYM Spotify] started", {
+			requestId: request.id,
+			manifestVersion: browser.runtime.getManifest().manifest_version,
+		});
 		try {
 			const result =
 				browser.runtime.getManifest().manifest_version === 2
 					? await searchBackgroundPage(request.data)
 					: await searchOffscreen(request.data);
+			const log = result.status === "error" ? console.warn : console.info;
+			log("[EvenBetterRYM Spotify] completed", {
+				requestId: request.id,
+				...result,
+			});
 			return {
 				id: request.id,
 				type: "spotifySearch",
@@ -137,6 +147,10 @@ export const spotifySearch = (
 							: {},
 			};
 		} catch (error) {
+			console.error("[EvenBetterRYM Spotify] background failure", {
+				requestId: request.id,
+				error,
+			});
 			return {
 				id: request.id,
 				type: "spotifySearch",

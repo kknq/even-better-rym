@@ -2,6 +2,7 @@ import {
 	type FrameRequest,
 	isSearchResult,
 	type SearchCategory,
+	type SearchDiagnostic,
 	type SearchInput,
 	type SearchResult,
 } from "./messages";
@@ -13,6 +14,7 @@ const searchFrame = (
 	new Promise((resolve) => {
 		const frame = document.createElement("iframe");
 		const id = crypto.randomUUID();
+		let readerReady = false;
 		// Keep a normal layout viewport without allowing popups or top navigation.
 		frame.setAttribute("sandbox", "allow-scripts allow-same-origin");
 		frame.style.cssText = "width:1280px;height:900px;border:0";
@@ -21,7 +23,20 @@ const searchFrame = (
 			clearTimeout(timeout);
 			window.removeEventListener("message", onMessage);
 			frame.remove();
-			resolve(result);
+			const diagnostics: SearchDiagnostic[] = [
+				...(result.diagnostics ?? []),
+				{
+					stage: "frame-finished",
+					details: JSON.stringify({
+						id,
+						category,
+						readerReady,
+						status: result.status,
+						online: navigator.onLine,
+					}),
+				},
+			];
+			resolve({ ...result, diagnostics });
 		};
 		const onMessage = (event: MessageEvent<unknown>) => {
 			if (
@@ -33,6 +48,7 @@ const searchFrame = (
 			)
 				return;
 			if (event.data.type === "ebr-spotify-ready") {
+				readerReady = true;
 				frame.contentWindow?.postMessage(
 					{
 						type: "ebr-spotify-read",
@@ -71,6 +87,7 @@ const searchFrame = (
 export const searchHiddenSpotify = async (
 	data: SearchInput,
 ): Promise<SearchResult> => {
+	const diagnostics: SearchDiagnostic[] = [];
 	const categories: SearchCategory[] =
 		data.releaseType === "music video"
 			? ["tracks"]
@@ -79,12 +96,15 @@ export const searchHiddenSpotify = async (
 				: ["albums"];
 	for (const category of categories) {
 		let result = await searchFrame(data, category);
+		diagnostics.push(...(result.diagnostics ?? []));
 		if (
 			result.status === "error" &&
 			result.message === "Spotify search page failed to render"
-		)
+		) {
 			result = await searchFrame(data, category);
-		if (result.status !== "not-found") return result;
+			diagnostics.push(...(result.diagnostics ?? []));
+		}
+		if (result.status !== "not-found") return { ...result, diagnostics };
 	}
-	return { status: "not-found" };
+	return { status: "not-found", diagnostics };
 };

@@ -2,10 +2,16 @@ import type { SpotifySearchRequest } from "~/shared/utils/messaging";
 
 export type SearchCategory = "albums" | "tracks";
 export type SearchInput = SpotifySearchRequest["data"];
-export type SearchResult =
+export type SearchDiagnostic = {
+	stage: string;
+	details: string;
+};
+
+export type SearchResult = (
 	| { status: "found"; url: string }
 	| { status: "not-found" }
-	| { status: "error"; message: string };
+	| { status: "error"; message: string }
+) & { diagnostics?: SearchDiagnostic[] };
 
 export type FrameRequest = {
 	type: "ebr-spotify-read";
@@ -28,6 +34,23 @@ export const isSearchInput = (value: unknown): value is SearchInput =>
 
 export const isSearchResult = (value: unknown): value is SearchResult => {
 	if (typeof value !== "object" || value === null || !("status" in value))
+		return false;
+	if (
+		"diagnostics" in value &&
+		(!Array.isArray(value.diagnostics) ||
+			value.diagnostics.length > 20 ||
+			!value.diagnostics.every(
+				(entry: unknown) =>
+					typeof entry === "object" &&
+					entry !== null &&
+					"stage" in entry &&
+					typeof entry.stage === "string" &&
+					entry.stage.length <= 100 &&
+					"details" in entry &&
+					typeof entry.details === "string" &&
+					entry.details.length <= 16_000,
+			))
+	)
 		return false;
 	switch (value.status) {
 		case "not-found":
