@@ -1,5 +1,6 @@
 import type { Track } from "~/shared/services/types";
 
+import { markBonusTrack } from "./bonus-track";
 import type { CapitalizationType } from "./capitalization";
 import { capitalize } from "./capitalization";
 
@@ -18,6 +19,7 @@ export function formatTracks(
 				title.toLowerCase() === "untitled"
 					? "[untitled]"
 					: capitalize(title, capitalization);
+			title = markBonusTrack(title);
 
 			if (track.header) {
 				title = `[b]${title}[/b]`;
