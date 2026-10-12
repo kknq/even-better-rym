@@ -10,6 +10,8 @@ import {
 	getUntetheredKeys,
 	hasDifferingTrackArtists,
 	hasSameMembers,
+	isVariousArtistsRelease,
+	OMITTED_LABEL,
 	readTrackTitles,
 	resetTrackTitle,
 	tetherTrackTitles,
@@ -42,6 +44,18 @@ describe("hasSameMembers", () => {
 	test("notices a missing or extra member", () => {
 		expect(hasSameMembers(["A"], ["A", "B"])).toBe(false);
 		expect(hasSameMembers(["A", "C"], ["A"])).toBe(false);
+	});
+});
+
+describe("isVariousArtistsRelease", () => {
+	test("is true for a Various Artists release, in any case", () => {
+		expect(isVariousArtistsRelease(["Various Artists"])).toBe(true);
+		expect(isVariousArtistsRelease(["various artists"])).toBe(true);
+	});
+
+	test("is false for any other release", () => {
+		expect(isVariousArtistsRelease(["A", "B"])).toBe(false);
+		expect(isVariousArtistsRelease([])).toBe(false);
 	});
 });
 
@@ -130,6 +144,24 @@ describe("buildRelinkPlan", () => {
 		);
 	});
 
+	test("leaves out omitted artists", () => {
+		const tracks = [
+			{ position: "1", artists: ["A", "B"] },
+			{ position: "2", artists: ["B"] },
+		];
+		const labels = new Map([
+			["A", "[Artist1]"],
+			["B", OMITTED_LABEL],
+		]);
+
+		expect(buildRelinkPlan(tracks, labels)).toEqual(
+			new Map([
+				["1#1", ["[Artist1]"]],
+				["2#1", []],
+			]),
+		);
+	});
+
 	test("keeps tracks with a repeated position apart", () => {
 		const tracks = [
 			{ position: "1", artists: ["A"] },
@@ -205,6 +237,17 @@ describe("applyTrackTitles", () => {
 			base: "First",
 			written: "[Artist1] - First",
 		});
+	});
+
+	test("writes the base title alone when a track has no labels", () => {
+		const first = applyTrackTitles("1|First|", plan, new Map());
+		const applied = applyTrackTitles(
+			first.text,
+			new Map([["1#1", []]]),
+			first.tether,
+		);
+
+		expect(applied.text).toBe("1|First|");
 	});
 
 	test("rewrites tethered tracks from their base titles", () => {

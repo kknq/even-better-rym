@@ -1,5 +1,7 @@
 import { forceQuerySelector } from "~/shared/utils/dom";
 
+import { closeShortcutPopup, openArtistLinkPopup } from "./page-functions";
+
 const SHORTCUT_FRAME_SELECTOR = "#shortcutsearchframe";
 const ARTIST_SEARCH_URL = "/go/search2?type=shortcutartist&func=";
 const SEARCH_TERM_SELECTOR = "#searchterm";
@@ -35,6 +37,24 @@ export const prefillArtistSearch = async (name: string): Promise<void> => {
 	}
 	searchInput.value = name;
 	searchInput.form.submit();
+};
+
+// Opens the popup beside the anchor element, searching for name.
+export const startArtistSearch = (anchorId: string, name: string): void => {
+	openArtistLinkPopup(anchorId);
+	void prefillArtistSearch(name);
+};
+
+// Searches for the next name, or closes the popup when none are left.
+export const continueArtistSearch = (
+	anchorId: string,
+	nextName: string | undefined,
+): void => {
+	if (nextName === undefined) {
+		closeShortcutPopup();
+		return;
+	}
+	startArtistSearch(anchorId, nextName);
 };
 
 // Calls onPick with the artist id of each result clicked in the popup until

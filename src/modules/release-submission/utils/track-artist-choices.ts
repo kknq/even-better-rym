@@ -1,9 +1,11 @@
 import type { ArtistLabels } from "./track-artist-links";
+import { OMITTED_LABEL } from "./track-artist-links";
 
-// What the user chose for one track artist: a linked artist token, leaving
-// it unlinked, or following a release artist's label.
+// What the user chose for one track artist: a linked artist token, its name
+// as plain text, leaving it out, or following a release artist's label.
 export type TrackArtistChoice =
 	| { kind: "linked"; token: string }
+	| { kind: "text" }
 	| { kind: "skipped" }
 	| { kind: "following"; releaseName: string };
 
@@ -48,15 +50,18 @@ const resolveChoiceLabel = (
 	switch (choice.kind) {
 		case "linked":
 			return choice.token;
-		case "skipped":
+		case "text":
 			return name;
+		case "skipped":
+			return OMITTED_LABEL;
 		case "following":
 			return releaseLabels.get(choice.releaseName);
 	}
 };
 
-// Returns each track artist's label: its token when linked, its own name when
-// skipped, or the followed release artist's label once that has one.
+// Returns each track artist's label: its token when linked, its own name as
+// text, the omitted label when skipped, or the followed release artist's
+// label once that has one.
 export const resolveTrackArtistLabels = (
 	choices: TrackArtistChoices,
 	releaseLabels: ArtistLabels,
@@ -72,7 +77,7 @@ export const resolveTrackArtistLabels = (
 };
 
 // Returns the labels with each artist that follows an unpicked release
-// artist labelled by its own name, as a skipped artist is.
+// artist labelled by its own name, as a text artist is.
 export const withUnpickedFollowedNames = (
 	choices: TrackArtistChoices,
 	labels: ArtistLabels,
@@ -94,8 +99,11 @@ export const describeTrackChoice = (
 	if (choice === undefined) {
 		return "not picked";
 	}
+	if (choice.kind === "text") {
+		return "plain text";
+	}
 	if (choice.kind === "skipped") {
-		return "left unlinked";
+		return "left out";
 	}
 	if (choice.kind === "linked") {
 		return choice.token;
