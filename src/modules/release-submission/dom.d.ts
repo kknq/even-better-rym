@@ -1,8 +1,12 @@
 import type { ResolveData } from "~/shared/services/types";
 
+import type { ReleaseArtistLabels } from "./utils/release-artist-links";
+
 type CustomEventMap = {
 	importEvent: CustomEvent<ResolveData>;
 	fillEvent: CustomEvent<FillData>;
+	releaseArtistsEvent: CustomEvent<string[]>;
+	releaseArtistLabelsEvent: CustomEvent<ReleaseArtistLabels>;
 	EbrArtistShortcutInsertedEvent: CustomEvent<ArtistShortcutInsertedDetail>;
 };
 

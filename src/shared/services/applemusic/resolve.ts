@@ -15,6 +15,7 @@ import type {
 } from "../types";
 import type { MusicVideoData, ReleaseData } from "./codec";
 import { convertAppleMusicDuration } from "./convert";
+import { findTrackLockupScriptText, getTrackArtists } from "./track-artists";
 
 const FULL_IMAGE_SIZE = "3000x3000bb.jpg";
 
@@ -108,11 +109,16 @@ const resolveAlbumFields = (
 	release: ReleaseData,
 	document_: Document,
 ): ResolvedFields => {
-	const tracks = release.tracks.map((t, i) => ({
-		position: String(i + 1),
-		title: t.name,
-		duration: ifDefined(convertAppleMusicDuration)(t.duration),
-	}));
+	const trackArtists = getTrackArtists(findTrackLockupScriptText(document_));
+	const tracks = release.tracks.map((t, i) => {
+		const artists = trackArtists.get(i + 1);
+		return {
+			position: String(i + 1),
+			title: t.name,
+			duration: ifDefined(convertAppleMusicDuration)(t.duration),
+			...(artists !== undefined ? { artists } : {}),
+		};
+	});
 
 	const { title, type: titleType } = parseTitleAndType(
 		release.name,
