@@ -11,6 +11,8 @@ const hostsArray = [
 	"https://www.beatport.com/*",
 	"https://*.beatport.com/*",
 	"https://*.traxsource.com/*",
+	"https://*.nts.live/*",
+	"https://*.ntslive.co.uk/*",
 	"https://deezer.com/*",
 	"https://api.deezer.com/*",
 	"https://discogs.com/*",

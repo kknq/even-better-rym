@@ -1,15 +1,14 @@
 import { render } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 
-import { equals, uniqueBy } from "~/shared/utils/array";
+import { equals } from "~/shared/utils/array";
 import {
 	forceQuerySelector,
 	waitForElement,
 	waitForResult,
 } from "~/shared/utils/dom";
-import { pipe } from "~/shared/utils/pipe";
-import { isDefined } from "~/shared/utils/types";
 
+import { type Artist, getFiledUnderArtists } from "../utils/credits";
 import { selectShortcut } from "../utils/page-functions";
 
 export default async function injectCreditsControls() {
@@ -17,31 +16,6 @@ export default async function injectCreditsControls() {
 	const unknownArtistDiv = document.createElement("div");
 	credits.after(unknownArtistDiv);
 	render(<Credits />, unknownArtistDiv);
-}
-
-function parseIntOrUndefined(value: string): number | undefined {
-	const n = Number.parseInt(value, 10);
-	return Number.isNaN(n) ? undefined : n;
-}
-
-function parseArtistIdFromInput(result: Element): number | undefined {
-	const value = result.querySelector<HTMLInputElement>("input")?.value;
-	if (!value) return undefined;
-	const match = /\[Artist(\d+)]/.exec(value);
-	if (!match?.[1]) return undefined;
-	return parseIntOrUndefined(match[1]);
-}
-
-function parseArtistNode(result: Element): Artist | undefined {
-	const artistLink = result.querySelector<HTMLAnchorElement>("a.artist");
-	if (artistLink === null) return undefined;
-
-	const name = artistLink.text;
-	const idFromTitle = parseIntOrUndefined(artistLink.title.slice(7, -1));
-	const id = idFromTitle ?? parseArtistIdFromInput(result);
-	if (id === undefined) return undefined;
-
-	return { id, name };
 }
 
 function Credits() {
@@ -52,14 +26,7 @@ function Credits() {
 		const observer = new MutationObserver(() => {
 			if (!document.body) return;
 
-			const artists: Artist[] = pipe(
-				document.querySelectorAll<HTMLAnchorElement>(
-					".sortable_filed_under .filed_under_artist",
-				),
-				(nodeList) => [...nodeList],
-				(nodes) => nodes.map(parseArtistNode).filter(isDefined),
-				uniqueBy((artist) => artist.id),
-			);
+			const artists = getFiledUnderArtists();
 
 			if (!equals(artists, filedUnderArtists)) {
 				setFiledUnderArtists(artists);
@@ -72,7 +39,8 @@ function Credits() {
 	}, [filedUnderArtists]);
 
 	const handleClick = useCallback(
-		(artist: Artist) => selectShortcut("a", artist.id, artist.name, "credits"),
+		(artist: Artist) =>
+			void selectShortcut("a", artist.id, artist.name, "credits"),
 		[],
 	);
 
@@ -133,11 +101,6 @@ function Credits() {
 		</div>
 	);
 }
-
-type Artist = {
-	id: number;
-	name: string;
-};
 
 function useSelectedText() {
 	const [selectedText, setSelectedText] = useState("");

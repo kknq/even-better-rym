@@ -222,6 +222,7 @@ const FIELDS_MAP: Record<FillField, string> = {
 	attributes: "Issue Attributes",
 	tracks: "Tracklist",
 	countries: "Countries Issued",
+	credits: "Credits",
 };
 
 const DEFAULT_FORM_OPTIONS: ImportOptions = {

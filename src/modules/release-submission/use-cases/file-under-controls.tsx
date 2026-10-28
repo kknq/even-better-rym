@@ -15,7 +15,7 @@ export default async function injectFileUnderControls() {
 function UnknownArtist() {
 	const handleClick = useCallback(
 		() =>
-			selectShortcut(
+			void selectShortcut(
 				"a",
 				250714,
 				"[unknown artist]",
