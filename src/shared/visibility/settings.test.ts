@@ -84,6 +84,7 @@ describe("visibility settings", () => {
 				release: false,
 				film: true,
 			});
+
 			expect(merge({ pages: { film: false } }).pages).toMatchObject({
 				release: true,
 				film: false,
@@ -95,6 +96,29 @@ describe("visibility settings", () => {
 		expect(mergeRatingSettings({ pages: { home: false } }).pages).toMatchObject(
 			{ home: false, newMusic: true, genre: true },
 		);
+	});
+
+	it("adds label and classifier defaults without changing existing choices", () => {
+		const settings = mergeRatingSettings({
+			ratings: "always",
+			pages: { release: false, recommendations: false },
+		});
+
+		expect(settings.pages).toMatchObject({
+			label: true,
+			classifier: true,
+			release: false,
+			recommendations: false,
+		});
+		expect(settings.ratings).toBe("always");
+		expect(
+			mergeRatingSettings({ pages: { label: false } }).pages,
+		).toMatchObject({ label: false, classifier: true });
+		expect(
+			mergeRatingSettings({ pages: { classifier: false } }).pages,
+		).toMatchObject({ label: true, classifier: false });
+		expect(defaultReviewSettings().pages).not.toHaveProperty("label");
+		expect(defaultReviewSettings().pages).not.toHaveProperty("classifier");
 	});
 
 	it("keeps review pages limited to supported review locations", () => {

@@ -172,6 +172,67 @@ describe("Hide Ratings feature", () => {
 		expect(document.body.classList).toContain("ebr-hide-ratings");
 	});
 
+	describe.each([
+		["label", "/label/cash-money-records/"],
+		["classifier", "/classifiers/Tha+Carter/"],
+	] as const)("%s pages", (page, pathname) => {
+		it("hides ratings and supports revealing and re-hiding them", async () => {
+			setPathname(pathname);
+
+			await main();
+
+			const button = document.getElementById("ebr-show-rating-btn-generic");
+			if (!button) throw new Error("Missing floating rating control");
+			expect(document.body.classList).toContain("ebr-hide-ratings");
+			button.click();
+			expect(document.body.classList).not.toContain("ebr-hide-ratings");
+			button.click();
+			expect(document.body.classList).toContain("ebr-hide-ratings");
+		});
+
+		it("respects the independent page setting", async () => {
+			setPathname(pathname);
+			mocks.getRatingSettings.mockResolvedValue(
+				getSettings({
+					pages: { ...defaultRatingSettings().pages, [page]: false },
+				}),
+			);
+
+			await main();
+
+			expect(document.body.classList).not.toContain("ebr-hide-ratings");
+			expect(document.getElementById("ebr-show-rating-btn-generic")).toBeNull();
+		});
+
+		it("respects the hide-counts and disabled-button settings", async () => {
+			setPathname(pathname);
+			mocks.getRatingSettings.mockResolvedValue(
+				getSettings({ counts: "scores-and-counts", buttons: false }),
+			);
+
+			await main();
+
+			expect(document.body.classList).toContain("ebr-hide-rating-counts");
+			expect(document.body.classList).toContain("ebr-hide-ratings");
+			expect(document.getElementById("ebr-show-rating-btn-generic")).toBeNull();
+		});
+	});
+
+	it.each([
+		"/classifiers/",
+		"/classifiers",
+	])("does not show rating controls on the classifier index at %s", async (pathname) => {
+		setPathname(pathname);
+		mocks.getRatingSettings.mockResolvedValue(
+			getSettings({ buttons: true, globalButton: true }),
+		);
+
+		await main();
+
+		expect(document.body.classList).not.toContain("ebr-hide-ratings");
+		expect(document.querySelector(".ebr-rating-toggle")).toBeNull();
+	});
+
 	it("shows own-rated profile releases while hiding other profile ratings", async () => {
 		setPathname("/artist/example");
 		document.body.innerHTML = `
