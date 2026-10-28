@@ -1,0 +1,16 @@
+.ebr-artist-search-hint {
+	clear: both;
+	margin: 0.4em 0 0.8em;
+	color: var(--mono-8, #666);
+	font-size: 1.125rem;
+	line-height: 1.5;
+	overflow-wrap: anywhere;
+}
+
+.ebr-artist-search-hint button {
+	margin-left: 0.6em;
+}
+
+.ebr-artist-search-hint button[hidden] {
+	display: none;
+}
