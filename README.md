@@ -114,6 +114,11 @@ Adds a timeline to group pages so you can see when members were active and what 
 
 ---
 
+### Artist Location Clear Buttons
+
+Adds a **clear location** button beside each location section when submitting or editing an artist profile.
+---
+
 ### Search Bar Shortcuts
 
 Lets you use RYM markup, such as `[Artist67]` or `[Album42]`, to go straight to a page from the search bar.
