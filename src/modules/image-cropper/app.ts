@@ -35,6 +35,30 @@ const pageFunctions: Record<CropDirection, string> = {
 	bottom: "trimBottom",
 };
 
+type Movement = { arrow: string; label: string };
+
+const movements: Record<
+	CropDirection,
+	{ inward: Movement; outward: Movement }
+> = {
+	left: {
+		inward: { arrow: "\u2192", label: "right" },
+		outward: { arrow: "\u2190", label: "left" },
+	},
+	right: {
+		inward: { arrow: "\u2190", label: "left" },
+		outward: { arrow: "\u2192", label: "right" },
+	},
+	top: {
+		inward: { arrow: "\u2193", label: "down" },
+		outward: { arrow: "\u2191", label: "up" },
+	},
+	bottom: {
+		inward: { arrow: "\u2191", label: "up" },
+		outward: { arrow: "\u2193", label: "down" },
+	},
+};
+
 export async function main(): Promise<void> {
 	const [topBar, bottomBar] = await Promise.all([
 		waitForElement<HTMLElement>("#controlbara"),
@@ -82,9 +106,12 @@ function createControl({
 	adjustment,
 	label,
 }: CropControl): HTMLButtonElement {
+	const movement = movements[direction][adjustment > 0 ? "inward" : "outward"];
 	const button = document.createElement("button");
 	button.type = "button";
-	button.textContent = label;
+	button.textContent = `${movement.arrow} ${label}`;
+	button.title = `Move ${direction} edge ${movement.label} by ${Math.abs(adjustment)} pixels`;
+	button.setAttribute("aria-label", button.title);
 	button.style.margin = "3px";
 	button.addEventListener("click", () => {
 		void runScript(`${pageFunctions[direction]}(${adjustment})`);
