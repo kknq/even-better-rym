@@ -7,7 +7,7 @@ export type FetchRequest = {
 	data: {
 		url: string;
 		method?: "GET" | "POST";
-		urlParameters?: Record<string, string>;
+		urlParameters?: Record<string, string | null | undefined>;
 		body?: string;
 		headers?: Record<string, string>;
 		credentials?: RequestCredentials;
