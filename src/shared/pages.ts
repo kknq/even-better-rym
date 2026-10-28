@@ -17,6 +17,7 @@ export const pages = {
 	voteHistoryDescriptors: "/rdescriptor/vote_history",
 	streamLinkMissing: "/misc/media_link_you_know",
 	searchBar: "/",
+	searchFocus: "/",
 	genreChartControls: "/genre/",
 	artistSearchHint: "/artist/",
 	timeline: "/artist/",
@@ -51,6 +52,7 @@ export const pageLabels: Record<PageKey, string> = {
 	voteHistoryDescriptors: "Enhancements for Descriptor Vote History",
 	streamLinkMissing: 'Filtering in "Media Link You Know" List',
 	searchBar: "Search Bar Shortcuts",
+	searchFocus: "Focus Search",
 	genreChartControls: "Genre Chart Controls",
 	artistSearchHint: "Artist Search Hint",
 	timeline: "Artist Timeline",
@@ -66,7 +68,7 @@ export const pageLabels: Record<PageKey, string> = {
 
 export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 	[
-		["Search and navigation", ["searchBar"]],
+		["Search and navigation", ["searchBar", "searchFocus"]],
 		[
 			"Charts",
 			[
@@ -143,6 +145,8 @@ export const pageHints: Record<PageKey, string> = {
 	streamLinkMissing:
 		'Adds filtering controls to the "Media Link You Know" submission list.',
 	searchBar: "Adds shortcuts to the site-wide search bar.",
+	searchFocus:
+		"Press / to open and focus the site-wide search bar when not typing in another field.",
 	genreChartControls:
 		"Adds chart controls to music genre pages and film genre pages, and links film chart genres to their film genre pages.",
 	artistSearchHint: "Shows the artist's search hint below their name",
@@ -165,6 +169,7 @@ export const pageHints: Record<PageKey, string> = {
 // Page keys whose features are global and should not affect the toolbar icon
 export const globalPageKeys = new Set<PageKey>([
 	"searchBar",
+	"searchFocus",
 	"hideRatings",
 	"hideReviews",
 ]);

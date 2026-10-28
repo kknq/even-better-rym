@@ -63,6 +63,11 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/search-focus/main.ts"],
+			matches: ["*://*.rateyourmusic.com/*"],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/hide-ratings/main.ts"],
 			css: ["src/shared/visibility/bootstrap.css"],
 			matches: ["*://*.rateyourmusic.com/*"],
