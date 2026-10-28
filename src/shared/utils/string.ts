@@ -3,8 +3,9 @@ export const regexIndexOf = (
 	regex: RegExp,
 	startpos?: number,
 ): number => {
-	const indexOf = string.slice(Math.max(0, startpos ?? 0)).search(regex);
-	return indexOf >= 0 ? indexOf + (startpos ?? 0) : indexOf;
+	const start = Math.max(0, startpos ?? 0);
+	const indexOf = string.slice(start).search(regex);
+	return indexOf >= 0 ? indexOf + start : indexOf;
 };
 
 export const regexLastIndexOf = (

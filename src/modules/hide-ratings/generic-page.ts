@@ -52,12 +52,17 @@ export const insertGlobalRatingButton = (): void => {
 	};
 
 	void update();
-	button.addEventListener("click", async () => {
+	const toggle = async () => {
 		await setModuleEnabled(
 			"hideRatings",
 			!(await getModuleEnabled("hideRatings")),
 		);
 		globalThis.location.reload();
+	};
+	button.addEventListener("click", () => {
+		void toggle().catch((error: unknown) => {
+			console.error("[hide-ratings] Failed to toggle module", error);
+		});
 	});
 	document.body.appendChild(button);
 };

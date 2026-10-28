@@ -7,14 +7,15 @@ import injectImportControls from "./use-cases/import-controls";
 import injectLabelControls from "./use-cases/label-controls";
 import injectTracklistControls from "./use-cases/tracklist-controls";
 
-export const main = () =>
-	Promise.all([
+export const main = () => {
+	injectArtistLinkFormatting();
+	return Promise.all([
 		injectImportControls(),
 		injectTracklistControls(),
-		injectArtistLinkFormatting(),
 		injectFileUnderControls(),
 		injectCreditsControls(),
 		injectLabelControls(),
 		injectCatalogNumberControls(),
 		injectDateControls(),
 	]);
+};
