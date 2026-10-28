@@ -16,6 +16,7 @@ const hostsArray = [
 	"https://*.mixcloud.com/*",
 	"https://deezer.com/*",
 	"https://api.deezer.com/*",
+	"https://*.dzcdn.net/*",
 	"https://discogs.com/*",
 	"https://*.discogs.com/*",
 	"https://melon.com/*",

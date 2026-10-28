@@ -8,6 +8,7 @@ export type FetchRequest = {
 		url: string;
 		method?: "GET" | "POST";
 		urlParameters?: Record<string, string>;
+		body?: string;
 		headers?: Record<string, string>;
 		credentials?: RequestCredentials;
 	};

@@ -38,6 +38,9 @@ test("sizes the URL box to fit every import icon at its full width", async () =>
 	expect(buttons.some((button) => button.title === "Traxsource")).toBe(true);
 	expect(buttons.some((button) => button.title === "NTS")).toBe(true);
 	expect(buttons.some((button) => button.title === "Mixcloud")).toBe(true);
+	expect(buttons.some((button) => button.title === "Deezer")).toBe(true);
+	expect(buttons.some((button) => button.title === "Tidal")).toBe(true);
+	expect(buttons.some((button) => button.title === "Qobuz")).toBe(true);
 	expect(buttons[0].parentElement?.style.flexWrap).toBe("wrap");
 	expect(buttons.every((button) => button.style.flexShrink === "0")).toBe(true);
 });
@@ -49,6 +52,9 @@ test.each([
 		"nts",
 	],
 	["https://www.mixcloud.com/huerco_s/eargasmlodgemix/", "mixcloud"],
+	["https://www.deezer.com/en/album/302127", "deezer"],
+	["https://tidal.com/browse/album/251380836", "tidal"],
+	["https://open.qobuz.com/album/0724384960650", "qobuz"],
 ])("automatically selects the import service for %s", async (url, id) => {
 	const onSubmit = vi.fn();
 	await act(() => {

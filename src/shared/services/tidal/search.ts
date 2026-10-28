@@ -14,7 +14,7 @@ type TidalSearchResponse = {
 				data?: TidalAlbum[];
 			};
 		};
-	};
+	}[];
 };
 
 export const search: SearchFunction = async ({
@@ -23,9 +23,9 @@ export const search: SearchFunction = async ({
 	serviceRegions,
 }) => {
 	const token = await requestToken();
-	const searchQuery = encodeURIComponent(`${artist} ${title}`);
+	const searchQuery = `${artist} ${title}`;
 	const response = await fetch({
-		url: `https://openapi.tidal.com/v2/searchResults/${searchQuery}`,
+		url: "https://openapi.tidal.com/v2/searchResults",
 		method: "GET",
 		headers: {
 			Authorization: `Bearer ${token.access_token}`,
@@ -33,6 +33,7 @@ export const search: SearchFunction = async ({
 			"Content-Type": "application/vnd.api+json",
 		},
 		urlParameters: {
+			"filter[query]": searchQuery,
 			explicitFilter: "INCLUDE",
 			countryCode: serviceRegions?.tidal ?? "US",
 			include: "albums",
@@ -44,7 +45,7 @@ export const search: SearchFunction = async ({
 	}
 
 	const data = JSON.parse(response) as TidalSearchResponse;
-	const albums = data?.data?.relationships?.albums?.data;
+	const albums = data?.data?.[0]?.relationships?.albums?.data;
 
 	if (albums && albums.length > 0) {
 		const albumId = albums[0].id;
