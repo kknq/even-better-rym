@@ -73,6 +73,7 @@ export const fetchInPage = async (
             }
             const res = await fetch(u.toString(), {
               method: req.method,
+              body: req.body,
               headers: req.headers,
               credentials: req.credentials,
             });

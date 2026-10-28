@@ -2,7 +2,7 @@ import type { FetchRequest, FetchResponse } from "~/shared/utils/messaging";
 
 export const backgroundFetch = async ({
 	id,
-	data: { url, method = "GET", urlParameters = {}, headers, credentials },
+	data: { url, method = "GET", urlParameters = {}, body, headers, credentials },
 }: FetchRequest): Promise<FetchResponse> => {
 	const urlObject = new URL(url);
 	if (urlParameters) {
@@ -13,6 +13,7 @@ export const backgroundFetch = async ({
 	try {
 		const response = await fetch(urlObject.toString(), {
 			method,
+			body,
 			headers,
 			credentials,
 		});
@@ -25,6 +26,11 @@ export const backgroundFetch = async ({
 				body: responseBody,
 				status: response.status,
 				statusText: response.statusText,
+				...(response.ok
+					? {}
+					: {
+							error: `HTTP ${response.status}${response.statusText ? `: ${response.statusText}` : ""}`,
+						}),
 			},
 		};
 	} catch (error) {
