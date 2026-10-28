@@ -13,6 +13,7 @@ const hostsArray = [
 	"https://*.traxsource.com/*",
 	"https://*.nts.live/*",
 	"https://*.ntslive.co.uk/*",
+	"https://*.mixcloud.com/*",
 	"https://deezer.com/*",
 	"https://api.deezer.com/*",
 	"https://discogs.com/*",

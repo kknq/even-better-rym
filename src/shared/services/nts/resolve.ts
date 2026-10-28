@@ -1,6 +1,7 @@
 import { MONTHS } from "~/shared/utils/datetime";
 import { fetch } from "~/shared/utils/fetch";
 
+import { DJ_MIX_RELEASE_DEFAULTS } from "../dj-mix";
 import type {
 	ReleaseDate,
 	ResolveData,
@@ -9,9 +10,8 @@ import type {
 } from "../types";
 
 export const NTS_RELEASE_DEFAULTS = {
+	...DJ_MIX_RELEASE_DEFAULTS,
 	classifiers: ["[Descriptor60311]"],
-	label: { id: 897, name: "(No Label)", catno: "n/a" },
-	filedUnderCreditRole: "DJ mixing",
 } satisfies ResolveData;
 
 const getText = (element: Element | null) => {
