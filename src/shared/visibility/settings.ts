@@ -11,6 +11,8 @@ export const visibilityPages = [
 	"newMusic",
 	"genre",
 	"recommendations",
+	"label",
+	"classifier",
 ] as const;
 
 export type VisibilityPage = (typeof visibilityPages)[number];

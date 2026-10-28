@@ -105,6 +105,8 @@ describe("RatingVisibilityView", () => {
 		expect(selectFor("Ratings").value).toBe("unrated");
 		expect(selectFor("Friends' ratings").value).toBe("after-release-rated");
 		expect(selectFor("Track ratings").value).toBe("after-release-rated");
+		expect(container.textContent).toContain("Label pages");
+		expect(container.textContent).toContain("Classifier pages");
 		expect(container.querySelectorAll('[role="switch"]')).toHaveLength(
 			visibilityPages.length + 2,
 		);

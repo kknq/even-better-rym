@@ -145,6 +145,7 @@ Hides community rating values while preserving page layout. Configure the suppor
 - **Artist pages** (`/artist/*`) — Ratings remain visible only for releases you have rated. Lazy-loaded discography entries follow the current toggle state.
 - **Charts, homepage, and new releases** — Available rating values are hidden because the page does not provide per-release rating status for the current user.
 - **Automatic Recommendations** (`/recommendations/*`)
+- **Labels and individual classifiers** (`/label/*`, `/classifiers/<name>/`) — Scores and rating bars start hidden, with a floating control to reveal them.
 - **Profiles, collections, and collection reviews** — Ratings remain visible for your own pages and are hidden on other users' pages.
 
 ---
