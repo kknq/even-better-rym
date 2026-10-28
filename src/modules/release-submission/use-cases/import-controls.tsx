@@ -130,7 +130,7 @@ function ImportOptionsForm({
 						flexDirection: "column",
 						gap: 4,
 						alignItems: "center",
-						width: 384,
+						width: "100%",
 						marginTop: "0.5em",
 					}}
 				>
