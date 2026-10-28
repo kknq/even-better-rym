@@ -18,6 +18,7 @@ export const pages = {
 	streamLinkMissing: "/misc/media_link_you_know",
 	searchBar: "/",
 	genreChartControls: "/genre/",
+	artistSearchHint: "/artist/",
 	timeline: "/artist/",
 	map: "/artist/",
 	hideVotes: "/r",
@@ -51,6 +52,7 @@ export const pageLabels: Record<PageKey, string> = {
 	streamLinkMissing: 'Filtering in "Media Link You Know" List',
 	searchBar: "Search Bar Shortcuts",
 	genreChartControls: "Genre Chart Controls",
+	artistSearchHint: "Artist Search Hint",
 	timeline: "Artist Timeline",
 	map: "Artist Location Map",
 	hideVotes: "Hide Votes on Genre/Descriptor Pages",
@@ -99,7 +101,10 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 				"voteHistoryDescriptors",
 			],
 		],
-		["Artist profiles", ["timeline", "map", "artistSubmission"]],
+		[
+			"Artist profiles",
+			["artistSearchHint", "timeline", "map", "artistSubmission"],
+		],
 		[
 			"Content visibility",
 			["hideRatings", "hideReviews", "hideCommentBoxes", "hideVotes"],
@@ -140,6 +145,7 @@ export const pageHints: Record<PageKey, string> = {
 	searchBar: "Adds shortcuts to the site-wide search bar.",
 	genreChartControls:
 		"Adds chart controls to music genre pages and film genre pages, and links film chart genres to their film genre pages.",
+	artistSearchHint: "Shows the artist's search hint below their name",
 	timeline:
 		"On artist pages, adds an inline timeline visualizing member activity and discography.",
 	map: "On artist pages, adds an interactive map showing concert locations.",

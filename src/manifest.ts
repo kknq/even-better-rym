@@ -101,6 +101,12 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/artist-search-hint/main.ts"],
+			css: ["src/modules/artist-search-hint/artist-search-hint.css"],
+			matches: ["*://*.rateyourmusic.com/artist/*"],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/timeline/main.ts"],
 			css: ["src/modules/timeline/timeline.css", "src/modules/map/map.css"],
 			matches: ["*://*.rateyourmusic.com/artist/*"],

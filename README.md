@@ -108,6 +108,12 @@ Adds filters and search to the list of releases missing streaming links.
 
 ---
 
+### Artist Search Hint
+
+Shows RYM's short artist search hint as a subtitle directly below the artist name (initial placement).
+
+---
+
 ### Artist Timeline
 
 Adds a timeline to group pages so you can see when members were active and what they played. Artist pages with shows also include a map of concert locations, including solo artists.
