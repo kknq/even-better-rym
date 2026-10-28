@@ -131,6 +131,12 @@ Lets you use RYM markup, such as `[Artist67]` or `[Album42]`, to go straight to 
 
 ---
 
+### Focus Search
+
+Press `/` to open and focus RYM's search bar from any page, without adding `/` to the query.
+
+---
+
 ### Hide Votes on Genre and Descriptor Pages
 
 Lets you show or hide user votes on genre and descriptor pages. Configure genre and descriptor votes independently to start hidden or shown.
