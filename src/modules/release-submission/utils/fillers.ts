@@ -17,6 +17,8 @@ import {
 import type { FillData } from "../dom";
 import type { CapitalizationType } from "./capitalization";
 import { capitalize } from "./capitalization";
+import { fillFiledUnderCredits } from "./credits";
+import { goInfobox } from "./page-functions";
 import { formatTracks, getTrackDurations } from "./tracklist";
 import type { ReleaseOptions } from "./types";
 
@@ -24,60 +26,68 @@ export async function fill(
 	data: ResolveData,
 	options: ReleaseOptions,
 ): Promise<void> {
-	await fillCoreFields(data, options);
-	await fillExtraFields(data, options);
+	const { fillFields, capitalization, preserveTrackLengths } = options;
+	const {
+		artists,
+		type,
+		date,
+		title,
+		format,
+		discSize,
+		label,
+		attributes,
+		tracks,
+		url,
+		countries,
+		classifiers,
+		filedUnderCreditRole,
+	} = data;
+	const steps: (() => unknown)[] = [];
+	if (artists != null && fillFields.artists)
+		steps.push(() => fillArtists(artists, data.artistMode));
+	if (type != null && fillFields.type) steps.push(() => fillType(type));
+	if (date != null && fillFields.date) steps.push(() => fillDate(date));
+	if (title != null && fillFields.title)
+		steps.push(() => fillTitle(title, capitalization));
+	if (format != null && fillFields.format) steps.push(() => fillFormat(format));
+	if (discSize != null && fillFields.discSize)
+		steps.push(() => fillDiscSize(discSize));
+	if (label != null && fillFields.label) steps.push(() => fillLabel(label));
+	if (attributes != null && fillFields.attributes)
+		steps.push(() => fillAttributes(attributes));
+	if (tracks != null && fillFields.tracks)
+		steps.push(() => fillTracks(tracks, capitalization, preserveTrackLengths));
+	if (url !== undefined) steps.push(() => fillSource(url));
+	if (countries != null && fillFields.countries)
+		steps.push(() => fillCountries(countries));
+	if (classifiers != null) steps.push(() => fillClassifiers(classifiers));
+	if (filedUnderCreditRole != null && fillFields.credits)
+		steps.push(() => fillFiledUnderCredits(filedUnderCreditRole));
+
+	// Run every step even if an earlier one fails, so one missing field
+	// doesn't prevent the rest of the release from being filled.
+	const errors: unknown[] = [];
+	for (const step of steps) {
+		try {
+			await step();
+		} catch (error) {
+			errors.push(error);
+		}
+	}
+	if (errors.length === 1) throw errors[0];
+	if (errors.length > 1) throw new AggregateError(errors, "Import failed");
 }
 
-async function fillCoreFields(
-	data: ResolveData,
-	options: ReleaseOptions,
-): Promise<void> {
-	if (data.artists != null && options.fillFields.artists) {
-		await fillArtists(data.artists);
+async function fillArtists(
+	artists: string[],
+	mode: ResolveData["artistMode"] = "search",
+) {
+	if (mode === "text") {
+		forceQuerySelector<HTMLInputElement>(document)(
+			"#filed_under_searchterm",
+		).value = artists.join(", ");
+		return;
 	}
-	if (data.type != null && options.fillFields.type) {
-		fillType(data.type);
-	}
-	if (data.date != null && options.fillFields.date) {
-		fillDate(data.date);
-	}
-	if (data.title != null && options.fillFields.title) {
-		fillTitle(data.title, options.capitalization);
-	}
-	if (data.format != null && options.fillFields.format) {
-		fillFormat(data.format);
-	}
-}
-
-async function fillExtraFields(
-	data: ResolveData,
-	options: ReleaseOptions,
-): Promise<void> {
-	if (data.discSize != null && options.fillFields.discSize) {
-		fillDiscSize(data.discSize);
-	}
-	if (data.label != null && options.fillFields.label) {
-		fillLabel(data.label);
-	}
-	if (data.attributes != null && options.fillFields.attributes) {
-		fillAttributes(data.attributes);
-	}
-	if (data.tracks != null && options.fillFields.tracks) {
-		await fillTracks(
-			data.tracks,
-			options.capitalization,
-			options.preserveTrackLengths,
-		);
-	}
-	if (data.url !== undefined) {
-		fillSource(data.url);
-	}
-	if (data.countries != null && options.fillFields.countries) {
-		fillCountries(data.countries);
-	}
-}
-
-async function fillArtists(artists: string[]) {
 	if (artists[0]?.toLowerCase() === "various artists") {
 		// Various Artists release
 		forceQuerySelector<HTMLInputElement>(document)("#cat_va").click();
@@ -167,15 +177,19 @@ function fillDiscSize(discSize: DiscSize) {
 	).checked = true;
 }
 
-function fillLabel(label: ReleaseLabel) {
-	forceQuerySelector<HTMLInputElement>(document)(
-		"#label~table #searchterm",
-	).value = label.name ?? "";
-
-	if (label.name)
+async function fillLabel(label: ReleaseLabel) {
+	if (label.id !== undefined) {
+		await goInfobox(label.id);
+	} else {
 		forceQuerySelector<HTMLInputElement>(document)(
-			"#label~table .gosearch .btn",
-		).click();
+			"#label~table #searchterm",
+		).value = label.name ?? "";
+
+		if (label.name)
+			forceQuerySelector<HTMLInputElement>(document)(
+				"#label~table .gosearch .btn",
+			).click();
+	}
 
 	forceQuerySelector<HTMLInputElement>(document)("#catalog_no").value =
 		label.catno ?? "";
@@ -216,6 +230,16 @@ function fillSource(url: string) {
 function fillCountries(countries: string[]) {
 	forceQuerySelector<HTMLTextAreaElement>(document)("#countries").value =
 		countries.join(", ");
+}
+
+function fillClassifiers(classifiers: string[]) {
+	const input =
+		forceQuerySelector<HTMLInputElement>(document)("#va_classifiers");
+	for (const classifier of classifiers) {
+		if (!input.value.includes(classifier)) {
+			input.value = [input.value.trim(), classifier].filter(Boolean).join(" ");
+		}
+	}
 }
 
 const TYPE_IDS: Record<ReleaseType, string> = {

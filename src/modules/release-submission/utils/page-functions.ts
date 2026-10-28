@@ -9,14 +9,14 @@ export const selectShortcut = (
 	name: string,
 	target: string,
 	label = "",
-): void =>
-	void runScript(
+): Promise<void> =>
+	runScript(
 		`selectShortcut(${JSON.stringify(type)}, ${id}, ${JSON.stringify(name)}, ${JSON.stringify(target)}, ${JSON.stringify(label)})`,
 	);
 
 // window.parent.goInfobox(897)
-export const goInfobox = (id: number): void =>
-	void runScript(`goInfobox(${id})`);
+export const goInfobox = (id: number): Promise<void> =>
+	runScript(`goInfobox(${id})`);
 
 // window.currentElement isn't visible to the content script's isolated
 // world, so window.createShortcut has to be wrapped from injected page-world

@@ -36,11 +36,18 @@ test("sizes the URL box to fit every import icon at its full width", async () =>
 	expect(input?.style.boxSizing).toBe("border-box");
 	expect(buttons).toHaveLength(RESOLVABLES.length);
 	expect(buttons.some((button) => button.title === "Traxsource")).toBe(true);
+	expect(buttons.some((button) => button.title === "NTS")).toBe(true);
 	expect(buttons[0].parentElement?.style.flexWrap).toBe("wrap");
 	expect(buttons.every((button) => button.style.flexShrink === "0")).toBe(true);
 });
 
-test("automatically selects Traxsource when pasting a release URL", async () => {
+test.each([
+	["https://www.traxsource.com/title/123/example", "traxsource"],
+	[
+		"https://www.nts.live/shows/guests/episodes/yhwh-nailgun-13th-august-2025",
+		"nts",
+	],
+])("automatically selects the import service for %s", async (url, id) => {
 	const onSubmit = vi.fn();
 	await act(() => {
 		render(
@@ -53,7 +60,6 @@ test("automatically selects Traxsource when pasting a release URL", async () => 
 		);
 	});
 
-	const url = "https://www.traxsource.com/title/123/example";
 	await act(() => {
 		const input = document.querySelector<HTMLInputElement>('input[type="url"]');
 		if (!input) throw new Error("Missing URL input");
@@ -65,8 +71,5 @@ test("automatically selects Traxsource when pasting a release URL", async () => 
 			.querySelector("form")
 			?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
 	});
-	expect(onSubmit).toHaveBeenCalledWith(
-		url,
-		expect.objectContaining({ id: "traxsource" }),
-	);
+	expect(onSubmit).toHaveBeenCalledWith(url, expect.objectContaining({ id }));
 });

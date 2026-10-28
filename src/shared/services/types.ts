@@ -15,6 +15,7 @@ export const SERVICE_IDS = [
 	"livemixtapes",
 	"metal-archives",
 	"traxsource",
+	"nts",
 ] as const;
 
 export type ServiceId = (typeof SERVICE_IDS)[number];
@@ -196,7 +197,7 @@ export type ReleaseAttribute =
 	| "television soundtrack"
 	| "video game soundtrack";
 
-export type ReleaseLabel = { name?: string; catno?: string };
+export type ReleaseLabel = { id?: number; name?: string; catno?: string };
 
 export type Track = {
 	position?: string;
@@ -209,6 +210,7 @@ export type ResolveData = {
 	url?: string;
 	title?: string;
 	artists?: string[];
+	artistMode?: "search" | "text";
 	coverArt?: string[];
 	date?: ReleaseDate;
 	publishDate?: ReleaseDate;
@@ -217,6 +219,8 @@ export type ResolveData = {
 	format?: ReleaseFormat;
 	discSize?: DiscSize;
 	attributes?: ReleaseAttribute[];
+	classifiers?: string[];
+	filedUnderCreditRole?: string;
 	tracks?: Track[];
 	countries?: string[];
 };

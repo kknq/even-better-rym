@@ -45,7 +45,11 @@ const ENG_DO_NOT_CAPITALIZE = new Set([
 // Don't capitalize even if it's the first or last word
 const ENG_DO_NOT_CAPITALIZE_FORCE = new Set(["etc", "etc."]);
 
-const RELEASE_FORMATS = new Set(["ep", "lp"]);
+const UPPERCASE_EXCEPTIONS = ["ep", "lp", "nts"];
+const UPPERCASE_EXCEPTION_PATTERN = new RegExp(
+	`\\b(?:${UPPERCASE_EXCEPTIONS.join("|")})\\b`,
+	"gi",
+);
 
 const isWord = ({ type }: Token) => type === "word" || type === "romanNumeral";
 
@@ -56,13 +60,9 @@ const isAfterHyphen = (phrase: Phrase, index: number) =>
 const isAfterUnspacedHyphen = (phrase: Phrase, index: number) =>
 	phrase[index - 1]?.text === "-";
 
-const isReleaseFormat = (token: Token) =>
-	RELEASE_FORMATS.has(token.text.toLowerCase());
-
 const toTitleCase = (token: Token) => {
 	const { text, type } = token;
 	if (!text[0]) return text;
-	if (isReleaseFormat(token)) return text.toUpperCase();
 	if (type === "romanNumeral") return text.toUpperCase();
 	return text[0].toUpperCase() + text.slice(1).toLowerCase();
 };
@@ -75,7 +75,8 @@ export const capitalize = (
 		? text
 		: tokenize(text.toLowerCase())
 				.map(capitalizePhrase(capitalization))
-				.join("");
+				.join("")
+				.replace(UPPERCASE_EXCEPTION_PATTERN, (word) => word.toUpperCase());
 
 const capitalizePhrase =
 	(capitalization: Exclude<CapitalizationType, "as-is">) =>
@@ -87,7 +88,6 @@ const capitalizePhrase =
 			? pipe(
 					phrase
 						.map((token, index) => {
-							if (isReleaseFormat(token)) return token.text.toUpperCase();
 							if (index === firstWordIndex) return toTitleCase(token);
 							if (token.type === "romanNumeral")
 								return token.text.toUpperCase();
