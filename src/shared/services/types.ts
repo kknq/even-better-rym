@@ -14,6 +14,7 @@ export const SERVICE_IDS = [
 	"deezer",
 	"livemixtapes",
 	"metal-archives",
+	"traxsource",
 ] as const;
 
 export type ServiceId = (typeof SERVICE_IDS)[number];

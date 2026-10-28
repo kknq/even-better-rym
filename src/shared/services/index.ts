@@ -10,6 +10,7 @@ import { Qobuz } from "./qobuz";
 import { Soundcloud } from "./soundcloud";
 import { Spotify } from "./spotify";
 import { Tidal } from "./tidal";
+import { Traxsource } from "./traxsource";
 import type { Embeddable, Resolvable, Searchable, Service } from "./types";
 import { isEmbeddable, isResolvable, isSearchable } from "./types";
 import { YouTube } from "./youtube";
@@ -28,6 +29,7 @@ export const SERVICES: Service[] = [
 	Tidal,
 	LiveMixtapes,
 	MetalArchives,
+	Traxsource,
 ];
 
 export const SEARCHABLES: (Service & Searchable)[] =
