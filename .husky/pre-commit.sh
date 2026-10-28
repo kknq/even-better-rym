@@ -6,3 +6,7 @@ if git diff --name-only --staged --diff-filter=ACMRTUXB | grep -Eq '\.tsx?$'; th
   npx biome format --write $files
   git add $files
 fi
+
+if ! npm run test -- --run; then
+  echo "WARNING: Tests failed. Continuing with commit."
+fi

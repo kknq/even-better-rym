@@ -72,87 +72,71 @@ function extractShowDateFromListItem(item: HTMLElement): number | null {
 	return parseDecimalYearFromDateString(dateText);
 }
 
-function clickPastShowsButton(): void {
-	const expandButton = document.getElementById("disco_expand_prev");
-
-	if (!expandButton) return;
-	if (expandButton.offsetParent === null) return;
-
-	expandButton.click();
+function hasRenderedPastShows(container: HTMLElement): boolean {
+	const now = currentDecimalYear();
+	return Array.from(container.querySelectorAll<HTMLElement>("li")).some(
+		(item) => {
+			const date = extractShowDateFromListItem(item);
+			return date !== null && date <= now;
+		},
+	);
 }
 
-async function waitForPastShowsLoaded(timeoutMs = 3000): Promise<void> {
+function loadPastShows(
+	showsContainer: HTMLElement,
+	expandButton: HTMLElement,
+	timeoutMs: number,
+): Promise<void> {
 	return new Promise((resolve) => {
-		const start = performance.now();
-		const showsContainer = document.querySelector<HTMLElement>(
-			".section_artist_shows ul.shows",
-		);
-		const initialItemCount = showsContainer
-			? showsContainer.querySelectorAll("li").length
-			: 0;
-
-		if (!showsContainer) {
-			setTimeout(resolve, timeoutMs);
-			return;
-		}
-
-		const expandButton = document.getElementById("disco_expand_prev");
-
-		if (!expandButton?.offsetParent) {
+		const finish = () => {
+			observer.disconnect();
+			clearTimeout(timer);
 			resolve();
-			return;
-		}
-
-		const observer = new MutationObserver(() => {
-			const expandButtonInner = document.getElementById("disco_expand_prev");
-			const currentItemCount = showsContainer.querySelectorAll("li").length;
-
-			if (expandButtonInner == null) {
-				observer.disconnect();
-				resolve();
-				return;
+		};
+		const check = () => {
+			if (
+				!expandButton.isConnected ||
+				expandButton.offsetParent === null ||
+				hasRenderedPastShows(showsContainer)
+			) {
+				finish();
 			}
-
-			if (currentItemCount > initialItemCount) {
-				const now = currentDecimalYear();
-				const items = Array.from(
-					showsContainer.querySelectorAll<HTMLElement>("li"),
-				);
-
-				for (const item of items) {
-					const date = extractShowDateFromListItem(item);
-
-					if (date !== null && date <= now) {
-						observer.disconnect();
-						resolve();
-						return;
-					}
-				}
-			}
-
-			if (performance.now() - start > timeoutMs) {
-				observer.disconnect();
-				resolve();
-			}
-		});
+		};
+		const observer = new MutationObserver(check);
+		const timer = setTimeout(() => {
+			console.warn("[timeline] Timed out waiting for past shows to load");
+			finish();
+		}, timeoutMs);
 
 		observer.observe(document.body, {
 			childList: true,
 			subtree: true,
+			attributes: true,
 		});
+		expandButton.click();
+		check();
 	});
 }
 
 export async function openPastShows(timeoutMs = 3000): Promise<void> {
-	clickPastShowsButton();
-	await waitForPastShowsLoaded(timeoutMs);
+	const showsContainer = document.querySelector<HTMLElement>(
+		".section_artist_shows ul.shows",
+	);
+	const expandButton = document.getElementById("disco_expand_prev");
+	if (
+		!showsContainer ||
+		hasRenderedPastShows(showsContainer) ||
+		!expandButton?.offsetParent
+	) {
+		return;
+	}
+	await loadPastShows(showsContainer, expandButton, timeoutMs);
 }
 
 export async function extractShowMarkersFromDOM(
 	disbandedYear: number | null,
 ): Promise<DiscoMarker[]> {
-	clickPastShowsButton();
-	await waitForPastShowsLoaded();
+	await openPastShows();
 
 	const showsSection = document.querySelector<HTMLElement>(
 		".section_artist_shows ul.shows",
