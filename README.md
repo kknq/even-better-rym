@@ -210,7 +210,7 @@ VITE_TIDAL_SECRET=
 VITE_YOUTUBE_KEY=
 ```
 
-Discogs also has an auth block, but it seems to work without any keys
+Discogs release imports work without credentials. Optionally set `VITE_DISCOGS_KEY` and `VITE_DISCOGS_SECRET` to use application credentials; unset values are omitted from API query parameters.
 
 ### Manifest Version
 

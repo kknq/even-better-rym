@@ -75,6 +75,46 @@ describe("backgroundFetch", () => {
 	});
 
 	test.each([
+		undefined,
+		null,
+	])("omits %s query parameters without dropping empty strings or credentials", async (missing) => {
+		const fetch = vi
+			.fn()
+			.mockImplementation(() => Promise.resolve(new Response("{}")));
+		vi.stubGlobal("fetch", fetch);
+
+		await backgroundFetch({
+			id: "request-1",
+			type: "fetch",
+			data: {
+				url: "https://api.discogs.com/releases/1",
+				urlParameters: {
+					key: missing,
+					secret: missing,
+					empty: "",
+				},
+			},
+		});
+
+		expect(fetch.mock.calls[0]?.[0]).toBe(
+			"https://api.discogs.com/releases/1?empty=",
+		);
+
+		await backgroundFetch({
+			id: "request-2",
+			type: "fetch",
+			data: {
+				url: "https://api.discogs.com/releases/1",
+				urlParameters: { key: "test-key", secret: "test-secret" },
+			},
+		});
+
+		expect(fetch.mock.calls[1]?.[0]).toBe(
+			"https://api.discogs.com/releases/1?key=test-key&secret=test-secret",
+		);
+	});
+
+	test.each([
 		400, 401, 403, 404, 429, 500, 503,
 	])("reports HTTP %s without including the response body in the error", async (status) => {
 		vi.stubGlobal(

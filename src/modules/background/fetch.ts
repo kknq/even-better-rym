@@ -6,8 +6,9 @@ export const backgroundFetch = async ({
 }: FetchRequest): Promise<FetchResponse> => {
 	const urlObject = new URL(url);
 	if (urlParameters) {
-		for (const [key, value] of Object.entries(urlParameters))
-			urlObject.searchParams.append(key, value);
+		for (const [key, value] of Object.entries(urlParameters)) {
+			if (value != null) urlObject.searchParams.append(key, value);
+		}
 	}
 
 	try {

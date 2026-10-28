@@ -68,8 +68,9 @@ export const fetchInPage = async (
             const req = JSON.parse(decodeURIComponent(escape(atob("${serialized}"))));
             const u = new URL(req.url);
             if (req.urlParameters) {
-              for (const [k,v] of Object.entries(req.urlParameters))
-                u.searchParams.append(k, v);
+              for (const [k,v] of Object.entries(req.urlParameters)) {
+                if (v != null) u.searchParams.append(k, v);
+              }
             }
             const res = await fetch(u.toString(), {
               method: req.method,
