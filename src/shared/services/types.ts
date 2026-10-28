@@ -16,6 +16,7 @@ export const SERVICE_IDS = [
 	"metal-archives",
 	"traxsource",
 	"nts",
+	"mixcloud",
 ] as const;
 
 export type ServiceId = (typeof SERVICE_IDS)[number];

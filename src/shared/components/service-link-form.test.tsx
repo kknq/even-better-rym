@@ -37,6 +37,7 @@ test("sizes the URL box to fit every import icon at its full width", async () =>
 	expect(buttons).toHaveLength(RESOLVABLES.length);
 	expect(buttons.some((button) => button.title === "Traxsource")).toBe(true);
 	expect(buttons.some((button) => button.title === "NTS")).toBe(true);
+	expect(buttons.some((button) => button.title === "Mixcloud")).toBe(true);
 	expect(buttons[0].parentElement?.style.flexWrap).toBe("wrap");
 	expect(buttons.every((button) => button.style.flexShrink === "0")).toBe(true);
 });
@@ -47,6 +48,7 @@ test.each([
 		"https://www.nts.live/shows/guests/episodes/yhwh-nailgun-13th-august-2025",
 		"nts",
 	],
+	["https://www.mixcloud.com/huerco_s/eargasmlodgemix/", "mixcloud"],
 ])("automatically selects the import service for %s", async (url, id) => {
 	const onSubmit = vi.fn();
 	await act(() => {

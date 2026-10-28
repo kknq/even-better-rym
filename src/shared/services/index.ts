@@ -6,6 +6,7 @@ import { Discogs } from "./discogs";
 import { LiveMixtapes } from "./livemixtapes";
 import { Melon } from "./melon";
 import { MetalArchives } from "./metalarchives";
+import { Mixcloud } from "./mixcloud";
 import { NTS } from "./nts";
 import { Qobuz } from "./qobuz";
 import { Soundcloud } from "./soundcloud";
@@ -32,6 +33,7 @@ export const SERVICES: Service[] = [
 	MetalArchives,
 	Traxsource,
 	NTS,
+	Mixcloud,
 ];
 
 export const SEARCHABLES: (Service & Searchable)[] =
