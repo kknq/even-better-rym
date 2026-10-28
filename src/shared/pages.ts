@@ -3,6 +3,7 @@ export const pages = {
 	descriptorLinks: "/release/",
 	trackTime: "/release/",
 	releaseSubmission: "/releases/ac",
+	artistSubmission: "/artist/profile_ac",
 	coverArt: "/images/upload",
 	userReception: "/release/",
 	whoSampled: "/release/",
@@ -35,6 +36,7 @@ export const pageLabels: Record<PageKey, string> = {
 	descriptorLinks: "Descriptor Links",
 	trackTime: "Release Length to Hours Conversion",
 	releaseSubmission: "Release Submission Helper",
+	artistSubmission: "Artist Location Clear Buttons",
 	coverArt: "Cover Art Submission Helper",
 	userReception: "User Reception",
 	whoSampled: "WhoSampled Link",
@@ -97,7 +99,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 				"voteHistoryDescriptors",
 			],
 		],
-		["Artist profiles", ["timeline", "map"]],
+		["Artist profiles", ["timeline", "map", "artistSubmission"]],
 		[
 			"Content visibility",
 			["hideRatings", "hideReviews", "hideCommentBoxes", "hideVotes"],
@@ -113,6 +115,8 @@ export const pageHints: Record<PageKey, string> = {
 		"Reformats the tracklist total length from MM:SS to H:MM:SS when the total exceeds one hour.",
 	releaseSubmission:
 		"Pre-fills the release submission form with data found on the provided page.",
+	artistSubmission:
+		"Adds clear buttons for origin, current, and relevant locations when submitting or editing artist profiles.",
 	coverArt: "Adds download controls to the cover art upload page.",
 	userReception:
 		"Summarizes the release's rating distribution into a user reception meter and ranked categories.",

@@ -52,6 +52,11 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/artist-submission/main.ts"],
+			matches: ["*://*.rateyourmusic.com/artist/profile_ac*"],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/search-bar/main.ts"],
 			matches: ["*://*.rateyourmusic.com/*"],
 			run_at: "document_start",
