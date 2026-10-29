@@ -116,6 +116,7 @@ const resolveAlbumFields = (
 			position: String(i + 1),
 			title: t.name,
 			duration: ifDefined(convertAppleMusicDuration)(t.duration),
+			...(t.url ? { creditsUrl: t.url } : {}),
 			...(artists !== undefined ? { artists } : {}),
 		};
 	});

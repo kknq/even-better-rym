@@ -13,6 +13,7 @@ import {
 	parseArtistTokenId,
 	planFiledUnderChanges,
 } from "./release-artist-links";
+import { reportSubmissionError } from "./report-error";
 
 const LIST_SELECTOR = "#filed_under_performerx";
 const ENTRY_SELECTOR = "li.sortable_filed_under_performer";
@@ -166,6 +167,11 @@ export const clearFiledUnderEntries = (): Promise<void> =>
 		}
 	});
 
+export const clearFiledUnderSearch = (): void => {
+	forceQuerySelector<HTMLInputElement>(document)(SEARCH_INPUT_SELECTOR).value =
+		"";
+};
+
 // Runs RYM's filed-under artist search for name.
 export const searchFiledUnder = (name: string): void => {
 	forceQuerySelector<HTMLInputElement>(document)(SEARCH_INPUT_SELECTOR).value =
@@ -231,7 +237,7 @@ export const watchFiledUnderChanges = (
 	const observer = new MutationObserver(() => {
 		if (!isReportQueued) {
 			isReportQueued = true;
-			void enqueueListEdit(reportChange);
+			void enqueueListEdit(reportChange).catch(reportSubmissionError);
 		}
 	});
 	observer.observe(list, { childList: true, subtree: true });

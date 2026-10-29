@@ -2,7 +2,7 @@ import { arrayToArtists } from "~/shared/utils/string";
 
 const TRACK_TITLE_ID_PATTERN = /^track_track_title\d+$/;
 export const ARTIST_SEPARATOR = " - ";
-const ARTIST_LINK_PATTERN = /\[Artist\d+]/;
+const ARTIST_LINK_PATTERN = /\[Artist\d+(?:,[^\]]+)?]/;
 
 export const isTrackTitleFieldId = (id: string): boolean =>
 	TRACK_TITLE_ID_PATTERN.test(id);
@@ -11,9 +11,7 @@ export const buildArtistToken = (assocId: string, text?: string): string =>
 	text ? `[Artist${assocId},${text}]` : `[Artist${assocId}]`;
 
 const splitArtistList = (artistList: string): string[] =>
-	artistList
-		.replaceAll("&", ",")
-		.split(",")
+	(artistList.match(/\[[^\]]*]|[^,&[]+/g) ?? [])
 		.map((artist) => artist.trim())
 		.filter((artist) => artist.length > 0);
 

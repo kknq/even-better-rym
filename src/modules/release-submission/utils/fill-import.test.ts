@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { runScript, waitForResult } from "~/shared/utils/dom";
-import { fill } from "./fillers";
+import { fill } from "./fill";
 import type { ReleaseOptions } from "./types";
 
 vi.mock("~/shared/utils/dom", () => ({
@@ -75,14 +75,25 @@ describe("release import artist modes", () => {
 		expect(runScript).toHaveBeenCalledTimes(2);
 	});
 
-	test("retains automatic artist lookup for existing services", async () => {
+	test("hands artists to the picker without automatically searching", async () => {
 		const search = vi.fn();
 		document
 			.querySelector('input[type="button"]')
 			?.addEventListener("click", search);
-		await fill({ artists: ["Existing Artist"] }, options);
-		expect(search).toHaveBeenCalledOnce();
-		expect(waitForResult).toHaveBeenCalledOnce();
+		const received: string[][] = [];
+		const listener = vi.fn((event: CustomEvent<string[]>) => {
+			received.push(event.detail);
+		});
+		document.addEventListener("releaseArtistsEvent", listener);
+		try {
+			await fill({ artists: ["Existing Artist"] }, options);
+			expect(listener).toHaveBeenCalledOnce();
+			expect(received).toEqual([["Existing Artist"]]);
+			expect(search).not.toHaveBeenCalled();
+			expect(waitForResult).not.toHaveBeenCalled();
+		} finally {
+			document.removeEventListener("releaseArtistsEvent", listener);
+		}
 	});
 
 	test("respects the artists import option for text-only names", async () => {
@@ -230,5 +241,35 @@ describe("release import artist modes", () => {
 			"ABC123",
 		);
 		expect(runScript).not.toHaveBeenCalled();
+	});
+
+	test("collects multiple field failures in order and still fills later fields", async () => {
+		document.body.insertAdjacentHTML(
+			"beforeend",
+			'<input id="va_classifiers">',
+		);
+		const importing = fill(
+			{
+				type: "album",
+				date: { year: 2020 },
+				classifiers: ["[Descriptor60311]"],
+			},
+			{
+				...options,
+				fillFields: { ...options.fillFields, type: true, date: true },
+			},
+		);
+		await expect(importing).rejects.toMatchObject({
+			message: "Import failed",
+			errors: [
+				expect.objectContaining({
+					message: "Missing element: input#categorys",
+				}),
+				expect.objectContaining({ message: "Missing element: #year" }),
+			],
+		});
+		expect(
+			document.querySelector<HTMLInputElement>("#va_classifiers")?.value,
+		).toBe("[Descriptor60311]");
 	});
 });

@@ -136,9 +136,13 @@ export const writeTracklistText = (text: string): Promise<void> =>
 		if (currentText === text) {
 			return;
 		}
-		const changedTitles = isAdvancedShowing()
-			? undefined
-			: getChangedTitles(currentText, text);
+		if (isAdvancedShowing()) {
+			forceQuerySelector<HTMLTextAreaElement>(document)(
+				ADVANCED_INPUT_SELECTOR,
+			).value = text;
+			return;
+		}
+		const changedTitles = getChangedTitles(currentText, text);
 		if (changedTitles === undefined) {
 			await editThroughAdvanced(() => text);
 			return;
@@ -149,10 +153,11 @@ export const writeTracklistText = (text: string): Promise<void> =>
 // Calls onChange after a row is added or removed, until the returned
 // function is called.
 export const watchTracklistRows = (onChange: () => void): (() => void) => {
-	const rowParent = forceQuerySelector(document)(
+	const rowParent = document.querySelector(
 		ROW_TEMPLATE_SELECTOR,
-	).parentElement;
-	if (rowParent === null) {
+	)?.parentElement;
+	if (!rowParent) {
+		console.warn("EvenBetterRYM: tracklist row template is unavailable");
 		return () => undefined;
 	}
 	// Only rows, not their contents, so adding reset slots doesn't call onChange.
@@ -164,8 +169,9 @@ export const watchTracklistRows = (onChange: () => void): (() => void) => {
 // Calls onEdit after the user changes a field or a row is added or removed,
 // until the returned function is called.
 export const watchTracklistEdits = (onEdit: () => void): (() => void) => {
-	const editors = forceQuerySelector(document)(SIMPLE_SELECTOR).parentElement;
-	if (editors === null) {
+	const editors = document.querySelector(SIMPLE_SELECTOR)?.parentElement;
+	if (!editors) {
+		console.warn("EvenBetterRYM: tracklist editor is unavailable");
 		return () => undefined;
 	}
 	editors.addEventListener("change", onEdit);

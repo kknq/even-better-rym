@@ -11,9 +11,9 @@ import {
 import { OMITTED_LABEL } from "./track-artist-links";
 
 describe("getInitialTrackChoices", () => {
-	test("has identically spelled track artists follow the release artist", () => {
+	test("leaves main artists out until each is explicitly chosen", () => {
 		expect(getInitialTrackChoices(["A", "b", "C"], ["A", "B"])).toEqual(
-			new Map([["A", { kind: "following", releaseName: "A" }]]),
+			new Map([["A", { kind: "skipped" }]]),
 		);
 	});
 });
@@ -47,7 +47,7 @@ describe("resolveTrackArtistLabels", () => {
 			new Map([
 				["A", "[Artist2]"],
 				["B", "B"],
-				["C", "[Artist1]"],
+				["C", "[Artist1,C]"],
 				["D", "Release B"],
 				["E", OMITTED_LABEL],
 			]),
@@ -60,6 +60,23 @@ describe("resolveTrackArtistLabels", () => {
 		]);
 
 		expect(resolveTrackArtistLabels(choices, releaseLabels)).toEqual(new Map());
+	});
+
+	test("preserves imported aliases when following the same or a differently named release artist", () => {
+		expect(
+			resolveTrackArtistLabels(
+				new Map([
+					["zavet", { kind: "following", releaseName: "zavet" }],
+					["Other alias", { kind: "following", releaseName: "zavet" }],
+				]),
+				new Map([["zavet", "[Artist1479561,zavet]"]]),
+			),
+		).toEqual(
+			new Map([
+				["zavet", "[Artist1479561,zavet]"],
+				["Other alias", "[Artist1479561,Other alias]"],
+			]),
+		);
 	});
 });
 
@@ -83,10 +100,10 @@ describe("withUnpickedFollowedNames", () => {
 
 describe("describeTrackChoice", () => {
 	test("describes each kind of choice", () => {
-		expect(describeTrackChoice(undefined, undefined)).toBe("not picked");
-		expect(describeTrackChoice({ kind: "text" }, "A")).toBe("plain text");
+		expect(describeTrackChoice(undefined, undefined)).toBe("not chosen yet");
+		expect(describeTrackChoice({ kind: "text" }, "A")).toBe("name as text");
 		expect(describeTrackChoice({ kind: "skipped" }, OMITTED_LABEL)).toBe(
-			"left out",
+			"left out of titles",
 		);
 		expect(
 			describeTrackChoice({ kind: "linked", token: "[Artist1]" }, "[Artist1]"),
@@ -97,11 +114,13 @@ describe("describeTrackChoice", () => {
 		const following = { kind: "following", releaseName: "R" } as const;
 
 		expect(describeTrackChoice(following, undefined)).toBe(
-			"follows R (not picked yet)",
+			"same as R (not chosen yet)",
 		);
-		expect(describeTrackChoice(following, "R")).toBe("follows R (unlinked)");
+		expect(describeTrackChoice(following, "R")).toBe(
+			"same as R (name as text)",
+		);
 		expect(describeTrackChoice(following, "[Artist1]")).toBe(
-			"follows R ([Artist1])",
+			"same as R ([Artist1])",
 		);
 	});
 });

@@ -28,11 +28,12 @@ const ENTRY_C = { id: "3", name: "Tom Schley" };
 describe("parseArtistTokenId", () => {
 	test("reads the id from an artist token", () => {
 		expect(parseArtistTokenId(" [Artist67636] ")).toBe("67636");
+		expect(parseArtistTokenId("[Artist1479561,zavet]")).toBe("1479561");
 	});
 
 	test("ignores anything else", () => {
 		expect(parseArtistTokenId("[Label12]")).toBeUndefined();
-		expect(parseArtistTokenId("[Artist12,Name]")).toBeUndefined();
+		expect(parseArtistTokenId("[Artist12,]")).toBeUndefined();
 	});
 });
 
@@ -128,6 +129,28 @@ describe("orderFiledUnderIds", () => {
 });
 
 describe("getReleaseArtistLabels", () => {
+	test("keeps differing credited names while leaving matching artist names canonical", () => {
+		expect(
+			getReleaseArtistLabels(
+				new Map([
+					[
+						"zavet",
+						{ kind: "inherited", entry: { id: "1479561", name: "Kai Angel" } },
+					],
+					[
+						"1000 Eyes",
+						{ kind: "linked", entry: { id: "1639184", name: "1000 Eyes" } },
+					],
+				]),
+			),
+		).toEqual(
+			new Map([
+				["zavet", "[Artist1479561,zavet]"],
+				["1000 Eyes", "[Artist1639184]"],
+			]),
+		);
+	});
+
 	test("labels linked and inherited artists with tokens, skipped by name", () => {
 		const choices: ReleaseArtistChoices = new Map([
 			["A", { kind: "linked", entry: ENTRY_A }],
@@ -137,8 +160,8 @@ describe("getReleaseArtistLabels", () => {
 
 		expect(getReleaseArtistLabels(choices)).toEqual(
 			new Map([
-				["A", "[Artist1]"],
-				["B", "[Artist2]"],
+				["A", "[Artist1,A]"],
+				["B", "[Artist2,B]"],
 				["C", "C"],
 			]),
 		);
@@ -212,7 +235,7 @@ describe("getPickedChoice", () => {
 describe("applyFiledUnderChange", () => {
 	const ARTISTS = { names: ["A", "B", "C"], parentEntries: [ENTRY_A] };
 
-	test("links a new artist to the active row and moves to the next unpicked row", () => {
+	test("links only the active row without starting another artist selection", () => {
 		const state: ReleasePickerState = {
 			choices: new Map([["A", { kind: "skipped" }]]),
 			activeName: "B",
@@ -229,7 +252,7 @@ describe("applyFiledUnderChange", () => {
 				["A", { kind: "skipped" }],
 				["B", { kind: "linked", entry: ENTRY_B }],
 			]),
-			activeName: "C",
+			activeName: undefined,
 		});
 	});
 
@@ -260,7 +283,7 @@ describe("applyFiledUnderChange", () => {
 				{ added: [ENTRY_B], presentIds: new Set(["2"]) },
 				ARTISTS,
 			).activeName,
-		).toBe("A");
+		).toBeUndefined();
 	});
 
 	test("clears a removed artist's row so it can be picked again", () => {

@@ -10,12 +10,14 @@ import {
 	undoEdit,
 } from "../utils/edit-history";
 import type { ReleaseArtistLabels } from "../utils/release-artist-links";
+import { reportSubmissionError } from "../utils/report-error";
 import {
 	isTracklistEditPending,
 	readTracklistText,
 	watchTracklistEdits,
 	writeTracklistText,
 } from "../utils/simple-tracklist";
+import type { TrackArtistChoices } from "../utils/track-artist-choices";
 import { getInitialTrackChoices } from "../utils/track-artist-choices";
 import type { ArtistLabels } from "../utils/track-artist-links";
 import type {
@@ -37,8 +39,7 @@ export type TracklistHistory = {
 	state: TracklistPickerState;
 	canUndo: boolean;
 	canRedo: boolean;
-	editState: (change: StateChange) => void;
-	reapply: () => void;
+	editState: (change: StateChange, allowUnpicked?: boolean) => void;
 	undo: () => void;
 	redo: () => void;
 };
@@ -74,6 +75,7 @@ function withShownText(history: PickerHistory): PickerHistory {
 export function useTracklistHistory(
 	session: PickerSession,
 	release: ReleaseArtistLabels,
+	initialChoices?: TrackArtistChoices,
 ): TracklistHistory {
 	const {
 		state: history,
@@ -83,7 +85,7 @@ export function useTracklistHistory(
 		createEditHistory(
 			createPickerState(
 				readTracklistText(),
-				getInitialTrackChoices(session.names, release.names),
+				initialChoices ?? getInitialTrackChoices(session.names, release.names),
 			),
 		),
 	);
@@ -118,18 +120,23 @@ export function useTracklistHistory(
 
 	useEffect(() => {
 		const before = recordOutsideEdits(latestHistory.current);
-		void showCurrent(reapplyReleaseLabels(before, session, release.labels));
+		void showCurrent(
+			reapplyReleaseLabels(before, session, release.labels),
+		).catch(reportSubmissionError);
 	}, [session, release.labels, showCurrent]);
 
 	const editState = useCallback(
-		(change: StateChange) => {
+		(change: StateChange, allowUnpicked = false) => {
 			const before = recordOutsideEdits(latestHistory.current);
 			const next = applyChoices(
 				change(before.current),
 				session,
 				latestReleaseLabels.current,
+				allowUnpicked,
 			);
-			void showCurrent(recordUserChange(before, next));
+			void showCurrent(recordUserChange(before, next)).catch(
+				reportSubmissionError,
+			);
 		},
 		[session, showCurrent],
 	);
@@ -141,7 +148,7 @@ export function useTracklistHistory(
 			const restored = step(recordOutsideEdits(latestHistory.current));
 			void showCurrent(
 				reapplyReleaseLabels(restored, session, latestReleaseLabels.current),
-			);
+			).catch(reportSubmissionError);
 		},
 		[session, showCurrent],
 	);
@@ -151,7 +158,6 @@ export function useTracklistHistory(
 		canUndo: canUndo(history),
 		canRedo: canRedo(history),
 		editState,
-		reapply: useCallback(() => editState((state) => state), [editState]),
 		undo: useCallback(() => restore(undoEdit), [restore]),
 		redo: useCallback(() => restore(redoEdit), [restore]),
 	};

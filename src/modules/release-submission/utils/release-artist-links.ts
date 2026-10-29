@@ -2,7 +2,7 @@ import { buildArtistToken } from "./artist-shortcuts";
 import type { ArtistLabels } from "./track-artist-links";
 import { hasSameMembers } from "./track-artist-links";
 
-const ARTIST_TOKEN_ID_PATTERN = /^\[Artist(\d+)]$/;
+const ARTIST_TOKEN_PATTERN = /^\[Artist(\d+)(?:,([^\]\r\n]+))?]$/;
 const DIACRITIC_PATTERN = /\p{M}/gu;
 const NON_ALPHANUMERIC_PATTERN = /[^\p{L}\p{N}]/gu;
 
@@ -54,9 +54,16 @@ export type FiledUnderChanges = {
 	add: FiledUnderEntry[];
 };
 
-// Returns the artist id in an [ArtistNNNN] token, if it is one.
+// Reads an artist token and its optional credited name.
+export const parseArtistToken = (
+	token: string,
+): { id: string; name: string | undefined } | undefined => {
+	const match = ARTIST_TOKEN_PATTERN.exec(token.trim());
+	return match === null ? undefined : { id: match[1], name: match[2] };
+};
+
 export const parseArtistTokenId = (token: string): string | undefined =>
-	ARTIST_TOKEN_ID_PATTERN.exec(token.trim())?.[1];
+	parseArtistToken(token)?.id;
 
 // Returns the name with case, accents, punctuation and spacing removed, or
 // just lowercased if that would leave nothing (e.g. "!!!").
@@ -155,7 +162,14 @@ export const getReleaseArtistLabels = (
 	for (const [name, choice] of choices) {
 		labels.set(
 			name,
-			choice.kind === "skipped" ? name : buildArtistToken(choice.entry.id),
+			choice.kind === "skipped"
+				? name
+				: buildArtistToken(
+						choice.entry.id,
+						normalizeArtistName(name) === normalizeArtistName(choice.entry.name)
+							? undefined
+							: name,
+					),
 		);
 	}
 	return labels;
@@ -215,8 +229,8 @@ export const getPickedChoice = (
 
 // Returns the picker state after a change to the filed-under list. Rows
 // whose artist was removed are cleared. The first added artist no other row
-// has chosen goes to the active row, and the next unpicked row becomes
-// active; an artist another row has chosen was added by the picker itself.
+// has chosen goes to the active row; an artist another row has chosen was
+// added by the picker itself.
 export const applyFiledUnderChange = (
 	state: ReleasePickerState,
 	change: FiledUnderListChange,
@@ -242,7 +256,7 @@ export const applyFiledUnderChange = (
 	);
 	return {
 		choices: nextChoices,
-		activeName: artists.names.find((name) => !nextChoices.has(name)),
+		activeName: undefined,
 	};
 };
 

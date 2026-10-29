@@ -3,6 +3,8 @@ import type { Track } from "~/shared/services/types";
 import { markBonusTrack } from "./bonus-track";
 import type { CapitalizationType } from "./capitalization";
 import { capitalize } from "./capitalization";
+import { stripFeaturedArtistTags } from "./suggested-credits";
+import { getTrackPosition } from "./track-position";
 
 export function formatTracks(
 	tracks: Track[],
@@ -11,15 +13,16 @@ export function formatTracks(
 ) {
 	return tracks
 		.map((track, index) => {
-			const position = track.position ?? index + 1;
+			const position = getTrackPosition(track, index);
 
 			let title = track.title ?? "";
+			if (!track.header) title = stripFeaturedArtistTags(title);
 
 			title =
 				title.toLowerCase() === "untitled"
 					? "[untitled]"
 					: capitalize(title, capitalization);
-			title = markBonusTrack(title);
+			if (!track.header) title = markBonusTrack(title);
 
 			if (track.header) {
 				title = `[b]${title}[/b]`;
