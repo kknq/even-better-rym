@@ -10,7 +10,7 @@ export const requestToken = async (): Promise<TokenResponse> =>
 		await fetch({
 			method: "POST",
 			url: "https://accounts.spotify.com/api/token",
-			urlParameters: { grant_type: "client_credentials" },
+			body: "grant_type=client_credentials",
 			headers: {
 				Authorization: `Basic ${btoa([client_id, client_secret].join(":"))}`,
 				"Content-Type": "application/x-www-form-urlencoded",

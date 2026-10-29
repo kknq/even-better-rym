@@ -108,15 +108,32 @@ Adds filters and search to the list of releases missing streaming links.
 
 ---
 
+### Artist Search Hint
+
+Shows RYM's short artist search hint as a subtitle directly below the artist name (initial placement).
+
+---
+
 ### Artist Timeline
 
 Adds a timeline to group pages so you can see when members were active and what they played. Artist pages with shows also include a map of concert locations, including solo artists.
 
 ---
 
+### Artist Location Clear Buttons
+
+Adds a **clear location** button beside each location section when submitting or editing an artist profile.
+---
+
 ### Search Bar Shortcuts
 
 Lets you use RYM markup, such as `[Artist67]` or `[Album42]`, to go straight to a page from the search bar.
+
+---
+
+### Focus Search
+
+Press `/` to open and focus RYM's search bar from any page, without adding `/` to the query.
 
 ---
 
@@ -140,6 +157,7 @@ Hides community rating values while preserving page layout. Configure the suppor
 - **Artist pages** (`/artist/*`) — Ratings remain visible only for releases you have rated. Lazy-loaded discography entries follow the current toggle state.
 - **Charts, homepage, and new releases** — Available rating values are hidden because the page does not provide per-release rating status for the current user.
 - **Automatic Recommendations** (`/recommendations/*`)
+- **Labels and individual classifiers** (`/label/*`, `/classifiers/<name>/`) — Scores and rating bars start hidden, with a floating control to reveal them.
 - **Profiles, collections, and collection reviews** — Ratings remain visible for your own pages and are hidden on other users' pages.
 
 ---
@@ -192,7 +210,7 @@ VITE_TIDAL_SECRET=
 VITE_YOUTUBE_KEY=
 ```
 
-Discogs also has an auth block, but it seems to work without any keys
+Discogs release imports work without credentials. Optionally set `VITE_DISCOGS_KEY` and `VITE_DISCOGS_SECRET` to use application credentials; unset values are omitted from API query parameters.
 
 ### Manifest Version
 

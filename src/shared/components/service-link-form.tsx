@@ -30,6 +30,7 @@ export function ServiceLinkForm<E extends Error, T, S extends Service>({
 				display: "flex",
 				gap: 8,
 				alignItems: "center",
+				maxWidth: "100%",
 			}}
 		>
 			<ServiceLinkInput
@@ -85,6 +86,7 @@ function ServiceLinkInput<S extends Service>({
 			style={{
 				display: "flex",
 				gap: 8,
+				maxWidth: "100%",
 			}}
 			onSubmit={(event) => {
 				event.preventDefault();
@@ -101,7 +103,8 @@ function ServiceLinkInput<S extends Service>({
 					flexDirection: "column",
 					gap: 4,
 					alignItems: "center",
-					width: 384,
+					width: Math.max(384, services.length * 36 - 4),
+					minWidth: 0,
 				}}
 			>
 				<input
@@ -109,7 +112,7 @@ function ServiceLinkInput<S extends Service>({
 					value={url}
 					required
 					onInput={(event) => setUrl((event.target as HTMLInputElement).value)}
-					style={{ width: "100%" }}
+					style={{ width: "100%", boxSizing: "border-box" }}
 				/>
 				<ServiceSelector
 					services={services}
@@ -128,6 +131,7 @@ function ServiceLinkInput<S extends Service>({
 				value={submitText}
 				style={{
 					cursor: "pointer",
+					flexShrink: 0,
 				}}
 			/>
 		</form>

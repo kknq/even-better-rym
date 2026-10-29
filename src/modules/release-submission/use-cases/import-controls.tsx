@@ -130,7 +130,7 @@ function ImportOptionsForm({
 						flexDirection: "column",
 						gap: 4,
 						alignItems: "center",
-						width: 384,
+						width: "100%",
 						marginTop: "0.5em",
 					}}
 				>
@@ -222,6 +222,7 @@ const FIELDS_MAP: Record<FillField, string> = {
 	attributes: "Issue Attributes",
 	tracks: "Tracklist",
 	countries: "Countries Issued",
+	credits: "Credits",
 };
 
 const DEFAULT_FORM_OPTIONS: ImportOptions = {

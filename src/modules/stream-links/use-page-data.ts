@@ -242,7 +242,7 @@ function getLinkData(
 	return null;
 }
 
-function getFullLink(
+export function getFullLink(
 	service: string,
 	linkData: LinkData,
 	streamingPreferences: NormalizedStreamingPreferences,
@@ -255,7 +255,9 @@ function getFullLink(
 
 		case "applemusic": {
 			const data = linkData as AppleMusicLinkData;
-			return `https://geo.music.apple.com/${data.loc}/${
+			const region =
+				streamingPreferences.service_regions.applemusic ?? data.loc;
+			return `https://music.apple.com/${region}/${
 				data.album ? "album" : "video"
 			}/${data.album ?? data.video}/${data.media_id}`;
 		}

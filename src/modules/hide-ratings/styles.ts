@@ -20,6 +20,9 @@ const SCORE_SELECTORS = [
 	".page_section_main_info_music_rating_value_rating",
 	".page_song_header_info_rest > .pipe_separated:has(a[href*='/charts/top/song/'])",
 	".or_q_rating_date_s",
+	".mbgen .abmrat",
+	".mbgen .abmratg",
+	".mbgen tr:has(.abmrat, .abmratg) > td:last-child",
 ];
 
 const COUNT_SELECTORS = [
@@ -33,7 +36,10 @@ const COUNT_SELECTORS = [
 	".page_charts_section_charts_item_details_ratings",
 	".component_discography_item_details_ratings",
 	".component_discography_item_details_reviews",
-	".page_recommendations_list .component_discography_item_stats_compact_section:not(:has(.component_discography_item_details_average_num)) .stat",
+	".component_discography_item_stats_compact_section:not(:has(.component_discography_item_details_average_num)) .stat",
+	".mbgen .abmpop",
+	".mbgen tr:has(.abmrat, .abmratg) > td:nth-last-child(3)",
+	".mbgen tr:has(.abmrat, .abmratg) > td:nth-last-child(4)",
 	".component_discography_item_header_ratings",
 	".component_discography_item_header_reviews",
 	".disco_header_num_reviews",

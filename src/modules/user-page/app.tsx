@@ -132,20 +132,20 @@ const previewClick = async (event: MouseEvent) => {
 		if (container.querySelector('svg[class*="loader"]') === null)
 			lockAndLoad(button);
 
-		const existing = container.querySelector(".rendered_text");
-		if (existing) existing.remove();
-
-		const value = await parseMarkup(
-			forceQuerySelector<HTMLTextAreaElement>(container)("textarea").value ||
-				"",
-		);
-		const line = document.createElement("hr");
-		line.style.margin = "1em 0";
-		value.prepend(line);
-		container.append(value);
-		const loaderSvg = forceQuerySelector(container)('svg[class*="loader"]');
-		if (loaderSvg) loaderSvg.remove();
-		unlock(button);
+		try {
+			const value = await parseMarkup(
+				forceQuerySelector<HTMLTextAreaElement>(container)("textarea").value ||
+					"",
+			);
+			container.querySelector(".rendered_text")?.remove();
+			const line = document.createElement("hr");
+			line.style.margin = "1em 0";
+			value.prepend(line);
+			container.append(value);
+		} finally {
+			container.querySelector('svg[class*="loader"]')?.remove();
+			unlock(button);
+		}
 	}
 };
 

@@ -29,7 +29,7 @@ function Label() {
 	}, []);
 
 	const handleNoLabelClick = useCallback(() => {
-		goInfobox(897);
+		void goInfobox(897);
 
 		const input = document.querySelector<HTMLInputElement>("input#catalog_no");
 		if (input) input.value = "n/a";

@@ -10,9 +10,9 @@ export const search: SearchFunction = async ({ artist, title }) => {
 	});
 
 	const html = new DOMParser().parseFromString(response, "text/html");
-	const firstLink = html.querySelector(
+	const firstLink = html.querySelector<HTMLAnchorElement>(
 		'#release-card-list a[href*="/us-en/album/"]',
-	) as HTMLAnchorElement | null;
+	);
 	if (!firstLink) return undefined;
 
 	const href = firstLink.getAttribute("href") ?? "";

@@ -104,6 +104,8 @@ describe("title caps", () => {
 		"Triptych III: Blood Flow",
 		"The Band - The Song",
 		"LP and EP",
+		"The NTS Breakfast Show",
+		"Live on NTS",
 	];
 	test.each(titles)("correctly capitalizes %p", (testCase) => {
 		const [input, output] =
@@ -122,8 +124,16 @@ describe("sentence caps", () => {
 		["The Band - The Song", "The band - The song"],
 		["67-й калибр", "67-й калибр"],
 		["This LP Is an EP", "This LP is an EP"],
+		["The NTS Breakfast Show", "The NTS breakfast show"],
+		["Live on NTS", "Live on NTS"],
 	];
 
 	test.each(titles)("correctly capitalizes %p", (input, output) =>
 		expect(capitalize(input.toLowerCase(), "sentence-case")).toEqual(output));
+});
+
+test("keeps capitalization unchanged in as-is mode", () => {
+	expect(capitalize("the nts breakfast show", "as-is")).toBe(
+		"the nts breakfast show",
+	);
 });

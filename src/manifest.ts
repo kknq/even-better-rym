@@ -10,8 +10,13 @@ const hostsArray = [
 	"https://*.bcbits.com/*",
 	"https://www.beatport.com/*",
 	"https://*.beatport.com/*",
+	"https://*.traxsource.com/*",
+	"https://*.nts.live/*",
+	"https://*.ntslive.co.uk/*",
+	"https://*.mixcloud.com/*",
 	"https://deezer.com/*",
 	"https://api.deezer.com/*",
+	"https://*.dzcdn.net/*",
 	"https://discogs.com/*",
 	"https://*.discogs.com/*",
 	"https://melon.com/*",
@@ -52,7 +57,17 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/artist-submission/main.ts"],
+			matches: ["*://*.rateyourmusic.com/artist/profile_ac*"],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/search-bar/main.ts"],
+			matches: ["*://*.rateyourmusic.com/*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/search-focus/main.ts"],
 			matches: ["*://*.rateyourmusic.com/*"],
 			run_at: "document_start",
 		},
@@ -93,6 +108,12 @@ const sharedManifest = {
 		{
 			js: ["src/modules/track-time/main.ts"],
 			matches: ["*://*.rateyourmusic.com/release/*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/artist-search-hint/main.ts"],
+			css: ["src/modules/artist-search-hint/artist-search-hint.css"],
+			matches: ["*://*.rateyourmusic.com/artist/*"],
 			run_at: "document_start",
 		},
 		{

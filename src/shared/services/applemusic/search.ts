@@ -6,7 +6,7 @@ import type { SearchObject } from "./codec";
 const normalize = (value: string): string =>
 	value.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 
-export const toGeoAppleMusicUrl = (
+export const toRegionalAppleMusicUrl = (
 	collectionViewUrl: string,
 	appleMusicRegion: string,
 ) => {
@@ -16,7 +16,6 @@ export const toGeoAppleMusicUrl = (
 	const path = url.pathname.split("/");
 	if (path.length < 3) return collectionViewUrl;
 
-	url.hostname = "geo.music.apple.com";
 	path[1] = appleMusicRegion;
 	url.pathname = path.join("/");
 	return url.toString();
@@ -48,7 +47,7 @@ export const search: SearchFunction = async ({
 		return response;
 	};
 	const toUrl = (url: string) =>
-		appleMusicRegion ? toGeoAppleMusicUrl(url, appleMusicRegion) : url;
+		appleMusicRegion ? toRegionalAppleMusicUrl(url, appleMusicRegion) : url;
 
 	const response = await request("search", {
 		term: `${artist} ${title}`,

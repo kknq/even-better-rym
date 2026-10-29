@@ -19,14 +19,14 @@ export const selectShortcut = (
 	name: string,
 	target: string,
 	label = "",
-): void =>
-	void runScript(
+): Promise<void> =>
+	runScript(
 		`selectShortcut(${JSON.stringify(type)}, ${id}, ${JSON.stringify(name)}, ${JSON.stringify(target)}, ${JSON.stringify(label)})`,
 	);
 
 // window.parent.goInfobox(897)
-export const goInfobox = (id: number): void =>
-	void runScript(`goInfobox(${id})`);
+export const goInfobox = (id: number): Promise<void> =>
+	runScript(`goInfobox(${id})`);
 
 // Opens RYM's "Insert link" popup beside anchorId.
 export const openArtistLinkPopup = (anchorId: string): void =>

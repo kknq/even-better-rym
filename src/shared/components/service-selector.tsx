@@ -16,6 +16,8 @@ export function ServiceSelector<S extends Service>({
 		<div
 			style={{
 				display: "flex",
+				flexWrap: "wrap",
+				width: "100%",
 				gap: 4,
 				justifyContent: "center",
 			}}
@@ -54,6 +56,8 @@ function ServiceButton<S extends Service>({
 			style={{
 				width: 32,
 				height: 32,
+				flexShrink: 0,
+				padding: 0,
 				margin: 0,
 				color: "var(--mono-3)",
 				fontSize: 0,
