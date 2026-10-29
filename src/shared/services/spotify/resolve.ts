@@ -14,7 +14,6 @@ import type {
 	AlbumObject,
 	AlbumTracks,
 	AlbumType,
-	ArtistObject,
 	SimplifiedTrackObject,
 	TrackObject,
 } from "./codecs";
@@ -44,11 +43,10 @@ const getPosition = (
 
 const getTracks = async (
 	tracks: AlbumTracks,
-	artists: ArtistObject[],
 	token: string,
 ): Promise<Track[]> => {
 	let next = tracks.next;
-	const allTracks = tracks.items;
+	const allTracks = [...tracks.items];
 	while (next !== null) {
 		const nextResponse = JSON.parse(
 			await fetch({
@@ -60,29 +58,14 @@ const getTracks = async (
 		next = nextResponse.next;
 	}
 
-	// currently there's no proper way to add links to the individual artists, so it seems
-	// counterproductive to add them to the song titles as it's more effort to fix all the
-	// unlinked credits than to add them manually and it also messes with capitalization.
-	const releaseArtists = new Set(artists.map((artist) => artist.name));
-	const isLikelyVariousArtistsRelease = allTracks.some((track) => {
-		const trackArtists = new Set(track.artists.map((artist) => artist.name));
-		const trackContainsAllReleaseArtists =
-			trackArtists.isSupersetOf(releaseArtists);
-		return !trackContainsAllReleaseArtists;
-	});
-	if (isLikelyVariousArtistsRelease) {
-		alert(
-			"This is likely to be a VA or split release. Please add the artist links to the tracks individually" +
-				" according to the guidelines as RYM artist lookup is not yet supported in this case.",
-		);
-	}
-
 	const numberOfDiscs = new Set(allTracks.map((track) => track.disc_number))
 		.size;
 	return allTracks.map((track) => ({
 		position: getPosition(track, numberOfDiscs),
 		title: track.name,
 		duration: secondsToString(track.duration_ms / 1000),
+		artists: track.artists.map((artist) => artist.name),
+		creditsUrl: `https://open.spotify.com/track/${track.id}`,
 	}));
 };
 
@@ -129,7 +112,7 @@ const resolveAlbum = async (
 	const title = response.name;
 	const artists = response.artists.map((artist) => artist.name);
 	const date = parseDate(response.release_date);
-	const tracks = await getTracks(response.tracks, response.artists, token);
+	const tracks = await getTracks(response.tracks, token);
 	const type = parseType(response.album_type, title, tracks.length);
 	const coverArt = asArray(await getCoverArt(response));
 	const label = {
@@ -172,8 +155,11 @@ const resolveTrack = async (
 	const date = parseDate(response.album.release_date);
 	const tracks = [
 		{
+			position: "1",
 			title: response.name,
 			duration: secondsToString(response.duration_ms / 1000),
+			artists,
+			creditsUrl: `https://open.spotify.com/track/${id}`,
 		},
 	];
 	const coverArt = asArray(await getCoverArt(response));

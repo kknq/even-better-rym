@@ -158,6 +158,67 @@ export const syncFiledUnderEntries = (
 		await keepChosenOrder(chosenEntries);
 	});
 
+type CreditedName = {
+	useDefault: boolean;
+	first: string;
+	last: string;
+};
+
+export function createCreditedNameSync(): (alias: string | undefined) => void {
+	let original: CreditedName | undefined;
+	let written: CreditedName | undefined;
+	let manuallyEdited = false;
+	return (alias) => {
+		if (manuallyEdited || (alias === undefined && written === undefined))
+			return;
+		const query = forceQuerySelector<HTMLInputElement>(document);
+		const defaultRadio = query("#credited_name_default");
+		const specifiedRadio = query("#credited_name_specified");
+		const first = query("#credited_firstname");
+		const last = query("#credited_lastname");
+		const current = {
+			useDefault: defaultRadio.checked,
+			first: first.value,
+			last: last.value,
+		};
+		if (
+			written !== undefined &&
+			(current.useDefault !== written.useDefault ||
+				current.first !== written.first ||
+				current.last !== written.last)
+		) {
+			manuallyEdited = true;
+			return;
+		}
+		if (written === undefined && !current.useDefault) return;
+		const next =
+			alias === undefined
+				? original
+				: { useDefault: false, first: "", last: alias };
+		if (next === undefined) return;
+		original ??= current;
+		const radio = next.useDefault ? defaultRadio : specifiedRadio;
+		if (!radio.checked) radio.click();
+		first.disabled = next.useDefault;
+		last.disabled = next.useDefault;
+		for (const [field, value] of [
+			[first, next.first],
+			[last, next.last],
+		] as const) {
+			if (field.value === value) continue;
+			field.value = value;
+			field.dispatchEvent(new Event("input", { bubbles: true }));
+			field.dispatchEvent(new Event("change", { bubbles: true }));
+		}
+		if (alias === undefined) {
+			original = undefined;
+			written = undefined;
+		} else {
+			written = next;
+		}
+	};
+}
+
 // Removes every artist from the filed-under list, after any earlier edits
 // have finished.
 export const clearFiledUnderEntries = (): Promise<void> =>

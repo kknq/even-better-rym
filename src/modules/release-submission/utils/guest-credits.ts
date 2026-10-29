@@ -1,5 +1,6 @@
 import type { Track } from "~/shared/services/types";
 import type { CreditChoice } from "./credit-lines";
+import { getNonFeaturedTrackArtists } from "./suggested-credits";
 import { getTrackPosition } from "./track-position";
 
 export const GUEST_ROLE = "guest";
@@ -13,7 +14,7 @@ export type GuestArtist = {
 };
 
 // Returns each track artist who isn't a release artist, in order of first
-// appearance, with the positions of the tracks they're on.
+// appearance, excluding their featured appearances on the same tracks.
 export const getGuestArtists = (
 	tracks: Track[],
 	releaseArtists: string[],
@@ -22,7 +23,7 @@ export const getGuestArtists = (
 	for (const [index, track] of tracks.entries()) {
 		if (track.header) continue;
 		const position = getTrackPosition(track, index);
-		const guests = (track.artists ?? []).filter(
+		const guests = getNonFeaturedTrackArtists(track).filter(
 			(name) => !releaseArtists.includes(name),
 		);
 		for (const name of guests) {

@@ -1,4 +1,5 @@
 import type { Track, TrackCredit } from "~/shared/services/types";
+import { normalizeArtistName } from "./release-artist-links";
 import { getTrackPosition } from "./track-position";
 
 const FEATURED_ARTIST_PATTERN =
@@ -35,6 +36,26 @@ export function getFeaturedArtists(
 	return [...artists];
 }
 
+export const getTrackCredits = (track: Track): TrackCredit[] => [
+	...(track.credits ?? []),
+	...getFeaturedArtists(track.title ?? "", track.artists).map((name) => ({
+		name,
+		role: "featured",
+	})),
+];
+
+export function getNonFeaturedTrackArtists(track: Track): string[] {
+	if (track.header) return [];
+	const featuredNames = new Set(
+		getTrackCredits(track)
+			.filter((credit) => credit.role.trim().toLowerCase() === "featured")
+			.map((credit) => normalizeArtistName(credit.name)),
+	);
+	return (track.artists ?? []).filter(
+		(name) => !featuredNames.has(normalizeArtistName(name)),
+	);
+}
+
 export function getSuggestedCredits(tracks: Track[]): CreditSuggestion[] {
 	const suggestions = new Map<
 		string,
@@ -43,14 +64,7 @@ export function getSuggestedCredits(tracks: Track[]): CreditSuggestion[] {
 	const trackCount = tracks.filter((track) => !track.header).length;
 	for (const [index, track] of tracks.entries()) {
 		if (track.header) continue;
-		const credits = [
-			...(track.credits ?? []),
-			...getFeaturedArtists(track.title ?? "", track.artists).map((name) => ({
-				name,
-				role: "featured",
-			})),
-		];
-		for (const credit of credits) {
+		for (const credit of getTrackCredits(track)) {
 			const name = credit.name.trim();
 			const role = credit.role.trim();
 			if (!name || !role) continue;

@@ -32,6 +32,7 @@ type PagingObject<C> = {
 };
 
 export type SimplifiedTrackObject = {
+	id: string;
 	disc_number: number;
 	duration_ms: number;
 	name: string;

@@ -175,6 +175,20 @@ export const getReleaseArtistLabels = (
 	return labels;
 };
 
+export const getReleaseArtistCreditName = (
+	names: string[],
+	choices: ReleaseArtistChoices,
+): string | undefined => {
+	if (names.length !== 1) return undefined;
+	const name = names[0];
+	const choice = choices.get(name);
+	return choice !== undefined &&
+		choice.kind !== "skipped" &&
+		normalizeArtistName(name) !== normalizeArtistName(choice.entry.name)
+		? name
+		: undefined;
+};
+
 // Returns the choices without the linked or inherited ones whose artist is
 // no longer listed, or the same choices if there are none.
 export const clearRemovedChoices = (

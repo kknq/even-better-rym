@@ -18,6 +18,7 @@ import {
 	ensureResetSlots,
 	watchTracklistRows,
 } from "../utils/simple-tracklist";
+import { getNonFeaturedTrackArtists } from "../utils/suggested-credits";
 import type {
 	TrackArtistChoice,
 	TrackArtistChoices,
@@ -49,7 +50,7 @@ import {
 	SearchButton,
 } from "./picker-row";
 import { useTracklistHistory } from "./tracklist-history";
-import { useImportSession } from "./use-import-session";
+import { useImportTracks } from "./use-import-tracks";
 
 const PICKER_ID = "ebr-artist-link-picker";
 const NO_RELEASE_ARTISTS: ReleaseArtistLabels = {
@@ -74,11 +75,16 @@ function getPickerSession(
 ): TrackPickerSession | undefined {
 	if (!options.fillFields.tracks) return undefined;
 	const releaseArtists = data.artists ?? [];
-	const importedTracks = data.tracks ?? [];
+	const tracks = withReleaseArtistFallback(
+		data.tracks ?? [],
+		releaseArtists,
+	).map((track) => ({
+		...track,
+		artists: getNonFeaturedTrackArtists(track),
+	}));
 	const automatic =
-		prefixesTrackArtists(importedTracks, releaseArtists) &&
-		hasDifferingTrackArtists(importedTracks, releaseArtists);
-	const tracks = withReleaseArtistFallback(importedTracks, releaseArtists);
+		prefixesTrackArtists(tracks, releaseArtists) &&
+		hasDifferingTrackArtists(tracks, releaseArtists);
 	const names = getDistinctTrackArtists(tracks);
 	if (names.length === 0) {
 		return undefined;
@@ -114,22 +120,52 @@ function useResetSlots(): Map<TrackKey, HTMLElement> {
 }
 
 function ArtistLinkPicker() {
-	const { count, session } = useImportSession(getPickerSession);
+	const { count, session: imported } = useImportTracks();
 	const release = useReleaseArtistLabels();
-	if (session === undefined) {
-		return null;
+	if (!imported?.options.fillFields.tracks) return null;
+	if (imported.loading) {
+		return (
+			<PickerPanel
+				id={PICKER_ID}
+				title="Track artists"
+				hint="Checking song credits before suggesting artists for track titles."
+				footer={
+					<div role="status">
+						Loading song credits ({imported.progress.completed}/
+						{imported.progress.total})...
+					</div>
+				}
+				children={null}
+			/>
+		);
 	}
-	return <TrackPickerPanel key={count} session={session} release={release} />;
+	const session = getPickerSession(
+		{ ...imported.data, tracks: imported.tracks },
+		imported.options,
+	);
+	if (session === undefined) {
+		return imported.error ? <div role="alert">{imported.error}</div> : null;
+	}
+	return (
+		<TrackPickerPanel
+			key={count}
+			session={session}
+			release={release}
+			error={imported.error}
+		/>
+	);
 }
 
 type TrackPickerPanelProps = {
 	session: TrackPickerSession;
 	release: ReleaseArtistLabels;
+	error?: string;
 };
 
 function TrackPickerPanel({
 	session,
 	release,
+	error,
 }: Readonly<TrackPickerPanelProps>) {
 	const [activeName, setActiveName] = useState<string | undefined>();
 	const [unlinkedName, setUnlinkedName] = useState<string | undefined>();
@@ -240,9 +276,10 @@ function TrackPickerPanel({
 		<PickerPanel
 			id={PICKER_ID}
 			title="Track artists"
-			hint="Choose how each artist is named in front of track titles. The tracklist updates as you choose."
+			hint="Choose how each artist is named in front of track titles. Featured appearances are excluded. The tracklist updates as you choose."
 			footer={
 				<>
+					{error && <div role="alert">{error}</div>}
 					<PickerButton
 						value="Undo"
 						title="Undo the last change to the tracklist"
