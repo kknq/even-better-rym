@@ -1,10 +1,14 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { resolveSongCredits } from "~/shared/services/applemusic/credits";
+import { resolveSongDetails as resolveDeezerDetails } from "~/shared/services/deezer/credits";
 import { createSongCreditsResolver } from "~/shared/services/spotify/credits";
 import { loadCreditSuggestions } from "./load-credit-suggestions";
 
 vi.mock("~/shared/services/applemusic/credits", () => ({
 	resolveSongCredits: vi.fn(),
+}));
+vi.mock("~/shared/services/deezer/credits", () => ({
+	resolveSongDetails: vi.fn(),
 }));
 vi.mock("~/shared/services/spotify/credits", () => ({
 	createSongCreditsResolver: vi.fn(),
@@ -130,6 +134,98 @@ test("does not reuse a Spotify session resolver across imports", async () => {
 	await loadCreditSuggestions([{ creditsUrl: spotifySong }], options);
 	expect(createSongCreditsResolver).toHaveBeenCalledTimes(2);
 	expect(resolveSpotifyCredits).toHaveBeenCalledTimes(2);
+});
+
+test("enriches Deezer attribution and credits once per URL while preserving known artist spellings", async () => {
+	vi.mocked(resolveDeezerDetails).mockResolvedValue({
+		artists: ["1000 EYES", "Tom Schley", "Guest"],
+		credits: [
+			{ name: "Tom Schley", role: "composition" },
+			{ name: "Guest", role: "featured" },
+		],
+	});
+	const creditsUrl = "https://www.deezer.com/track/4266030142";
+	const tracks = [
+		{
+			position: "1",
+			title: "Original",
+			artists: ["1000 Eyes"],
+			creditsUrl,
+			credits: [{ name: "Existing", role: "producer" }],
+		},
+		{ position: "2", artists: ["1000 Eyes"], creditsUrl },
+	];
+	const original = JSON.stringify(tracks);
+	const result = await loadCreditSuggestions(tracks, {
+		isActive: () => true,
+		onProgress: vi.fn(),
+		releaseArtists: ["1000 Eyes", "Tom Schley"],
+	});
+	expect(resolveDeezerDetails).toHaveBeenCalledExactlyOnceWith(creditsUrl);
+	expect(result.tracks.map((track) => track.artists)).toEqual([
+		["1000 Eyes", "Tom Schley", "Guest"],
+		["1000 Eyes", "Tom Schley", "Guest"],
+	]);
+	expect(result.tracks[0]?.credits).toEqual([
+		{ name: "Existing", role: "producer" },
+		{ name: "Tom Schley", role: "composition" },
+		{ name: "Guest", role: "featured" },
+	]);
+	expect(result.tracks[0]?.title).toBe("Original");
+	expect(JSON.stringify(tracks)).toBe(original);
+	expect(result.failedPositions).toEqual([]);
+});
+
+test("dispatches Deezer alongside Apple Music and Spotify without mixing readers", async () => {
+	vi.mocked(resolveDeezerDetails).mockResolvedValue({
+		artists: ["Deezer Artist"],
+		credits: [],
+	});
+	vi.mocked(resolveSongCredits).mockResolvedValue([]);
+	resolveSpotifyCredits.mockResolvedValue([]);
+	const result = await loadCreditSuggestions(
+		[
+			{ creditsUrl: "https://deezer.com/track/1" },
+			{ creditsUrl: appleSong(1) },
+			{ creditsUrl: spotifySong },
+		],
+		{ isActive: () => true, onProgress: vi.fn() },
+	);
+	expect(result.tracks[0]?.artists).toEqual(["Deezer Artist"]);
+	expect(result.tracks[1]?.artists).toBeUndefined();
+	expect(result.tracks[2]?.artists).toBeUndefined();
+	expect(resolveDeezerDetails).toHaveBeenCalledOnce();
+	expect(resolveSongCredits).toHaveBeenCalledOnce();
+	expect(resolveSpotifyCredits).toHaveBeenCalledOnce();
+});
+
+test("retains Deezer's basic attribution and known credits when the detail page fails", async () => {
+	vi.mocked(resolveDeezerDetails).mockRejectedValue(
+		new Error("Missing page state"),
+	);
+	const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+	try {
+		const result = await loadCreditSuggestions(
+			[
+				{
+					position: "2.1",
+					title: "Song [feat. Guest]",
+					artists: ["Main"],
+					credits: [{ name: "Guest", role: "featured" }],
+					creditsUrl: "https://www.deezer.com/track/1",
+				},
+			],
+			{ isActive: () => true, onProgress: vi.fn() },
+		);
+		expect(result.failedPositions).toEqual(["2.1"]);
+		expect(result.tracks[0]?.artists).toEqual(["Main"]);
+		expect(result.tracks[0]?.credits).toEqual([
+			{ name: "Guest", role: "featured" },
+		]);
+		expect(warn).toHaveBeenCalledOnce();
+	} finally {
+		warn.mockRestore();
+	}
 });
 
 test("does not report cancelled Spotify work as a failure or schedule more songs", async () => {

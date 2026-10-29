@@ -61,6 +61,7 @@ function complete(
 	const isActive = () => generation === current;
 	void loadCreditSuggestions(tracks, {
 		isActive,
+		releaseArtists: data.artists,
 		onProgress: (completed, total) => {
 			if (!isActive() || !snapshot.session) return;
 			publish({

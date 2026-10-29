@@ -28,7 +28,7 @@ vi.mock("~/shared/utils/dom", async (importOriginal) => ({
 test.each([
 	undefined,
 	"Tom Schley",
-])("shows a compact error cross instead of adding an unlinked main artist (label=%s)", async (label) => {
+])("shows an accessible error indicator instead of adding an unlinked main artist (label=%s)", async (label) => {
 	document.body.innerHTML = `
 			<div><div id="tracks_simp"><table><tbody><tr id="track_base"></tr></tbody></table></div>
 			<div id="tracks_adv"><textarea id="track_advanced">1|First|</textarea></div></div>
@@ -66,16 +66,14 @@ test.each([
 		expect(button?.disabled).toBe(false);
 		await act(() => button?.click());
 		const error = document.querySelector<HTMLElement>('[role="alert"]');
-		expect(error?.textContent).toBe("\u00d7");
-		expect(error?.title).toBe(
+		const indicator = error?.querySelector("button");
+		expect(indicator?.querySelector("svg")?.getAttribute("width")).toBe("24");
+		expect(indicator?.getAttribute("aria-label")).toBe(
 			'Link Tom Schley to a RYM artist first, or use "Put in plain text".',
 		);
-		expect(error?.getAttribute("aria-label")).toBe(error?.title);
-		expect(error?.parentElement?.style.width).toBe("1em");
-		expect(error?.parentElement?.parentElement?.style.minHeight).toBe("");
-		expect(error?.parentElement?.previousElementSibling?.tagName).toBe(
-			"SELECT",
-		);
+		expect(error?.style.width).toBe("24px");
+		expect(error?.parentElement?.style.minHeight).toBe("");
+		expect(error?.previousElementSibling?.tagName).toBe("SELECT");
 		expect(document.querySelector("textarea")?.value).toBe("1|First|");
 
 		await act(() => {
@@ -89,7 +87,7 @@ test.each([
 			);
 		});
 		expect(document.querySelector('[role="alert"]')).toBeNull();
-		expect(error?.isConnected).toBe(false);
+		expect(indicator?.isConnected).toBe(false);
 		await act(() => button?.click());
 		await vi.waitFor(() =>
 			expect(document.querySelector("textarea")?.value).toBe(
