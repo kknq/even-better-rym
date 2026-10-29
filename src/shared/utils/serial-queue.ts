@@ -5,7 +5,12 @@ export type SerialQueue = (task: () => Promise<void>) => Promise<void>;
 export const createSerialQueue = (): SerialQueue => {
 	let pending: Promise<void> = Promise.resolve();
 	return (task) => {
-		pending = pending.then(task, task);
-		return pending;
+		const result = pending.then(() => task());
+		// Keep the queue usable after a failure; the caller still receives it.
+		pending = result.then(
+			() => undefined,
+			() => undefined,
+		);
+		return result;
 	};
 };

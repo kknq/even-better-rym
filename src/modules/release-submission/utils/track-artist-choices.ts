@@ -1,3 +1,8 @@
+import { buildArtistToken } from "./artist-shortcuts";
+import {
+	normalizeArtistName,
+	parseArtistTokenId,
+} from "./release-artist-links";
 import type { ArtistLabels } from "./track-artist-links";
 import { OMITTED_LABEL } from "./track-artist-links";
 
@@ -12,8 +17,7 @@ export type TrackArtistChoice =
 // Maps a track artist name to the user's choice for it.
 export type TrackArtistChoices = Map<string, TrackArtistChoice>;
 
-// Returns the starting choices: each track artist spelled exactly like a
-// release artist follows that release artist.
+// Main artists are left out until explicitly chosen for track titles.
 export const getInitialTrackChoices = (
 	names: string[],
 	releaseNames: string[],
@@ -21,7 +25,7 @@ export const getInitialTrackChoices = (
 	new Map(
 		names
 			.filter((name) => releaseNames.includes(name))
-			.map((name) => [name, { kind: "following", releaseName: name }]),
+			.map((name) => [name, { kind: "skipped" }]),
 	);
 
 // Returns the choices with name's choice replaced, or removed when choice is
@@ -54,8 +58,14 @@ const resolveChoiceLabel = (
 			return name;
 		case "skipped":
 			return OMITTED_LABEL;
-		case "following":
-			return releaseLabels.get(choice.releaseName);
+		case "following": {
+			const label = releaseLabels.get(choice.releaseName);
+			const artistId = parseArtistTokenId(label ?? "");
+			return artistId !== undefined &&
+				normalizeArtistName(name) !== normalizeArtistName(choice.releaseName)
+				? buildArtistToken(artistId, name)
+				: label;
+		}
 	}
 };
 
@@ -97,20 +107,20 @@ export const describeTrackChoice = (
 	label: string | undefined,
 ): string => {
 	if (choice === undefined) {
-		return "not picked";
+		return "not chosen yet";
 	}
 	if (choice.kind === "text") {
-		return "plain text";
+		return "name as text";
 	}
 	if (choice.kind === "skipped") {
-		return "left out";
+		return "left out of titles";
 	}
 	if (choice.kind === "linked") {
 		return choice.token;
 	}
 	if (label === undefined) {
-		return `follows ${choice.releaseName} (not picked yet)`;
+		return `same as ${choice.releaseName} (not chosen yet)`;
 	}
-	const followedLabel = label === choice.releaseName ? "unlinked" : label;
-	return `follows ${choice.releaseName} (${followedLabel})`;
+	const followedLabel = label === choice.releaseName ? "name as text" : label;
+	return `same as ${choice.releaseName} (${followedLabel})`;
 };

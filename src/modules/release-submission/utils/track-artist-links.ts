@@ -2,6 +2,7 @@ import type { Track } from "~/shared/services/types";
 import { arrayToArtists } from "~/shared/utils/string";
 
 import { ARTIST_SEPARATOR } from "./artist-shortcuts";
+import { getTrackPosition } from "./track-position";
 
 export const TRACKLIST_LINE_SEPARATOR = "\n";
 export const TRACKLIST_FIELD_SEPARATOR = "|";
@@ -41,18 +42,6 @@ export type AppliedTitles = {
 export const buildLinkedTitle = (title: string, labels: string[]): string =>
 	`${arrayToArtists([...labels])}${ARTIST_SEPARATOR}${title}`;
 
-// Returns the tracks with the release's artists filled in on any track that
-// lists none of its own.
-export const withReleaseArtistFallback = (
-	tracks: Track[],
-	releaseArtists: string[],
-): Track[] =>
-	tracks.map((track) =>
-		track.artists === undefined || track.artists.length === 0
-			? { ...track, artists: releaseArtists }
-			: track,
-	);
-
 // Checks whether both collections hold the same members, in any order.
 export const hasSameMembers = <T>(
 	items: Iterable<T>,
@@ -66,27 +55,59 @@ export const hasSameMembers = <T>(
 	);
 };
 
+// Returns the track's own artists, or an empty list for a header or a track
+// credited to none.
+const getOwnArtists = (track: Track): string[] =>
+	track.header ? [] : (track.artists ?? []);
+
+// Checks whether the release is credited to Various Artists.
+export const isVariousArtistsRelease = (releaseArtists: string[]): boolean =>
+	releaseArtists[0]?.toLowerCase() === VARIOUS_ARTISTS;
+
+// Checks whether track titles should name their artists: on a Various
+// Artists release, or when some track leaves out a release artist, as on a
+// split or a soundtrack.
+export const prefixesTrackArtists = (
+	tracks: Track[],
+	releaseArtists: string[],
+): boolean =>
+	isVariousArtistsRelease(releaseArtists) ||
+	tracks.some((track) => {
+		const artists = getOwnArtists(track);
+		return (
+			artists.length > 0 &&
+			releaseArtists.some((name) => !artists.includes(name))
+		);
+	});
+
+// Returns the tracks with the release's artists filled in on any track that
+// lists none of its own.
+export const withReleaseArtistFallback = (
+	tracks: Track[],
+	releaseArtists: string[],
+): Track[] =>
+	tracks.map((track) =>
+		!track.header && getOwnArtists(track).length === 0
+			? { ...track, artists: releaseArtists }
+			: track,
+	);
+
 // Checks whether any track lists artists other than exactly the release's.
 // A track with no artists of its own counts as the release's.
 export const hasDifferingTrackArtists = (
 	tracks: Track[],
 	releaseArtists: string[],
 ): boolean =>
-	tracks.some(
-		(track) =>
-			track.artists !== undefined &&
-			track.artists.length > 0 &&
-			!hasSameMembers(track.artists, releaseArtists),
-	);
-
-// Checks whether the release is credited to Various Artists, which covers
-// split releases too.
-export const isVariousArtistsRelease = (releaseArtists: string[]): boolean =>
-	releaseArtists[0]?.toLowerCase() === VARIOUS_ARTISTS;
+	tracks.some((track) => {
+		const artists = getOwnArtists(track);
+		return artists.length > 0 && !hasSameMembers(artists, releaseArtists);
+	});
 
 // Returns each track artist name once, in order of first appearance.
 export const getDistinctTrackArtists = (tracks: Track[]): string[] => [
-	...new Set(tracks.flatMap((track) => track.artists ?? [])),
+	...new Set(
+		tracks.flatMap((track) => (track.header ? [] : (track.artists ?? []))),
+	),
 ];
 
 // Returns each position's track key, numbering repeats of a position, or
@@ -111,11 +132,11 @@ export const buildRelinkPlan = (
 	tracks: Track[],
 	labels: ArtistLabels,
 ): RelinkPlan => {
-	const keys = getTrackKeys(tracks.map((track) => track.position?.trim()));
+	const keys = getTrackKeys(tracks.map(getTrackPosition));
 	const plan: RelinkPlan = new Map();
 	tracks.forEach((track, index) => {
 		const key = keys[index];
-		if (key === undefined || track.artists === undefined) {
+		if (track.header || key === undefined || track.artists === undefined) {
 			return;
 		}
 		plan.set(
@@ -251,18 +272,18 @@ export const getUntetheredKeys = (
 		.map(([key]) => key);
 
 // Returns the tracklist with the track's title put back to its base title
-// prefixed with its planned labels, which ties it to the picker again.
+// prefixed with its planned labels, if any, which ties it to the picker
+// again.
 export const resetTrackTitle = (
 	applied: AppliedTitles,
 	plan: RelinkPlan,
 	key: TrackKey,
 ): AppliedTitles => {
 	const base = applied.tether.get(key)?.base;
-	const labels = plan.get(key);
-	if (base === undefined || labels === undefined) {
+	if (base === undefined) {
 		return applied;
 	}
-	const written = buildWrittenTitle(base, labels);
+	const written = buildWrittenTitle(base, plan.get(key) ?? []);
 	return {
 		text: writeTrackTitles(applied.text, new Map([[key, written]])),
 		tether: new Map(applied.tether).set(key, { base, written }),

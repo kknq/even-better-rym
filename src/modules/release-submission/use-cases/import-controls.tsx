@@ -11,7 +11,7 @@ import { isComplete } from "~/shared/utils/one-shot";
 
 import type { CapitalizationType } from "../utils/capitalization";
 import { CAPITALIZATION_TYPES } from "../utils/capitalization";
-import { fill } from "../utils/fillers";
+import { importRelease } from "../utils/import-release";
 import type { ReleaseOptions } from "../utils/types";
 
 export default async function injectImportControls() {
@@ -25,18 +25,22 @@ export default async function injectImportControls() {
 function Import() {
 	const { info, fetchInfo } = useReleaseInfo();
 	const [formOptions, setFormOptions] = useState(DEFAULT_FORM_OPTIONS);
+	const [importError, setImportError] = useState<string>();
 
 	const fetchInfoOuter = useCallback(
 		async (url: string, service: Service & Resolvable) => {
 			const info = await fetchInfo(url, service);
 			if (isComplete(info)) {
-				void fill(info.data, formOptions);
-
-				// emit import event
-				const importEvent = new CustomEvent<ResolveData>("importEvent", {
-					detail: info.data,
-				});
-				document.dispatchEvent(importEvent);
+				setImportError(undefined);
+				try {
+					await importRelease(info.data, formOptions);
+				} catch (error) {
+					console.error("Could not fill imported release", error);
+					setImportError(
+						error instanceof Error ? error.message : String(error),
+					);
+					return;
+				}
 
 				if (formOptions.downloadArt && info.data.coverArt) {
 					const filename = getFilename(info.data);
@@ -61,6 +65,7 @@ function Import() {
 				>
 					<ImportOptionsForm onOptionsUpdate={setFormOptions} />
 				</ServiceLinkForm>
+				{importError && <div role="alert">{importError}</div>}
 			</div>
 		</>
 	);

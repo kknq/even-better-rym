@@ -200,12 +200,19 @@ export type ReleaseAttribute =
 
 export type ReleaseLabel = { id?: number; name?: string; catno?: string };
 
+export type TrackCredit = {
+	name: string;
+	role: string;
+};
+
 export type Track = {
 	position?: string;
 	title?: string;
 	duration?: string;
 	header?: boolean;
 	artists?: string[];
+	credits?: TrackCredit[];
+	creditsUrl?: string;
 };
 
 export type ResolveData = {

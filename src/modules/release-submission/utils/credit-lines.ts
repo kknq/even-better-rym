@@ -1,21 +1,29 @@
+import { createSerialQueue } from "~/shared/utils/serial-queue";
 import type { ArtistCredit } from "./page-functions";
 import { addArtistCredit, deleteCreditLine } from "./page-functions";
+
+export const enqueueCreditEdit = createSerialQueue();
+
+export type CreditChoice =
+	| { kind: "linked"; token: string; line: string | undefined }
+	| { kind: "text"; line: string | undefined }
+	| { kind: "skipped" };
 
 const CREDIT_LINE_SELECTOR = "#creditsx li.sortable_credit";
 const CREDIT_LINE_ID_PREFIX = "credits_";
 
-// Returns the number of the last line in the credits list, if any.
-const getLastCreditLine = (): string | undefined => {
-	const lines = document.querySelectorAll(CREDIT_LINE_SELECTOR);
-	return lines[lines.length - 1]?.id.slice(CREDIT_LINE_ID_PREFIX.length);
-};
-
 // Adds a credit line and returns its number.
-export const addCreditLine = async (
-	credit: ArtistCredit,
-): Promise<string | undefined> => {
+export const addCreditLine = async (credit: ArtistCredit): Promise<string> => {
+	const previous = new Set(document.querySelectorAll(CREDIT_LINE_SELECTOR));
 	await addArtistCredit(credit);
-	return getLastCreditLine();
+	const added = [...document.querySelectorAll(CREDIT_LINE_SELECTOR)].filter(
+		(line) => !previous.has(line),
+	);
+	const line = added[0]?.id;
+	if (added.length !== 1 || !line?.startsWith(CREDIT_LINE_ID_PREFIX)) {
+		throw new Error(`Could not identify the new credit for ${credit.name}`);
+	}
+	return line.slice(CREDIT_LINE_ID_PREFIX.length);
 };
 
 // Removes the numbered credit line, if there is one.

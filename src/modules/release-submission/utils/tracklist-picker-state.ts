@@ -16,6 +16,7 @@ import type {
 import {
 	applyTrackTitles,
 	buildRelinkPlan,
+	OMITTED_LABEL,
 	resetTrackTitle,
 	tetherTrackTitles,
 } from "./track-artist-links";
@@ -66,22 +67,22 @@ export const getWrittenLabels = (
 const hasAllLabels = (names: string[], labels: ArtistLabels): boolean =>
 	names.every((name) => labels.has(name));
 
-// Checks whether the choices give every artist a label to write.
-export const canApplyChoices = (
-	state: TracklistPickerState,
-	session: PickerSession,
-	releaseLabels: ArtistLabels,
-): boolean =>
-	hasAllLabels(session.names, getWrittenLabels(state, releaseLabels));
-
 // Returns the state with the choices' labels written to the tracks the
-// picker still controls, once every artist has a label.
+// picker still controls, once every artist has a label. An explicit request
+// starts writing without waiting for the remaining choices; subsequent edits
+// keep applying while undecided artists remain omitted.
 export const applyChoices = (
 	state: TracklistPickerState,
 	session: PickerSession,
 	releaseLabels: ArtistLabels,
+	allowUnpicked = false,
 ): TracklistPickerState => {
 	const labels = getWrittenLabels(state, releaseLabels);
+	if (allowUnpicked || state.appliedPlan.size > 0) {
+		for (const name of session.names) {
+			if (!labels.has(name)) labels.set(name, OMITTED_LABEL);
+		}
+	}
 	if (!hasAllLabels(session.names, labels)) {
 		return state;
 	}

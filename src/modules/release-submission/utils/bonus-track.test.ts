@@ -1,6 +1,13 @@
 import { describe, expect, test } from "vitest";
 
 import { markBonusTrack } from "./bonus-track";
+import { formatTracks } from "./tracklist";
+
+test("does not convert a tracklist header named Bonus Track", () => {
+	expect(formatTracks([{ title: "Bonus Track", header: true }], "as-is")).toBe(
+		"1|[b]Bonus Track[/b]|",
+	);
+});
 
 describe("markBonusTrack", () => {
 	test("rewrites each form of trailing tag", () => {

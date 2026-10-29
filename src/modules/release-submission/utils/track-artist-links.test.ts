@@ -12,29 +12,13 @@ import {
 	hasSameMembers,
 	isVariousArtistsRelease,
 	OMITTED_LABEL,
+	prefixesTrackArtists,
 	readTrackTitles,
 	resetTrackTitle,
 	tetherTrackTitles,
 	withReleaseArtistFallback,
 	writeTrackTitles,
 } from "./track-artist-links";
-
-describe("withReleaseArtistFallback", () => {
-	test("gives tracks with no artists the release's artists", () => {
-		const tracks = [{ position: "1" }, { position: "2", artists: [] }];
-
-		expect(withReleaseArtistFallback(tracks, ["A", "B"])).toEqual([
-			{ position: "1", artists: ["A", "B"] },
-			{ position: "2", artists: ["A", "B"] },
-		]);
-	});
-
-	test("keeps a track's own artists", () => {
-		const tracks = [{ position: "1", artists: ["C"] }];
-
-		expect(withReleaseArtistFallback(tracks, ["A"])).toEqual(tracks);
-	});
-});
 
 describe("hasSameMembers", () => {
 	test("ignores order and repeats", () => {
@@ -56,6 +40,64 @@ describe("isVariousArtistsRelease", () => {
 	test("is false for any other release", () => {
 		expect(isVariousArtistsRelease(["A", "B"])).toBe(false);
 		expect(isVariousArtistsRelease([])).toBe(false);
+	});
+});
+
+describe("prefixesTrackArtists", () => {
+	test("is true on a Various Artists release", () => {
+		expect(prefixesTrackArtists([], ["Various Artists"])).toBe(true);
+	});
+
+	test("is true on a split, where each track has one release artist", () => {
+		const tracks = [{ artists: ["Barbelith"] }, { artists: ["Trhä"] }];
+
+		expect(prefixesTrackArtists(tracks, ["Barbelith", "Trhä"])).toBe(true);
+	});
+
+	test("is true when tracks leave out the release's artists", () => {
+		const tracks = [
+			{ artists: ["Konstantin Schimanowski"] },
+			{ artists: ["1000 Eyes", "Konstantin Schimanowski", "Tom Schley"] },
+		];
+
+		expect(prefixesTrackArtists(tracks, ["1000 Eyes", "Tom Schley"])).toBe(
+			true,
+		);
+	});
+
+	test("is false when every track keeps the release's artists", () => {
+		const tracks = [
+			{ artists: ["A"] },
+			{ artists: ["A", "Guest"] },
+			{ artists: [] },
+			{},
+			{ header: true, artists: ["B"] },
+		];
+
+		expect(prefixesTrackArtists(tracks, ["A"])).toBe(false);
+	});
+
+	test("compares names exactly", () => {
+		const tracks = [{ artists: ["tom schley"] }];
+
+		expect(prefixesTrackArtists(tracks, ["Tom Schley"])).toBe(true);
+	});
+});
+
+describe("withReleaseArtistFallback", () => {
+	test("gives tracks with no artists the release's artists", () => {
+		const tracks = [{ position: "1" }, { position: "2", artists: [] }];
+
+		expect(withReleaseArtistFallback(tracks, ["A", "B"])).toEqual([
+			{ position: "1", artists: ["A", "B"] },
+			{ position: "2", artists: ["A", "B"] },
+		]);
+	});
+
+	test("keeps a track's own artists", () => {
+		const tracks = [{ position: "1", artists: ["C"] }];
+
+		expect(withReleaseArtistFallback(tracks, ["A"])).toEqual(tracks);
 	});
 });
 
@@ -176,8 +218,10 @@ describe("buildRelinkPlan", () => {
 		);
 	});
 
-	test("skips tracks with no position", () => {
-		expect(buildRelinkPlan([{ artists: ["A"] }], new Map())).toEqual(new Map());
+	test("uses the displayed fallback position for tracks with no position", () => {
+		expect(buildRelinkPlan([{ artists: ["A"] }], new Map())).toEqual(
+			new Map([["1#1", ["A"]]]),
+		);
 	});
 });
 
@@ -299,6 +343,20 @@ describe("resetTrackTitle", () => {
 		expect(reset.tether.get("1#1")).toEqual({
 			base: "First",
 			written: "[Artist2] - First",
+		});
+	});
+
+	test("restores the base title before any labels are applied", () => {
+		const applied = {
+			text: "1|Typed|3:00",
+			tether: new Map([["1#1", { base: "First", written: "First" }]]),
+		};
+		const reset = resetTrackTitle(applied, new Map(), "1#1");
+
+		expect(reset.text).toBe("1|First|3:00");
+		expect(reset.tether.get("1#1")).toEqual({
+			base: "First",
+			written: "First",
 		});
 	});
 

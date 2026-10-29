@@ -27,7 +27,7 @@ describe("getGuestArtists", () => {
 		expect(getGuestArtists(tracks, ["A", "B"])).toEqual([]);
 	});
 
-	test("lists a repeated position once and skips missing positions", () => {
+	test("lists a repeated position once and fills missing positions like the tracklist", () => {
 		const tracks = [
 			{ position: " 1 ", artists: ["G"] },
 			{ position: "1", artists: ["G"] },
@@ -35,7 +35,7 @@ describe("getGuestArtists", () => {
 		];
 
 		expect(getGuestArtists(tracks, ["A"])).toEqual([
-			{ name: "G", positions: ["1"] },
+			{ name: "G", positions: ["1", "3"] },
 		]);
 	});
 });
@@ -51,13 +51,13 @@ describe("describeGuestChoice", () => {
 
 	test("describes each choice with the guest's tracks", () => {
 		expect(describeGuestChoice(guest, undefined)).toBe(
-			"not credited (tracks 2, 12)",
+			"not chosen yet (tracks 2, 12)",
 		);
 		expect(describeGuestChoice(guest, { kind: "skipped" })).toBe(
-			"left out (tracks 2, 12)",
+			"not credited (tracks 2, 12)",
 		);
 		expect(describeGuestChoice(guest, { kind: "text", line: "3" })).toBe(
-			"plain text as guest (tracks 2, 12)",
+			"credited by name (tracks 2, 12)",
 		);
 		expect(
 			describeGuestChoice(guest, {

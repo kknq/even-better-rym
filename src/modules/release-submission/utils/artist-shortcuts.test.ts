@@ -11,6 +11,15 @@ describe("insertArtistShortcut", () => {
 		["Track", "[ArtistX] - Track"],
 		["Artist1 - Track", "[ArtistX] - Artist1 - Track"],
 		["[Artist1] - Track", "[Artist1] & [ArtistX] - Track"],
+		["[Artist1,zavet] - Track", "[Artist1,zavet] & [ArtistX] - Track"],
+		[
+			"Artist1 & [Artist2,zavet] - Track",
+			"Artist1, [Artist2,zavet] & [ArtistX] - Track",
+		],
+		[
+			"[Artist1,Foo, Bar & Baz] - Track",
+			"[Artist1,Foo, Bar & Baz] & [ArtistX] - Track",
+		],
 		["Artist1 & Artist2 - Track", "[ArtistX] - Artist1 & Artist2 - Track"],
 		["Artist1 & [Artist2] - Track", "Artist1, [Artist2] & [ArtistX] - Track"],
 		["[Artist1] & Artist2 - Track", "[Artist1], Artist2 & [ArtistX] - Track"],

@@ -20,6 +20,7 @@ Shows links to supported streaming services below the cover art. Existing RYM li
 
 Paste a supported music-service link to fill in a release submission faster. It can bring in release details and cover art, and adds handy buttons for dates, labels, catalogue numbers, track lengths, and credits.
 
+Now suggests credit links!
 ---
 
 ### Cover Art Submission Helper

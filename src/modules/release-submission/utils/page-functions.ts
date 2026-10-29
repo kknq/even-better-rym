@@ -1,4 +1,6 @@
 import { runScript } from "~/shared/utils/dom";
+import { buildArtistToken } from "./artist-shortcuts";
+import { reportSubmissionError } from "./report-error";
 
 const CREATE_SHORTCUT_PATCH_ATTEMPTS = 20;
 const CREATE_SHORTCUT_PATCH_INTERVAL_MS = 200;
@@ -9,6 +11,7 @@ const UNLINKED_CREDIT_ID = "XXX";
 export type ArtistCredit = {
 	id: string | undefined;
 	name: string;
+	creditedName?: string;
 	role: string;
 	tracks: string;
 };
@@ -29,13 +32,56 @@ export const goInfobox = (id: number): Promise<void> =>
 	runScript(`goInfobox(${id})`);
 
 // Opens RYM's "Insert link" popup beside anchorId.
-export const openArtistLinkPopup = (anchorId: string): void =>
-	void runScript(
+export const openArtistLinkPopup = (anchorId: string): Promise<void> =>
+	runScript(
 		`openShortcut(document.getElementById(${JSON.stringify(anchorId)}));`,
 	);
 
 // Closes RYM's "Insert link" popup.
-export const closeShortcutPopup = (): void => void runScript("closeShortcut()");
+export const closeShortcutPopup = (): Promise<void> =>
+	runScript("closeShortcut()");
+
+export const attachCreditRoleSuggestions = (fieldId: string): Promise<void> =>
+	runScript(`
+		(function () {
+			if (typeof window.roleattachSuggest !== "function" ||
+				typeof window.rolechooseSuggestion !== "function") {
+				throw new Error("RYM credit role suggestions are unavailable");
+			}
+			if (!window.rolechooseSuggestion.ebrWrapped) {
+				var original = window.rolechooseSuggestion;
+				var wrapped = function () {
+					var input = window.roleinputEl;
+					var result = original.apply(this, arguments);
+					if (input && input.hasAttribute("data-ebr-credit-role")) {
+						input.dispatchEvent(new Event("input", { bubbles: true }));
+						input.dispatchEvent(new Event("change", { bubbles: true }));
+					}
+					return result;
+				};
+				wrapped.ebrWrapped = true;
+				window.rolechooseSuggestion = wrapped;
+			}
+			window.roleattachSuggest(${JSON.stringify(fieldId)});
+		})();
+	`);
+
+export const updateCreditDetails = (
+	line: string,
+	role: string,
+	tracks: string,
+): Promise<void> =>
+	runScript(`
+		(function () {
+			var role = document.getElementById(${JSON.stringify(`credits_roles_${line}`)});
+			var tracks = document.getElementById(${JSON.stringify(`credits_tracks_${line}`)});
+			if (!role || !tracks) throw new Error("Could not find the credit fields");
+			role.value = ${JSON.stringify(role)};
+			tracks.value = ${JSON.stringify(tracks)};
+			role.dispatchEvent(new Event("change", { bubbles: true }));
+			tracks.dispatchEvent(new Event("change", { bubbles: true }));
+		})();
+	`);
 
 // Adds a credit line for the artist, filled with the role and tracks. An
 // unlinked artist goes in as RYM's manual line, with the name typed in.
@@ -44,9 +90,17 @@ export const addArtistCredit = (credit: ArtistCredit): Promise<void> => {
 		credit.id === undefined
 			? `document.getElementById('credits_artist_' + credits_num).value = ${JSON.stringify(credit.name)};`
 			: "";
+	const typeCreditedName =
+		credit.id !== undefined && credit.creditedName !== undefined
+			? `
+				document.getElementById('credits_artist_' + credits_num).value = ${JSON.stringify(buildArtistToken(credit.id, credit.creditedName))};
+				updateArtistPreview(credits_num, 'credits');
+			`
+			: "";
 	return runScript(`
 		addCredit('a', ${JSON.stringify(credit.id ?? UNLINKED_CREDIT_ID)}, ${JSON.stringify(credit.name)});
 		${typeUnlinkedName}
+		${typeCreditedName}
 		document.getElementById('credits_roles_' + credits_num).value = ${JSON.stringify(credit.role)};
 		document.getElementById('credits_tracks_' + credits_num).value = ${JSON.stringify(credit.tracks)};
 	`);
@@ -78,10 +132,28 @@ export const patchCreateShortcut = (): void =>
 					clearInterval(interval);
 					return;
 				}
-				if (typeof window.createShortcut !== "function") return;
+				if (typeof window.createShortcut !== "function" ||
+					typeof window.openShortcut !== "function" ||
+					typeof window.closeShortcut !== "function") return;
 				clearInterval(interval);
 
 				var original = window.createShortcut;
+				var originalOpen = window.openShortcut;
+				window.openShortcut = function (target) {
+					var result = originalOpen.apply(window, arguments);
+					document.dispatchEvent(new CustomEvent("EbrShortcutPopupEvent", {
+						detail: { targetId: target ? target.id : undefined }
+					}));
+					return result;
+				};
+				var originalClose = window.closeShortcut;
+				window.closeShortcut = function () {
+					var result = originalClose.apply(window, arguments);
+					document.dispatchEvent(new CustomEvent("EbrShortcutPopupEvent", {
+						detail: {}
+					}));
+					return result;
+				};
 				window.createShortcut = function (type, assocId, text) {
 					var target = window.currentElement;
 					var previousValue = target ? target.value : undefined;
@@ -101,4 +173,4 @@ export const patchCreateShortcut = (): void =>
 				};
 			}, ${CREATE_SHORTCUT_PATCH_INTERVAL_MS});
 		})();
-	`);
+	`).catch(reportSubmissionError);
