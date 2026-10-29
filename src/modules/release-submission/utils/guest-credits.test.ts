@@ -151,6 +151,52 @@ describe("formatCreditTracks", () => {
 	test("separates positions with a comma and a space", () => {
 		expect(formatCreditTracks(["2", "12"])).toBe("2, 12");
 	});
+
+	test.each([
+		{ positions: [], expected: "" },
+		{ positions: ["1"], expected: "1" },
+		{ positions: ["1", "2"], expected: "1, 2" },
+		{ positions: ["1", "2", "3"], expected: "1-3" },
+		{
+			positions: [
+				"1",
+				"2",
+				"3",
+				"4",
+				"6",
+				"7",
+				"8",
+				"9",
+				"11",
+				"12",
+				"14",
+				"15",
+				"16",
+				"17",
+				"19",
+				"20",
+				"22",
+				"23",
+				"24",
+			],
+			expected: "1-4, 6-9, 11, 12, 14-17, 19, 20, 22-24",
+		},
+		{ positions: ["9", "10", "11", "14"], expected: "9-11, 14" },
+		{ positions: ["1", "3", "4", "5"], expected: "1, 3-5" },
+		{ positions: ["3", "2", "1"], expected: "3, 2, 1" },
+		{ positions: ["1", "1", "2"], expected: "1, 1, 2" },
+		{ positions: ["01", "02", "03"], expected: "01, 02, 03" },
+		{ positions: ["A1", "A2", "A3", "B1"], expected: "A1, A2, A3, B1" },
+		{ positions: ["1.1", "1.2", "1.3", "2.1"], expected: "1.1, 1.2, 1.3, 2.1" },
+		{ positions: ["1", "2", "A1", "3", "4", "5"], expected: "1, 2, A1, 3-5" },
+	])("formats $positions as $expected without changing the source", ({
+		positions,
+		expected,
+	}) => {
+		const original = [...positions];
+		expect(formatCreditTracks(positions)).toBe(expected);
+		expect(positions).toEqual(original);
+	});
 });
 
 describe("describeGuestChoice", () => {

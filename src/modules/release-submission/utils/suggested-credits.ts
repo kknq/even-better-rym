@@ -18,6 +18,9 @@ export type CreditSuggestion = TrackCredit & {
 export const creditKey = (name: string, role: string): string =>
 	JSON.stringify([name, role]);
 
+export const isSpecialCreditRole = (role: string): boolean =>
+	["featured", "guest", "remixer"].includes(role.trim().toLowerCase());
+
 export function getFeaturedArtists(
 	title: string,
 	knownArtists: string[] = [],
@@ -83,8 +86,23 @@ export function getSuggestedCredits(tracks: Track[]): CreditSuggestion[] {
 			suggestions.set(key, suggestion);
 		}
 	}
-	return [...suggestions.values()].map(({ trackIndexes, ...suggestion }) => ({
-		...suggestion,
-		positions: trackIndexes.size === trackCount ? [] : suggestion.positions,
-	}));
+	const grouped = new Map<string, CreditSuggestion>();
+	for (const { trackIndexes, ...suggestion } of suggestions.values()) {
+		const groupKey = JSON.stringify([
+			suggestion.name,
+			[...trackIndexes],
+			isSpecialCreditRole(suggestion.role) ? suggestion.role : null,
+		]);
+		const previous = grouped.get(groupKey);
+		const role = previous
+			? `${previous.role}, ${suggestion.role}`
+			: suggestion.role;
+		grouped.set(groupKey, {
+			...suggestion,
+			key: creditKey(suggestion.name, role),
+			role,
+			positions: trackIndexes.size === trackCount ? [] : suggestion.positions,
+		});
+	}
+	return [...grouped.values()];
 }

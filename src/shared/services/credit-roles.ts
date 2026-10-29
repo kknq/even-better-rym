@@ -1,23 +1,25 @@
-const ROLE_NAMES: Record<string, string> = {
-	Songwriter: "songwriting",
-	Composer: "composition",
-	Lyricist: "lyrics",
-	Producer: "producer",
-	"Co-Producer": "co-producer",
-	"Executive Producer": "executive producer",
-	"Mixing Engineer": "mixing",
-	"Mastering Engineer": "mastering",
-	"Recording Engineer": "recording engineer",
-	Engineer: "engineer",
-	"Assistant Engineer": "assistant engineer",
-	Vocals: "vocals",
-	"Background Vocals": "backing vocals",
-	"Lead Vocals": "lead vocals",
-	"Featured Artist": "featured",
-};
+const ROLE_NAMES = new Map([
+	["songwriter", "songwriting"],
+	["writer", "songwriting"],
+	["author", "songwriting"],
+	["composer", "composition"],
+	["lyricist", "lyrics"],
+	["producer", "producer"],
+	["coproducer", "co-producer"],
+	["executiveproducer", "executive producer"],
+	["mixingengineer", "mixing"],
+	["masteringengineer", "mastering"],
+	["recordingengineer", "recording engineer"],
+	["engineer", "engineer"],
+	["assistantengineer", "assistant engineer"],
+	["vocals", "vocals"],
+	["backgroundvocals", "backing vocals"],
+	["leadvocals", "lead vocals"],
+	["featuredartist", "featured"],
+	["featuring", "featured"],
+]);
 
 export const normalizeCreditRole = (role: string): string => {
-	const trimmed = role.trim();
-	const normalized = ROLE_NAMES[trimmed];
-	return typeof normalized === "string" ? normalized : trimmed.toLowerCase();
+	const normalized = role.replaceAll("_", " ").trim().toLowerCase();
+	return ROLE_NAMES.get(normalized.replace(/[\s-]+/g, "")) ?? normalized;
 };

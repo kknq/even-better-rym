@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import {
+	creditKey,
 	getFeaturedArtists,
 	getNonFeaturedTrackArtists,
 	getSuggestedCredits,
@@ -108,4 +109,68 @@ test("uses the shared position fallback and does not mistake missing credits for
 		{ title: "No credits" },
 	]);
 	expect(result[0]?.positions).toEqual(["1"]);
+});
+
+test.each([
+	false,
+	true,
+])("combines ordinary roles with identical coverage, deduplicating roles (whole release=%s)", (wholeRelease) => {
+	const credits = [
+		{ name: "Person", role: "producer" },
+		{ name: "Person", role: "mixing" },
+	];
+	const suggestions = getSuggestedCredits([
+		{ header: true, title: "Disc 1" },
+		{ position: "1.1", credits: [...credits, ...credits] },
+		{ header: true, title: "Disc 2" },
+		{ position: "2.1", credits: [...credits].reverse() },
+		{
+			position: "2.2",
+			credits: wholeRelease ? credits : [],
+		},
+	]);
+	expect(suggestions).toEqual([
+		{
+			key: creditKey("Person", "producer, mixing"),
+			name: "Person",
+			role: "producer, mixing",
+			positions: wholeRelease ? [] : ["1.1", "2.1"],
+		},
+	]);
+});
+
+test("keeps roles on different tracks separate even when position labels are identical", () => {
+	expect(
+		getSuggestedCredits([
+			{ position: "1", credits: [{ name: "Person", role: "producer" }] },
+			{ position: "1", credits: [{ name: "Person", role: "mixing" }] },
+			{ position: "2" },
+		]).map(({ role, positions }) => ({ role, positions })),
+	).toEqual([
+		{ role: "producer", positions: ["1"] },
+		{ role: "mixing", positions: ["1"] },
+	]);
+});
+
+test("keeps artists and special roles separate despite identical coverage", () => {
+	expect(
+		getSuggestedCredits([
+			{
+				credits: [
+					{ name: "Person", role: "producer" },
+					{ name: "Person", role: "mixing" },
+					{ name: "Person", role: "featured" },
+					{ name: "Person", role: "guest" },
+					{ name: "Person", role: "remixer" },
+					{ name: "Other", role: "producer" },
+				],
+			},
+		]).map(({ name, role, positions }) => ({ name, role, positions })),
+	).toEqual([
+		{ name: "Person", role: "producer, mixing", positions: [] },
+		{ name: "Person", role: "featured", positions: [] },
+		{ name: "Person", role: "guest", positions: [] },
+		{ name: "Person", role: "remixer", positions: [] },
+		{ name: "Other", role: "producer", positions: [] },
+	]);
 });

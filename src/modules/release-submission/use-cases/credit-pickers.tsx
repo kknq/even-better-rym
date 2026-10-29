@@ -4,6 +4,7 @@ import {
 	creditKey,
 	getFeaturedArtists,
 	getSuggestedCredits,
+	isSpecialCreditRole,
 } from "../utils/suggested-credits";
 import { isVariousArtistsRelease } from "../utils/track-artist-links";
 import { CreditPicker } from "./credit-picker";
@@ -46,8 +47,7 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 		? []
 		: getGuestArtists(loadedTracks, releaseArtists);
 	const suggestions = getSuggestedCredits(loadedTracks).filter(
-		(credit) =>
-			!isReissue || ["featured", "guest", "remixer"].includes(credit.role),
+		(credit) => !isReissue || isSpecialCreditRole(credit.role),
 	);
 	return (
 		<>
@@ -70,7 +70,7 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 					key="suggested"
 					id="ebr-suggested-credit-picker"
 					title="Suggested credits"
-					hint="Review artist identities and roles before adding. Blank Tracks means the whole release. Combine ordinary roles covering the same tracks before submitting."
+					hint="Review artist identities and roles before adding. Blank Tracks means the whole release. Ordinary roles for the same artist covering identical tracks are combined."
 					credits={suggestions}
 					showDetails
 					loading={loading}

@@ -15,6 +15,7 @@ const hostsArray = [
 	"https://*.ntslive.co.uk/*",
 	"https://*.mixcloud.com/*",
 	"https://deezer.com/*",
+	"https://www.deezer.com/*",
 	"https://api.deezer.com/*",
 	"https://*.dzcdn.net/*",
 	"https://discogs.com/*",

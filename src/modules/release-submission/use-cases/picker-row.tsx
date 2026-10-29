@@ -1,4 +1,7 @@
 import type { ComponentChildren } from "preact";
+import { createPortal } from "preact/compat";
+import { useId, useState } from "preact/hooks";
+import XIcon from "~/shared/icons/x";
 
 export const NOT_INHERITED = "";
 
@@ -28,6 +31,83 @@ const TONE_COLORS: Record<ChoiceTone, { color: string; background: string }> = {
 };
 
 const CELL_STYLE = { padding: "3px 6px", verticalAlign: "middle" };
+
+function PickerErrorIndicator({ error }: Readonly<{ error: string }>) {
+	const tooltipId = useId();
+	const [hovered, setHovered] = useState(false);
+	const [focused, setFocused] = useState(false);
+	const [position, setPosition] = useState({ left: 0, bottom: 0 });
+	const visible = hovered || focused;
+	const positionTooltip = (element: HTMLElement) => {
+		const rect = element.getBoundingClientRect();
+		setPosition({
+			left: Math.max(8, Math.min(rect.left, window.innerWidth - 328)),
+			bottom: window.innerHeight - rect.top + 6,
+		});
+	};
+
+	return (
+		<>
+			<button
+				type="button"
+				aria-label={error}
+				aria-describedby={visible ? tooltipId : undefined}
+				onMouseEnter={(event) => {
+					positionTooltip(event.currentTarget);
+					setHovered(true);
+				}}
+				onMouseLeave={() => setHovered(false)}
+				onFocus={(event) => {
+					positionTooltip(event.currentTarget);
+					setFocused(true);
+				}}
+				onBlur={() => setFocused(false)}
+				onKeyDown={(event) => {
+					if (event.key === "Escape") {
+						setHovered(false);
+						setFocused(false);
+					}
+				}}
+				style={{
+					display: "inline-flex",
+					width: "24px",
+					height: "24px",
+					padding: 0,
+					border: 0,
+					background: "transparent",
+					color: "inherit",
+					cursor: "help",
+				}}
+			>
+				<XIcon width={24} height={24} aria-hidden="true" />
+			</button>
+			{visible &&
+				createPortal(
+					<div
+						id={tooltipId}
+						role="tooltip"
+						style={{
+							...position,
+							position: "fixed",
+							zIndex: 2147483647,
+							maxWidth: "min(320px, calc(100vw - 16px))",
+							padding: "6px 8px",
+							color: "var(--mono-2, #222)",
+							background: "var(--mono-f8, #f8f8f8)",
+							border: "1px solid var(--mono-c, #ccc)",
+							borderRadius: "3px",
+							whiteSpace: "normal",
+							overflowWrap: "anywhere",
+							pointerEvents: "none",
+						}}
+					>
+						{error}
+					</div>,
+					document.body,
+				)}
+		</>
+	);
+}
 
 type PickerPanelProps = {
 	id?: string;
@@ -140,20 +220,19 @@ export function PickerRow({
 				<div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
 					{children}
 					<span
+						role={error ? "alert" : undefined}
 						style={{
-							width: "1em",
+							display: "inline-flex",
+							width: "24px",
+							height: "24px",
 							flexShrink: 0,
-							textAlign: "center",
-							fontWeight: 700,
+							alignItems: "center",
+							justifyContent: "center",
 							color: "var(--gen-text-red, #a33)",
-							cursor: "help",
+							cursor: error ? "help" : undefined,
 						}}
 					>
-						{error && (
-							<span role="alert" aria-label={error} title={error}>
-								&times;
-							</span>
-						)}
+						{error && <PickerErrorIndicator error={error} />}
 					</span>
 				</div>
 			</td>

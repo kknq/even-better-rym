@@ -264,6 +264,45 @@ test("excludes loaded featured artists from track titles even when credit import
 	expect(loadCreditSuggestions).toHaveBeenCalledOnce();
 });
 
+test("shares newly discovered co-main artists with the track picker without suggesting them as guests", async () => {
+	vi.mocked(loadCreditSuggestions).mockImplementation((tracks) =>
+		Promise.resolve({
+			tracks: tracks.map((track) => ({
+				...track,
+				artists: ["1000 Eyes", "Tom Schley"],
+				credits: [{ name: "Tom Schley", role: "composition" }],
+			})),
+			failedPositions: [],
+		}),
+	);
+	await setup({
+		artists: ["1000 Eyes", "Tom Schley"],
+		tracks: [
+			{
+				position: "1",
+				title: "vholume",
+				artists: ["1000 Eyes"],
+				creditsUrl: "https://www.deezer.com/track/4266030142",
+			},
+		],
+	});
+	await mountTrackPicker("1|vholume|");
+	expect(trackRows().map((row) => row.cells[0]?.textContent)).toEqual([
+		"1000 Eyes",
+		"Tom Schley",
+	]);
+	expect(document.querySelector("#ebr-guest-credit-picker")).toBeNull();
+	expect(rows()[0]?.cells[0]?.textContent).toBe("Tom Schley");
+	expect(rows()[0]?.cells[1]?.querySelector("input")?.value).toBe(
+		"composition",
+	);
+	expect(document.querySelector("textarea")?.value).toBe("1|vholume|");
+	expect(loadCreditSuggestions).toHaveBeenCalledOnce();
+	expect(
+		vi.mocked(loadCreditSuggestions).mock.calls[0]?.[1].releaseArtists,
+	).toEqual(["1000 Eyes", "Tom Schley"]);
+});
+
 test("shows suggestions below guests with separate roles and correct whole-release/subset tracks", async () => {
 	await setup({
 		artists: ["Main"],
@@ -327,7 +366,7 @@ test("shows suggestions below guests with separate roles and correct whole-relea
 	expect(removeCreditLine).not.toHaveBeenCalled();
 });
 
-test("linking a suggestion credits only that person-role row", async () => {
+test("linking a suggestion credits only that row when the person's roles have different coverage", async () => {
 	await setup({
 		tracks: [
 			{
@@ -337,6 +376,7 @@ test("linking a suggestion credits only that person-role row", async () => {
 					{ name: "Person", role: "songwriting" },
 				],
 			},
+			{ title: "Other track", credits: [{ name: "Person", role: "producer" }] },
 		],
 	});
 	await vi.waitFor(() => expect(rows()).toHaveLength(2));
@@ -353,7 +393,7 @@ test("linking a suggestion credits only that person-role row", async () => {
 			id: "12",
 			name: "Person",
 			role: "songwriting",
-			tracks: "",
+			tracks: "1",
 		}),
 	);
 	await vi.waitFor(() =>
@@ -369,6 +409,55 @@ test("linking a suggestion credits only that person-role row", async () => {
 			'input[value="Credit with artist link"]',
 		)?.disabled,
 	).toBe(false);
+	expect(addCreditLine).toHaveBeenCalledOnce();
+});
+
+test.each([
+	false,
+	true,
+])("shows and accepts matching ordinary roles as one editable suggestion (subset=%s)", async (subset) => {
+	const credits = [
+		{ name: "Person", role: "composition" },
+		{ name: "Person", role: "songwriting" },
+		{ name: "Person", role: "producer" },
+	];
+	await setup({
+		tracks: [
+			{ position: "1", credits },
+			{ position: "2", credits },
+			{ position: "3", credits },
+			...(subset ? [{ position: "4" }] : []),
+		],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(1));
+	expect(rows()[0]?.cells[1]?.querySelector("input")?.value).toBe(
+		"composition, songwriting, producer",
+	);
+	expect(rows()[0]?.cells[2]?.querySelector("input")?.value).toBe(
+		subset ? "1-3" : "",
+	);
+	expect(addCreditLine).not.toHaveBeenCalled();
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Credit in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenCalledExactlyOnceWith({
+			id: undefined,
+			name: "Person",
+			role: "composition, songwriting, producer",
+			tracks: subset ? "1-3" : "",
+		}),
+	);
+	await editDetail(1, "composition, lyrics");
+	await vi.waitFor(() =>
+		expect(updateCreditDetails).toHaveBeenCalledExactlyOnceWith(
+			"1",
+			"composition, lyrics",
+			subset ? "1-3" : "",
+		),
+	);
 	expect(addCreditLine).toHaveBeenCalledOnce();
 });
 
@@ -460,6 +549,13 @@ test("shares a selected suggestion's artist link across roles, but keeps plain-t
 					{ name: "Person", role: "mixing" },
 				],
 			},
+			{
+				credits: [
+					{ name: "Person", role: "producer" },
+					{ name: "Person", role: "mixing" },
+				],
+			},
+			{ credits: [{ name: "Person", role: "mixing" }] },
 		],
 	});
 	await vi.waitFor(() => expect(rows()).toHaveLength(3));
@@ -603,6 +699,7 @@ test.each([
 					{ name: "zavet", role: "vocals" },
 				],
 			},
+			{ credits: [{ name: "zavet", role: "producer" }] },
 		],
 	});
 	await vi.waitFor(() => expect(rows()).toHaveLength(2));
@@ -661,7 +758,7 @@ test.each([
 			name: "zavet",
 			creditedName: "zavet",
 			role: "vocals",
-			tracks: "",
+			tracks: "1",
 		}),
 	);
 	await editDetail(1, "mixing");
@@ -824,7 +921,7 @@ test("attaches RYM's role suggestions only to the focused role field", async () 
 			{
 				credits: [
 					{ name: "Person", role: "producer" },
-					{ name: "Person", role: "mixing" },
+					{ name: "Other", role: "mixing" },
 				],
 			},
 		],
@@ -916,7 +1013,9 @@ test("shows an error and does not add a credit with a blank role", async () => {
 	await vi.waitFor(() => expect(rows()).toHaveLength(1));
 	await editDetail(1, " ");
 	expect(
-		rows()[0]?.querySelector('[role="alert"]')?.getAttribute("title"),
+		rows()[0]
+			?.querySelector('[role="alert"] button')
+			?.getAttribute("aria-label"),
 	).toBe("Enter a credit role.");
 	expect(
 		rows()[0]?.querySelector<HTMLInputElement>(

@@ -41,8 +41,29 @@ export const getGuestArtists = (
 };
 
 // Returns the positions as RYM's credit tracks field lists them.
-export const formatCreditTracks = (positions: string[]): string =>
-	positions.join(CREDIT_TRACKS_SEPARATOR);
+export const formatCreditTracks = (positions: string[]): string => {
+	const runs: string[][] = [];
+	let run: string[] = [];
+	let previous = Number.NaN;
+	for (const position of positions) {
+		const number = /^[1-9]\d*$/.test(position) ? Number(position) : Number.NaN;
+		if (!Number.isSafeInteger(number) || number !== previous + 1) {
+			run = [];
+			runs.push(run);
+		}
+		run.push(position);
+		previous = Number.isSafeInteger(number) ? number : Number.NaN;
+	}
+	return runs
+		.map((positions) => {
+			const first = positions[0];
+			const last = positions.at(-1);
+			return positions.length >= 3 && first !== undefined && last !== undefined
+				? `${first}-${last}`
+				: positions.join(CREDIT_TRACKS_SEPARATOR);
+		})
+		.join(CREDIT_TRACKS_SEPARATOR);
+};
 
 // Returns the status text for a guest's choice.
 export const describeGuestChoice = (
