@@ -205,6 +205,7 @@ export type Track = {
 	title?: string;
 	duration?: string;
 	header?: boolean;
+	artists?: string[];
 };
 
 export type ResolveData = {

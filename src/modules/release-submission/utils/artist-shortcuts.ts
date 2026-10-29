@@ -1,7 +1,7 @@
 import { arrayToArtists } from "~/shared/utils/string";
 
 const TRACK_TITLE_ID_PATTERN = /^track_track_title\d+$/;
-const ARTIST_SEPARATOR = " - ";
+export const ARTIST_SEPARATOR = " - ";
 const ARTIST_LINK_PATTERN = /\[Artist\d+]/;
 
 export const isTrackTitleFieldId = (id: string): boolean =>
