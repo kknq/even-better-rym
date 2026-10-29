@@ -38,6 +38,113 @@ describe("getGuestArtists", () => {
 			{ name: "G", positions: ["1", "3"] },
 		]);
 	});
+
+	test("excludes title-featured artists but keeps other guests on the same tracks", () => {
+		const tracks = [
+			{
+				position: "2",
+				title: "Go2DaMoon (feat. Kanye West)",
+				artists: ["Playboi Carti", "Kanye West", "Other Guest"],
+			},
+			{
+				position: "6",
+				title: "M3tamorphosis [feat. Kid Cudi]",
+				artists: ["Playboi Carti", "Kid Cudi"],
+			},
+			{
+				position: "10",
+				title: "Teen X (feat. Future)",
+				artists: ["Playboi Carti", "Future"],
+			},
+		];
+		expect(getGuestArtists(tracks, ["Playboi Carti"])).toEqual([
+			{ name: "Other Guest", positions: ["2"] },
+		]);
+	});
+
+	test("subtracts only the featured tracks, keeping the artist's remaining guest scope", () => {
+		const tracks = [
+			{
+				position: "A1",
+				title: "One",
+				artists: ["Guest"],
+				credits: [{ name: "Guest", role: "featured" }],
+			},
+			{
+				position: "A2",
+				title: "Two",
+				artists: ["Guest"],
+				credits: [{ name: "Guest", role: "producer" }],
+			},
+			{ position: "B1", title: "Three (feat. Guest)", artists: ["Guest"] },
+			{ position: "B2", title: "Four", artists: ["Guest"] },
+		];
+		const original = JSON.stringify(tracks);
+		expect(getGuestArtists(tracks, ["Main"])).toEqual([
+			{ name: "Guest", positions: ["A2", "B2"] },
+		]);
+		expect(JSON.stringify(tracks)).toBe(original);
+	});
+
+	test("omits a person featured on every track rather than treating blank featured scope as no overlap", () => {
+		expect(
+			getGuestArtists(
+				[
+					{
+						artists: ["Guest"],
+						credits: [{ name: "Guest", role: "featured" }],
+					},
+					{
+						artists: ["Guest"],
+						credits: [{ name: "Guest", role: "featured" }],
+					},
+				],
+				["Main"],
+			),
+		).toEqual([]);
+	});
+
+	test("matches normalized feature names and preserves known artist names containing separators", () => {
+		expect(
+			getGuestArtists(
+				[
+					{
+						title: "Song [featuring Simon & Garfunkel]",
+						artists: ["Simon & Garfunkel"],
+					},
+					{
+						artists: ["beyonce"],
+						credits: [{ name: " Beyoncé ", role: "featured" }],
+					},
+					{ title: "Song (feat. FUTURE)", artists: ["Future"] },
+				],
+				["Main"],
+			),
+		).toEqual([]);
+	});
+
+	test("compares actual tracks rather than deleting every occurrence of a featured position", () => {
+		expect(
+			getGuestArtists(
+				[
+					{
+						position: "1",
+						artists: ["Guest"],
+						credits: [{ name: "Guest", role: "featured" }],
+					},
+					{ position: "1", artists: ["Guest"] },
+					{
+						header: true,
+						position: "2",
+						artists: ["Guest"],
+						title: "Disc (feat. Guest)",
+					},
+					{ position: "3", artists: ["Guest"] },
+				],
+				["Main"],
+			),
+		).toEqual([{ name: "Guest", positions: ["1", "3"] }]);
+	});
 });
 
 describe("formatCreditTracks", () => {

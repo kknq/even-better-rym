@@ -1,22 +1,6 @@
 import { fetch } from "~/shared/utils/fetch";
+import { normalizeCreditRole } from "../credit-roles";
 import type { TrackCredit } from "../types";
-
-const ROLE_NAMES: Record<string, string> = {
-	Songwriter: "songwriting",
-	Composer: "composition",
-	Lyricist: "lyrics",
-	Producer: "producer",
-	"Co-Producer": "co-producer",
-	"Executive Producer": "executive producer",
-	"Mixing Engineer": "mixing",
-	"Mastering Engineer": "mastering",
-	"Recording Engineer": "recording engineer",
-	Engineer: "engineer",
-	"Assistant Engineer": "assistant engineer",
-	Vocals: "vocals",
-	"Background Vocals": "backing vocals",
-	"Lead Vocals": "lead vocals",
-};
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
@@ -45,7 +29,7 @@ export function readSongCredits(document_: Document): TrackCredit[] {
 						if (typeof role !== "string" || !role.trim()) continue;
 						credits.push({
 							name: item.name.trim(),
-							role: ROLE_NAMES[role] ?? role.toLowerCase().trim(),
+							role: normalizeCreditRole(role),
 						});
 					}
 				}

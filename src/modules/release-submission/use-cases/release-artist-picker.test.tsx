@@ -7,9 +7,10 @@ import { afterEach, expect, test, vi } from "vitest";
 import {
 	readFiledUnderEntries,
 	syncFiledUnderEntries,
+	watchFiledUnderChanges,
 } from "../utils/filed-under";
 import type { ReleaseArtistLabels } from "../utils/release-artist-links";
-import injectReleaseArtistPicker from "./release-artist-picker";
+import injectPicker from "./release-artist-picker";
 
 vi.mock("webextension-polyfill", () => ({ default: {} }));
 
@@ -22,6 +23,31 @@ vi.mock("../utils/filed-under", async (importOriginal) => ({
 }));
 
 const ORIGINAL_URL = window.location.href;
+
+async function injectReleaseArtistPicker() {
+	document.body.insertAdjacentHTML(
+		"beforeend",
+		`<input type="radio" id="credited_name_default" name="credited_name" value="default" checked>
+		<input type="radio" id="credited_name_specified" name="credited_name" value="specified">
+		<input id="credited_firstname" disabled>
+		<input id="credited_lastname" disabled>`,
+	);
+	await injectPicker();
+}
+
+function creditedName() {
+	return {
+		useDefault: document.querySelector<HTMLInputElement>(
+			"#credited_name_default",
+		)?.checked,
+		specified: document.querySelector<HTMLInputElement>(
+			"#credited_name_specified",
+		)?.checked,
+		first: document.querySelector<HTMLInputElement>("#credited_firstname")
+			?.value,
+		last: document.querySelector<HTMLInputElement>("#credited_lastname")?.value,
+	};
+}
 
 afterEach(() => {
 	const container = document.querySelector(
@@ -65,6 +91,12 @@ test.each([
 		expect(published.mock.calls.at(-1)?.[0].detail.labels).toEqual(
 			new Map([["zavet", "[Artist1479561,zavet]"]]),
 		);
+		expect(creditedName()).toEqual({
+			useDefault: false,
+			specified: true,
+			first: "",
+			last: "zavet",
+		});
 		expect(document.body.textContent).toContain("filed under Kai Angel");
 		expect(document.body.textContent).not.toContain("(from parent)");
 		expect(
@@ -84,12 +116,15 @@ test.each([
 			[],
 			new Set(["1479561"]),
 		);
+		expect(creditedName().useDefault).toBe(true);
+		expect(creditedName().last).toBe("");
 		expect(restore?.disabled).toBe(false);
 		await act(() => restore?.click());
 		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
 			[entry],
 			new Set(["1479561"]),
 		);
+		expect(creditedName().last).toBe("zavet");
 	} finally {
 		document.removeEventListener("releaseArtistLabelsEvent", published);
 	}
@@ -267,6 +302,12 @@ test("maps the imported alias zavet to the existing Kai Angel parent link withou
 		expect(published.mock.calls.at(-1)?.[0].detail.labels).toEqual(
 			new Map([["zavet", "[Artist1479561,zavet]"]]),
 		);
+		expect(creditedName()).toEqual({
+			useDefault: false,
+			specified: true,
+			first: "",
+			last: "zavet",
+		});
 		await act(() => {
 			if (!select) throw new Error("Missing parent alias selector");
 			select.value = "";
@@ -277,9 +318,133 @@ test("maps the imported alias zavet to the existing Kai Angel parent link withou
 			new Set(["1479561"]),
 		);
 		expect(published.mock.calls.at(-1)?.[0].detail.labels).toEqual(new Map());
+		expect(creditedName().useDefault).toBe(true);
+		expect(creditedName().last).toBe("");
 	} finally {
 		document.removeEventListener("releaseArtistLabelsEvent", published);
 	}
+});
+
+test("uses the imported alias as the native artist name after a differently named search result is picked", async () => {
+	window.history.replaceState(null, "", "/releases/ac");
+	document.body.innerHTML = `
+		<div id="section_filed_under">
+			<div class="gosearch"><input id="filed_under_searchterm">
+				<input type="button" value="Search"></div>
+		</div>
+	`;
+	await act(async () => injectReleaseArtistPicker());
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistsEvent", { detail: ["zavet"] }),
+		);
+	});
+	await act(() => {
+		document
+			.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
+			?.click();
+	});
+	await act(() => {
+		const changed = vi.mocked(watchFiledUnderChanges).mock.calls.at(-1)?.[0];
+		if (!changed) throw new Error("Missing filed-under watcher");
+		changed({
+			added: [{ id: "1479561", name: "Kai Angel" }],
+			presentIds: new Set(["1479561"]),
+		});
+	});
+	expect(creditedName()).toEqual({
+		useDefault: false,
+		specified: true,
+		first: "",
+		last: "zavet",
+	});
+});
+
+test("restores an untouched automatic alias when the next import uses the canonical name", async () => {
+	window.history.replaceState(null, "", "/releases/ac?artist_id=1479561");
+	vi.mocked(readFiledUnderEntries).mockReturnValue([
+		{ id: "1479561", name: "Kai Angel" },
+	]);
+	document.body.innerHTML = '<div id="section_filed_under"></div>';
+	await act(async () => injectReleaseArtistPicker());
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistsEvent", { detail: ["zavet"] }),
+		);
+	});
+	expect(creditedName().last).toBe("zavet");
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistsEvent", { detail: ["Kai Angel"] }),
+		);
+	});
+	expect(creditedName()).toEqual({
+		useDefault: true,
+		specified: false,
+		first: "",
+		last: "",
+	});
+});
+
+test("preserves a manually edited artist name when the next import starts", async () => {
+	window.history.replaceState(null, "", "/releases/ac?artist_id=1479561");
+	vi.mocked(readFiledUnderEntries).mockReturnValue([
+		{ id: "1479561", name: "Kai Angel" },
+	]);
+	document.body.innerHTML = '<div id="section_filed_under"></div>';
+	await act(async () => injectReleaseArtistPicker());
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistsEvent", { detail: ["zavet"] }),
+		);
+	});
+	const last = document.querySelector<HTMLInputElement>("#credited_lastname");
+	if (!last) throw new Error("Missing artist Last name field");
+	last.value = "Manually credited name";
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistsEvent", { detail: ["Kai Angel"] }),
+		);
+	});
+	expect(creditedName()).toEqual({
+		useDefault: false,
+		specified: true,
+		first: "",
+		last: "Manually credited name",
+	});
+});
+
+test("does not set a stale alias after its filed-under edit finishes during another import", async () => {
+	window.history.replaceState(null, "", "/releases/ac?artist_id=1479561");
+	vi.mocked(readFiledUnderEntries).mockReturnValue([
+		{ id: "1479561", name: "Kai Angel" },
+	]);
+	let finish: (() => void) | undefined;
+	vi.mocked(syncFiledUnderEntries).mockImplementationOnce(
+		() =>
+			new Promise<void>((resolve) => {
+				finish = resolve;
+			}),
+	);
+	document.body.innerHTML = '<div id="section_filed_under"></div>';
+	await act(async () => injectReleaseArtistPicker());
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistsEvent", { detail: ["zavet"] }),
+		);
+	});
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistsEvent", { detail: ["Kai Angel"] }),
+		);
+	});
+	await act(() => finish?.());
+	expect(creditedName()).toEqual({
+		useDefault: true,
+		specified: false,
+		first: "",
+		last: "",
+	});
 });
 
 test("keeps track-title controls out of the Filed under section", async () => {

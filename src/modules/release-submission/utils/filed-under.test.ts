@@ -4,6 +4,7 @@ import { afterEach, expect, test, vi } from "vitest";
 
 import { runScript } from "~/shared/utils/dom";
 import {
+	createCreditedNameSync,
 	removeRepeatedFiledUnderEntries,
 	syncFiledUnderEntries,
 	watchFiledUnderChanges,
@@ -25,6 +26,109 @@ function row(number: string, id: string, name = "Artist") {
 		<input id="filed_under_performer_artist_${number}" value="[Artist${id}]">
 		<span class="filed_under_artist_preview">${name}</span></li>`;
 }
+
+function creditedNameFields() {
+	document.body.innerHTML = `
+		<input type="radio" id="credited_name_default" name="credited_name" checked>
+		<input type="radio" id="credited_name_specified" name="credited_name">
+		<input id="credited_firstname" disabled>
+		<input id="credited_lastname" disabled>
+	`;
+	const input = (id: string) => {
+		const field = document.querySelector<HTMLInputElement>(`#${id}`);
+		if (!field) throw new Error(`Missing ${id}`);
+		return field;
+	};
+	return {
+		defaultRadio: input("credited_name_default"),
+		specifiedRadio: input("credited_name_specified"),
+		first: input("credited_firstname"),
+		last: input("credited_lastname"),
+	};
+}
+
+test("selects the custom artist name and puts the whole alias in Last name", () => {
+	const fields = creditedNameFields();
+	fields.first.value = "Old first";
+	fields.last.value = "Old last";
+	const changed = vi.fn();
+	document.body.addEventListener("change", changed);
+	try {
+		createCreditedNameSync()("zavet");
+		expect(fields.defaultRadio.checked).toBe(false);
+		expect(fields.specifiedRadio.checked).toBe(true);
+		expect(fields.first.value).toBe("");
+		expect(fields.last.value).toBe("zavet");
+		expect(fields.first.disabled).toBe(false);
+		expect(fields.last.disabled).toBe(false);
+		expect(
+			changed.mock.calls.map(([event]) => (event as Event).target),
+		).toContain(fields.last);
+	} finally {
+		document.body.removeEventListener("change", changed);
+	}
+});
+
+test("restores the original default fields when an automatic alias is removed", () => {
+	const fields = creditedNameFields();
+	fields.first.value = "Saved first";
+	fields.last.value = "Saved last";
+	const sync = createCreditedNameSync();
+	sync("zavet");
+	sync(undefined);
+	expect(fields.defaultRadio.checked).toBe(true);
+	expect(fields.specifiedRadio.checked).toBe(false);
+	expect(fields.first.value).toBe("Saved first");
+	expect(fields.last.value).toBe("Saved last");
+	expect(fields.first.disabled).toBe(true);
+	expect(fields.last.disabled).toBe(true);
+	sync("Another Alias");
+	expect(fields.last.value).toBe("Another Alias");
+});
+
+test("preserves an existing manually specified artist name", () => {
+	const fields = creditedNameFields();
+	fields.specifiedRadio.click();
+	fields.first.value = "Manual first";
+	fields.last.value = "Manual last";
+	createCreditedNameSync()("zavet");
+	expect(fields.specifiedRadio.checked).toBe(true);
+	expect(fields.first.value).toBe("Manual first");
+	expect(fields.last.value).toBe("Manual last");
+});
+
+test.each([
+	"first",
+	"last",
+] as const)("stops controlling the artist name after the user edits %s", (field) => {
+	const fields = creditedNameFields();
+	const sync = createCreditedNameSync();
+	sync("zavet");
+	fields[field].value = "Manual edit";
+	sync(undefined);
+	sync("Another Alias");
+	expect(fields.specifiedRadio.checked).toBe(true);
+	expect(fields[field].value).toBe("Manual edit");
+});
+
+test("preserves the user's explicit switch back to Use default", () => {
+	const fields = creditedNameFields();
+	const sync = createCreditedNameSync();
+	sync("zavet");
+	fields.defaultRadio.click();
+	sync("Another Alias");
+	sync(undefined);
+	expect(fields.defaultRadio.checked).toBe(true);
+	expect(fields.specifiedRadio.checked).toBe(false);
+});
+
+test("does not touch default artist-name fields when there is no alias", () => {
+	const fields = creditedNameFields();
+	createCreditedNameSync()(undefined);
+	expect(fields.defaultRadio.checked).toBe(true);
+	expect(fields.last.value).toBe("");
+	expect(fields.last.disabled).toBe(true);
+});
 
 test("preserves unmanaged artists while removing and reordering managed ones", async () => {
 	document.body.innerHTML = `<ul id="filed_under_performerx">

@@ -1,4 +1,5 @@
-import { resolveSongCredits } from "~/shared/services/applemusic/credits";
+import { resolveSongCredits as resolveAppleMusicCredits } from "~/shared/services/applemusic/credits";
+import { createSongCreditsResolver as createSpotifyCreditsResolver } from "~/shared/services/spotify/credits";
 import type { Track, TrackCredit } from "~/shared/services/types";
 import { getTrackPosition } from "./track-position";
 
@@ -16,6 +17,21 @@ export async function loadCreditSuggestions(
 		!track.header && track.creditsUrl ? [{ track, index }] : [],
 	);
 	const cache = new Map<string, Promise<TrackCredit[]>>();
+	let spotifyResolver:
+		| ReturnType<typeof createSpotifyCreditsResolver>
+		| undefined;
+	const resolveSongCredits = (url: string): Promise<TrackCredit[]> => {
+		const parsed = new URL(url);
+		if (!parsed.username && !parsed.password) {
+			if (parsed.origin === "https://music.apple.com")
+				return resolveAppleMusicCredits(url);
+			if (parsed.origin === "https://open.spotify.com") {
+				spotifyResolver ??= createSpotifyCreditsResolver(isActive);
+				return spotifyResolver(url);
+			}
+		}
+		throw new Error("Unsupported song credits URL");
+	};
 	const failedPositions: string[] = [];
 	let next = 0;
 	let completed = 0;
@@ -35,8 +51,14 @@ export async function loadCreditSuggestions(
 				const credits = await request;
 				item.track.credits = [...(item.track.credits ?? []), ...credits];
 			} catch (error) {
-				console.warn("EvenBetterRYM: could not load song credits", url, error);
-				failedPositions.push(getTrackPosition(item.track, item.index));
+				if (isActive()) {
+					console.warn(
+						"EvenBetterRYM: could not load song credits",
+						url,
+						error,
+					);
+					failedPositions.push(getTrackPosition(item.track, item.index));
+				}
 			}
 			completed += 1;
 			if (isActive()) onProgress(completed, pending.length);

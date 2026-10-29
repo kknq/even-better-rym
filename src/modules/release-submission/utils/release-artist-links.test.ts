@@ -9,6 +9,7 @@ import {
 	clearRemovedChoices,
 	getChosenEntries,
 	getPickedChoice,
+	getReleaseArtistCreditName,
 	getReleaseArtistLabels,
 	getRepeatedIndexes,
 	getUnchosenIds,
@@ -149,6 +150,52 @@ describe("getReleaseArtistLabels", () => {
 				["1000 Eyes", "[Artist1639184]"],
 			]),
 		);
+	});
+
+	describe("getReleaseArtistCreditName", () => {
+		test.each([
+			"linked",
+			"inherited",
+		] as const)("uses the imported alias for a single %s artist", (kind) => {
+			expect(
+				getReleaseArtistCreditName(
+					["zavet"],
+					new Map([
+						["zavet", { kind, entry: { id: "1479561", name: "Kai Angel" } }],
+					]),
+				),
+			).toBe("zavet");
+		});
+
+		test("keeps the default for normalized matches, unpicked names, and skipped artists", () => {
+			expect(
+				getReleaseArtistCreditName(
+					["beyonce"],
+					new Map([["beyonce", { kind: "linked", entry: ENTRY_A }]]),
+				),
+			).toBeUndefined();
+			expect(getReleaseArtistCreditName(["zavet"], new Map())).toBeUndefined();
+			expect(
+				getReleaseArtistCreditName(
+					["zavet"],
+					new Map([["zavet", { kind: "skipped" }]]),
+				),
+			).toBeUndefined();
+		});
+
+		test("does not invent a combined custom name for multiple artists", () => {
+			expect(
+				getReleaseArtistCreditName(
+					["zavet", "Other"],
+					new Map([
+						[
+							"zavet",
+							{ kind: "linked", entry: { id: "1479561", name: "Kai Angel" } },
+						],
+					]),
+				),
+			).toBeUndefined();
+		});
 	});
 
 	test("labels linked and inherited artists with tokens, skipped by name", () => {

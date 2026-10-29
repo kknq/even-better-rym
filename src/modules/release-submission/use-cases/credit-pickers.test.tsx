@@ -11,6 +11,7 @@ import {
 	updateCreditDetails,
 } from "../utils/page-functions";
 import { watchArtistResultClicks } from "../utils/shortcut-popup";
+import injectArtistLinkPicker from "./artist-link-picker";
 import injectGuestCreditPicker from "./guest-credit-picker";
 
 vi.mock("webextension-polyfill", () => ({ default: {} }));
@@ -43,8 +44,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-	const container = document.querySelector("#creditsx")?.nextElementSibling;
-	if (container) render(null, container);
+	for (const selector of ["#creditsx", "#tracks_adv"]) {
+		const container = document.querySelector(selector)?.nextElementSibling;
+		if (container) render(null, container);
+	}
 	document.body.replaceChildren();
 	vi.clearAllMocks();
 });
@@ -72,6 +75,194 @@ function rows() {
 		),
 	];
 }
+
+async function mountTrackPicker(text = "1|One|\n2|Two|") {
+	document.body.insertAdjacentHTML(
+		"beforeend",
+		`
+		<div><div id="tracks_simp"><table><tbody><tr id="track_base"></tr></tbody></table></div>
+		<div id="tracks_adv"><textarea id="track_advanced"></textarea></div></div>
+	`,
+	);
+	const input = document.querySelector<HTMLTextAreaElement>("#track_advanced");
+	if (input) input.value = text;
+	await act(async () => {
+		await injectArtistLinkPicker();
+	});
+}
+
+const trackRows = () => [
+	...document.querySelectorAll<HTMLTableRowElement>(
+		"#ebr-artist-link-picker tbody tr",
+	),
+];
+
+test("deduplicates WLR's loaded featured credits against guests using one shared enrichment", async () => {
+	let finish:
+		| ((result: Awaited<ReturnType<typeof loadCreditSuggestions>>) => void)
+		| undefined;
+	vi.mocked(loadCreditSuggestions).mockImplementation(
+		() =>
+			new Promise((resolve) => {
+				finish = resolve;
+			}),
+	);
+	const featured = new Map([
+		["2", "Kanye West"],
+		["6", "Kid Cudi"],
+		["10", "Future"],
+	]);
+	const tracks = Array.from({ length: 24 }, (_, index) => {
+		const position = String(index + 1);
+		const feature = featured.get(position);
+		return {
+			position,
+			title: "Song",
+			artists: feature ? ["Playboi Carti", feature] : ["Playboi Carti"],
+			creditsUrl: `https://open.spotify.com/track/${position.padStart(22, "0")}`,
+		};
+	});
+	await setup({ artists: ["Playboi Carti"], tracks });
+	await mountTrackPicker("2|Go2DaMoon|\n6|M3tamorphosis|\n10|Teen X|");
+	expect(
+		document.querySelector("#ebr-artist-link-picker")?.textContent,
+	).toContain("Loading song credits");
+	expect(document.querySelector("#ebr-artist-link-picker input")).toBeNull();
+	expect(
+		document.querySelector<HTMLInputElement>(
+			'#ebr-guest-credit-picker input[value="Credit in plain text"]',
+		)?.disabled,
+	).toBe(true);
+	await act(() =>
+		finish?.({
+			tracks: tracks.map((track) => ({
+				...track,
+				credits: featured.has(track.position)
+					? [{ name: featured.get(track.position) ?? "", role: "featured" }]
+					: [],
+			})),
+			failedPositions: [],
+		}),
+	);
+	await vi.waitFor(() =>
+		expect(document.querySelector("#ebr-guest-credit-picker")).toBeNull(),
+	);
+	expect(
+		rows().map((row) => [
+			row.cells[0]?.textContent,
+			row.cells[1]?.querySelector("input")?.value,
+			row.cells[2]?.querySelector("input")?.value,
+		]),
+	).toEqual([
+		["Kanye West", "featured", "2"],
+		["Kid Cudi", "featured", "6"],
+		["Future", "featured", "10"],
+	]);
+	expect(loadCreditSuggestions).toHaveBeenCalledOnce();
+	expect(addCreditLine).not.toHaveBeenCalled();
+	expect(trackRows().map((row) => row.cells[0]?.textContent)).toEqual([
+		"Playboi Carti",
+	]);
+	expect(document.querySelector("textarea")?.value).toBe(
+		"2|Go2DaMoon|\n6|M3tamorphosis|\n10|Teen X|",
+	);
+});
+
+test("keeps and submits only guest appearances not covered by the person's loaded featured credits", async () => {
+	vi.mocked(loadCreditSuggestions).mockImplementation((tracks) =>
+		Promise.resolve({
+			tracks: tracks.map((track, index) => ({
+				...track,
+				credits: [
+					{ name: "Guest", role: index === 0 ? "featured" : "producer" },
+				],
+			})),
+			failedPositions: [],
+		}),
+	);
+	await setup({
+		artists: ["Main"],
+		tracks: [
+			{
+				position: "1",
+				title: "One",
+				artists: ["Main", "Guest"],
+				creditsUrl: "song-one",
+			},
+			{
+				position: "2",
+				title: "Two",
+				artists: ["Main", "Guest"],
+				creditsUrl: "song-two",
+			},
+		],
+	});
+	await mountTrackPicker();
+	expect(trackRows().map((row) => row.cells[0]?.textContent)).toEqual([
+		"Main",
+		"Guest",
+	]);
+	const guest = document.querySelector("#ebr-guest-credit-picker tbody tr");
+	expect(guest?.textContent).toContain("tracks 2");
+	expect(
+		rows().map((row) => row.cells[1]?.querySelector("input")?.value),
+	).toEqual(["featured", "producer"]);
+	await act(() =>
+		guest
+			?.querySelector<HTMLInputElement>('input[value="Credit in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenCalledWith({
+			id: undefined,
+			name: "Guest",
+			role: "guest",
+			tracks: "2",
+		}),
+	);
+	await act(() =>
+		trackRows()[1]
+			?.querySelector<HTMLInputElement>('input[value="Put in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(document.querySelector("textarea")?.value).toBe(
+			"1|One|\n2|Guest - Two|",
+		),
+	);
+	expect(loadCreditSuggestions).toHaveBeenCalledOnce();
+});
+
+test("excludes loaded featured artists from track titles even when credit import is disabled", async () => {
+	vi.mocked(loadCreditSuggestions).mockImplementation((tracks) =>
+		Promise.resolve({
+			tracks: tracks.map((track) => ({
+				...track,
+				credits: [{ name: "Guest", role: "featured" }],
+			})),
+			failedPositions: [],
+		}),
+	);
+	await setup(
+		{
+			artists: ["Main"],
+			tracks: [
+				{
+					position: "1",
+					title: "One",
+					artists: ["Main", "Guest"],
+					creditsUrl: "song",
+				},
+			],
+		},
+		false,
+	);
+	await mountTrackPicker("1|One|");
+	expect(trackRows().map((row) => row.cells[0]?.textContent)).toEqual(["Main"]);
+	expect(document.querySelector("#ebr-suggested-credit-picker")).toBeNull();
+	expect(document.querySelector("#ebr-guest-credit-picker")).toBeNull();
+	expect(loadCreditSuggestions).toHaveBeenCalledOnce();
+});
 
 test("shows suggestions below guests with separate roles and correct whole-release/subset tracks", async () => {
 	await setup({
@@ -488,15 +679,18 @@ test("retains title-based featured suggestions when song-credit loading partiall
 		}),
 	);
 	await setup({
+		artists: ["Main"],
 		tracks: [
-			{ position: "1", title: "First" },
+			{ position: "1", title: "First", artists: ["Main", "Kanye West"] },
 			{
 				position: "2",
 				title: "Go2DaMoon (feat. Kanye West)",
+				artists: ["Main", "Kanye West"],
 				creditsUrl: "song",
 			},
 		],
 	});
+	await mountTrackPicker("1|First|\n2|Go2DaMoon|");
 	await vi.waitFor(() =>
 		expect(document.querySelector('[role="alert"]')?.textContent).toContain(
 			"tracks 2",
@@ -505,9 +699,28 @@ test("retains title-based featured suggestions when song-credit loading partiall
 	expect(rows()[0]?.cells[0]?.textContent).toBe("Kanye West");
 	expect(rows()[0]?.cells[1]?.querySelector("input")?.value).toBe("featured");
 	expect(rows()[0]?.cells[2]?.querySelector("input")?.value).toBe("2");
+	const guest = document.querySelector("#ebr-guest-credit-picker tbody tr");
+	expect(guest?.textContent).toContain("Kanye West");
+	expect(guest?.textContent).toContain("tracks 1");
+	expect(guest?.textContent).not.toContain("tracks 1, 2");
+	expect(
+		guest?.querySelector<HTMLInputElement>(
+			'input[value="Credit in plain text"]',
+		)?.disabled,
+	).toBe(false);
+	await act(() =>
+		trackRows()[1]
+			?.querySelector<HTMLInputElement>('input[value="Put in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(document.querySelector("textarea")?.value).toBe(
+			"1|Kanye West - First|\n2|Go2DaMoon|",
+		),
+	);
 });
 
-test("does not restore suggestions after a new import cancels loading", async () => {
+test("does not restore old guests or suggestions over a new import after cancelling loading", async () => {
 	let finish:
 		| ((result: Awaited<ReturnType<typeof loadCreditSuggestions>>) => void)
 		| undefined;
@@ -517,18 +730,53 @@ test("does not restore suggestions after a new import cancels loading", async ()
 				finish = resolve;
 			}),
 	);
-	await setup({ tracks: [{ title: "Track", creditsUrl: "song" }] });
+	await setup({
+		artists: ["Main"],
+		tracks: [{ title: "Track", artists: ["Main", "Old"], creditsUrl: "song" }],
+	});
+	await mountTrackPicker();
 	expect(document.querySelector('[role="status"]')).not.toBeNull();
+	expect(
+		document.querySelector("#ebr-guest-credit-picker")?.textContent,
+	).toContain("Old");
 	await act(() => {
 		document.dispatchEvent(new CustomEvent("importEvent", { detail: {} }));
+		document.dispatchEvent(
+			new CustomEvent("importCompleteEvent", {
+				detail: {
+					data: {
+						artists: ["Main"],
+						tracks: [{ title: "New track", artists: ["Main", "New"] }],
+					},
+					options: { fillFields: { tracks: true, credits: true } },
+				},
+			}),
+		);
 	});
-	await act(() =>
+	await act(async () => {
 		finish?.({
-			tracks: [{ credits: [{ name: "Old", role: "producer" }] }],
+			tracks: [
+				{
+					artists: ["Main", "Old"],
+					credits: [{ name: "Old", role: "producer" }],
+				},
+			],
 			failedPositions: [],
-		}),
-	);
+		});
+		await Promise.resolve();
+	});
 	expect(document.querySelector("#ebr-suggested-credit-picker")).toBeNull();
+	expect(
+		document.querySelector("#ebr-guest-credit-picker")?.textContent,
+	).toContain("New");
+	expect(
+		document.querySelector("#ebr-guest-credit-picker")?.textContent,
+	).not.toContain("Old");
+	expect(loadCreditSuggestions).toHaveBeenCalledOnce();
+	expect(trackRows().map((row) => row.cells[0]?.textContent)).toEqual([
+		"Main",
+		"New",
+	]);
 });
 
 test("does not load or offer suggestions when credit import is disabled", async () => {

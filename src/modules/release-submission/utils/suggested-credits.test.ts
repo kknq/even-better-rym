@@ -1,5 +1,40 @@
 import { expect, test } from "vitest";
-import { getFeaturedArtists, getSuggestedCredits } from "./suggested-credits";
+import {
+	getFeaturedArtists,
+	getNonFeaturedTrackArtists,
+	getSuggestedCredits,
+} from "./suggested-credits";
+
+test("track-title artists exclude title and metadata features but retain unrelated roles", () => {
+	expect(
+		getNonFeaturedTrackArtists({
+			title: "Song [feat. Simon & Garfunkel]",
+			artists: ["Main", "Simon & Garfunkel", "Future", "Other"],
+			credits: [
+				{ name: " FUTURE ", role: "featured" },
+				{ name: "Other", role: "producer" },
+			],
+		}),
+	).toEqual(["Main", "Other"]);
+});
+
+test("featured exclusion is per track and ignores headers", () => {
+	expect(
+		getNonFeaturedTrackArtists({
+			artists: ["Main", "Guest"],
+			credits: [{ name: "Guest", role: "featured" }],
+		}),
+	).toEqual(["Main"]);
+	expect(
+		getNonFeaturedTrackArtists({
+			artists: ["Main", "Guest"],
+			credits: [{ name: "Guest", role: "lyrics" }],
+		}),
+	).toEqual(["Main", "Guest"]);
+	expect(
+		getNonFeaturedTrackArtists({ header: true, artists: ["Guest"] }),
+	).toEqual([]);
+});
 
 test("groups every person-role pair by track and leaves whole-release tracks blank", () => {
 	const credits = getSuggestedCredits([

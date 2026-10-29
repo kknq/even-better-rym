@@ -5,6 +5,7 @@ import { waitForElement } from "~/shared/utils/dom";
 
 import {
 	clearFiledUnderSearch,
+	createCreditedNameSync,
 	readFiledUnderEntries,
 	removeRepeatedFiledUnderEntries,
 	searchFiledUnder,
@@ -23,6 +24,7 @@ import type {
 import {
 	applyFiledUnderChange,
 	getChosenEntries,
+	getReleaseArtistCreditName,
 	getReleaseArtistLabels,
 	getUnchosenIds,
 	hasSameEntries,
@@ -153,8 +155,10 @@ function ReleasePickerPanel({
 	const managedIds = useRef(
 		new Set(session.parentEntries.map((entry) => entry.id)),
 	);
+	const syncCreditedName = useRef(createCreditedNameSync());
 
 	useEffect(() => {
+		let active = true;
 		const chosenEntries = getChosenEntries(session.names, choices);
 		for (const entry of chosenEntries) {
 			managedIds.current.add(entry.id);
@@ -162,14 +166,29 @@ function ReleasePickerPanel({
 		if (!hasSameEntries(chosenEntries, session.parentEntries)) {
 			switchAwayFromSameAsParent();
 		}
-		void syncFiledUnderEntries(chosenEntries, managedIds.current).catch(
-			reportSubmissionError,
-		);
+		void syncFiledUnderEntries(chosenEntries, managedIds.current)
+			.then(() => {
+				if (active)
+					syncCreditedName.current(
+						getReleaseArtistCreditName(session.names, choices),
+					);
+			})
+			.catch(reportSubmissionError);
 		// The import listener already published the starting choices.
 		if (choices !== session.initialChoices) {
 			publishReleaseArtistLabels(session.names, choices);
 		}
+		return () => {
+			active = false;
+		};
 	}, [session, choices]);
+
+	useEffect(
+		() => () => {
+			syncCreditedName.current(undefined);
+		},
+		[],
+	);
 
 	useEffect(() => {
 		// Assigns the selected search result to the active row.
