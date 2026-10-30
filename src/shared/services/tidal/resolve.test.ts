@@ -56,13 +56,13 @@ const album = {
 };
 const trackPage = {
 	data: [
-		{ id: "t1", type: "tracks", meta: { volumeNumber: 1, trackNumber: 1 } },
-		{ id: "t2", type: "tracks", meta: { volumeNumber: 1, trackNumber: 2 } },
+		{ id: "101", type: "tracks", meta: { volumeNumber: 1, trackNumber: 1 } },
+		{ id: "102", type: "tracks", meta: { volumeNumber: 1, trackNumber: 2 } },
 	],
 	included: [
 		artist,
 		{
-			id: "t2",
+			id: "102",
 			type: "tracks",
 			attributes: {
 				title: "Second Track",
@@ -72,7 +72,7 @@ const trackPage = {
 			relationships: { artists: { data: [{ id: "guest", type: "artists" }] } },
 		},
 		{
-			id: "t1",
+			id: "101",
 			type: "tracks",
 			attributes: { title: "First Track", duration: "PT3M7S" },
 			relationships: {
@@ -104,6 +104,8 @@ describe("Tidal imports", () => {
 		"https://tidal.com/album/123?u",
 		"https://tidal.com/browse/album/123?utm_source=test",
 		"https://tidal.com/browse/us/album/123",
+		"https://tidal.com/album/123/credits",
+		"https://tidal.com/album/123/credits/?test=1",
 	])("recognizes album URL %s", (url) => {
 		expect(Tidal.regex.test(url)).toBe(true);
 	});
@@ -113,6 +115,7 @@ describe("Tidal imports", () => {
 		"https://tidal.com/browse/artist/123",
 		"https://tidal.com/browse/album/123abc",
 		"https://tidal.com.evil.example/album/123",
+		"https://tidal.com/album/123/credits/other",
 	])("rejects non-album URL %s", async (url) => {
 		expect(Tidal.regex.test(url)).toBe(false);
 		await expect(resolve(url)).rejects.toThrow("Unsupported Tidal album URL");
@@ -130,11 +133,19 @@ describe("Tidal imports", () => {
 			attributes: ["streaming"],
 			coverArt: ["https://resources.tidal.com/large.jpg"],
 			tracks: [
-				{ position: "1", title: "First Track", duration: "3:07" },
+				{
+					position: "1",
+					title: "First Track",
+					duration: "3:07",
+					artists: ["Main Artist"],
+					creditsUrl: "https://tidal.com/album/123/track/101",
+				},
 				{
 					position: "2",
-					title: "Guest Artist - Second Track (Club Mix)",
+					title: "Second Track (Club Mix)",
 					duration: "62:03",
+					artists: ["Guest Artist"],
+					creditsUrl: "https://tidal.com/album/123/track/102",
 				},
 			],
 		});
@@ -145,6 +156,18 @@ describe("Tidal imports", () => {
 				Accept: "application/vnd.api+json",
 			},
 			urlParameters: { countryCode: "US", include: "artists,coverArt" },
+		});
+	});
+
+	test("accepts a pasted credits-page link while keeping the canonical album URL", async () => {
+		await expect(
+			resolve("https://tidal.com/album/123/credits"),
+		).resolves.toMatchObject({
+			url,
+			tracks: [
+				{ creditsUrl: "https://tidal.com/album/123/track/101" },
+				{ creditsUrl: "https://tidal.com/album/123/track/102" },
+			],
 		});
 	});
 
@@ -184,6 +207,70 @@ describe("Tidal imports", () => {
 				url: "https://openapi.tidal.com/v2/albums/123/relationships/items?page[cursor]=second",
 			}),
 		);
+	});
+
+	test("collects all 201 tracks and preserves raw feature titles and track artists", async () => {
+		const items = Array.from({ length: 201 }, (_, index) => ({
+			id: String(1000 + index),
+			type: "tracks",
+			meta: { volumeNumber: 1, trackNumber: index + 1 },
+		}));
+		const resources = items.map((item) => ({
+			...item,
+			attributes: { title: "Song (feat. Guest Artist)", duration: "PT1M" },
+			relationships: {
+				artists: {
+					data: [
+						{ id: artist.id, type: artist.type },
+						{ id: "guest", type: "artists" },
+					],
+				},
+			},
+		}));
+		vi.mocked(fetch)
+			.mockReset()
+			.mockResolvedValueOnce(
+				JSON.stringify({
+					...album,
+					data: {
+						...album.data,
+						attributes: { ...album.data.attributes, numberOfItems: 201 },
+					},
+				}),
+			);
+		for (let offset = 0; offset < items.length; offset += 100) {
+			vi.mocked(fetch).mockResolvedValueOnce(
+				JSON.stringify({
+					data: items.slice(offset, offset + 100),
+					included: [
+						artist,
+						{
+							id: "guest",
+							type: "artists",
+							attributes: { name: "Guest Artist" },
+						},
+						...resources.slice(offset, offset + 100),
+					],
+					links:
+						offset + 100 < items.length
+							? {
+									next: `/albums/123/relationships/items?page[cursor]=${offset + 100}`,
+								}
+							: {},
+				}),
+			);
+		}
+		const result = await resolve(url);
+		expect(result.tracks).toHaveLength(201);
+		expect(result.tracks?.map((track) => track.position)).toEqual(
+			items.map((item) => String(item.meta.trackNumber)),
+		);
+		expect(result.tracks?.at(-1)).toMatchObject({
+			title: "Song (feat. Guest Artist)",
+			artists: ["Main Artist", "Guest Artist"],
+			creditsUrl: "https://tidal.com/album/123/track/1200",
+		});
+		expect(fetch).toHaveBeenCalledTimes(4);
 	});
 
 	test("does not send credentials to an unexpected pagination host", async () => {

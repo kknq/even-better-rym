@@ -1,5 +1,9 @@
 import { nanoid } from "nanoid";
 import browser from "webextension-polyfill";
+import type {
+	TidalCreditsInput,
+	TidalCreditsResult,
+} from "~/shared/services/tidal/credits-page";
 
 export type FetchRequest = {
 	id: string;
@@ -86,6 +90,18 @@ export type WikipediaSearchResponse = {
 	data: { url?: string; error?: string };
 };
 
+export type TidalCreditsRequest = {
+	id: string;
+	type: "tidalCredits";
+	data: TidalCreditsInput;
+};
+
+export type TidalCreditsResponse = {
+	id: string;
+	type: "tidalCredits";
+	data: TidalCreditsResult;
+};
+
 // One-way messages (not a request/response pair, no `id`) for broadcasting a
 // chart-shortcut rebind to any already-open chart page, so it takes effect
 // without a refresh. Popup -> background -> matching tabs.
@@ -124,12 +140,14 @@ export type BackgroundRequest =
 	| DownloadRequest
 	| ScriptRequest
 	| SpotifySearchRequest
+	| TidalCreditsRequest
 	| WikipediaSearchRequest;
 export type BackgroundResponse =
 	| FetchResponse
 	| DownloadResponse
 	| ScriptResponse
 	| SpotifySearchResponse
+	| TidalCreditsResponse
 	| WikipediaSearchResponse;
 
 export const isBackgroundRequest = (o: unknown): o is BackgroundRequest =>

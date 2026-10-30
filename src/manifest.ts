@@ -48,6 +48,12 @@ const sharedManifest = {
 			run_at: "document_idle",
 		},
 		{
+			js: ["src/modules/tidal-credits/main.ts"],
+			matches: ["https://tidal.com/album/*/credits"],
+			all_frames: true,
+			run_at: "document_idle",
+		},
+		{
 			js: ["src/modules/cover-art/main.ts"],
 			matches: ["*://*.rateyourmusic.com/images/upload*"],
 			run_at: "document_start",
