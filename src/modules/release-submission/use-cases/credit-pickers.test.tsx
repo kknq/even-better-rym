@@ -76,6 +76,49 @@ function rows() {
 	];
 }
 
+test("uses same-side vinyl ranges when accepting suggested and guest credits", async () => {
+	const positions = ["A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4"];
+	const credited = new Set(["A1", "A2", "A3", "A4", "B1", "B3", "B4"]);
+	await setup({
+		artists: ["Main"],
+		tracks: positions.map((position) => ({
+			position,
+			artists: credited.has(position) ? ["Main", "Guest"] : ["Main"],
+			credits: credited.has(position) ? [{ name: "Ozzy", role: "vocals" }] : [],
+		})),
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(1));
+	const expectedTracks = "A1-A4, B1, B3, B4";
+	expect(rows()[0]?.cells[2]?.querySelector("input")?.value).toBe(
+		expectedTracks,
+	);
+	for (const picker of [
+		"#ebr-suggested-credit-picker",
+		"#ebr-guest-credit-picker",
+	]) {
+		await act(() =>
+			document
+				.querySelector<HTMLInputElement>(
+					`${picker} input[value="Credit in plain text"]`,
+				)
+				?.click(),
+		);
+	}
+	await vi.waitFor(() => expect(addCreditLine).toHaveBeenCalledTimes(2));
+	expect(addCreditLine).toHaveBeenNthCalledWith(1, {
+		id: undefined,
+		name: "Ozzy",
+		role: "vocals",
+		tracks: expectedTracks,
+	});
+	expect(addCreditLine).toHaveBeenNthCalledWith(2, {
+		id: undefined,
+		name: "Guest",
+		role: "guest",
+		tracks: expectedTracks,
+	});
+});
+
 async function mountTrackPicker(text = "1|One|\n2|Two|") {
 	document.body.insertAdjacentHTML(
 		"beforeend",
@@ -969,6 +1012,93 @@ test("does not load or offer suggestions when credit import is disabled", async 
 	);
 	expect(loadCreditSuggestions).not.toHaveBeenCalled();
 	expect(document.querySelector("#ebr-suggested-credit-picker")).toBeNull();
+});
+
+test("offers an unmapped album-wide artwork role without question-mark placeholders", async () => {
+	await setup({
+		tracks: [
+			{ credits: [{ name: "rose-engine", role: "artwork by" }] },
+			{ credits: [{ name: "rose-engine", role: "artwork by" }] },
+		],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(1));
+	expect(rows()[0]?.cells[1]?.querySelector("input")?.value).toBe("artwork by");
+	expect(rows()[0]?.cells[2]?.querySelector("input")?.value).toBe("");
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Credit in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenCalledExactlyOnceWith({
+			id: undefined,
+			name: "rose-engine",
+			role: "artwork by",
+			tracks: "",
+		}),
+	);
+});
+
+test("puts unverified names last and prevents placeholder values from being submitted", async () => {
+	await setup({
+		tracks: [{ credits: [{ name: "Track Person", role: "producer" }] }],
+		unverifiedCredits: [
+			{ name: "Release Person", role: "mixing engineer" },
+			{ name: "Description Person" },
+		],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(3));
+	expect(rows().map((row) => row.cells[0]?.textContent)).toEqual([
+		"Track Person",
+		"Release Person",
+		"Description Person",
+	]);
+	expect(rows()[1]?.cells[1]?.querySelector("input")?.value).toBe(
+		"mixing engineer",
+	);
+	expect(rows()[1]?.cells[2]?.querySelector("input")?.value).toBe("???");
+	expect(rows()[2]?.cells[1]?.querySelector("input")?.value).toBe("???");
+	expect(rows()[2]?.cells[2]?.querySelector("input")?.value).toBe("???");
+	expect(
+		rows()[2]?.querySelector<HTMLInputElement>(
+			'input[value="Credit in plain text"]',
+		)?.disabled,
+	).toBe(true);
+
+	const edit = async (column: number, value: string) => {
+		const input = rows()[2]?.cells[column]?.querySelector("input");
+		if (!input) throw new Error("Missing unverified credit detail");
+		await act(() => {
+			input.value = value;
+			input.dispatchEvent(new Event("input", { bubbles: true }));
+			input.dispatchEvent(new Event("change", { bubbles: true }));
+		});
+	};
+	await edit(1, "writer");
+	expect(
+		rows()[2]?.querySelector<HTMLInputElement>(
+			'input[value="Credit in plain text"]',
+		)?.disabled,
+	).toBe(true);
+	await edit(2, "1");
+	expect(
+		rows()[2]?.querySelector<HTMLInputElement>(
+			'input[value="Credit in plain text"]',
+		)?.disabled,
+	).toBe(false);
+	await act(() =>
+		rows()[2]
+			?.querySelector<HTMLInputElement>('input[value="Credit in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenLastCalledWith({
+			id: undefined,
+			name: "Description Person",
+			role: "writer",
+			tracks: "1",
+		}),
+	);
 });
 
 test("only offers RYM's allowed special credits on a non-primary issue", async () => {

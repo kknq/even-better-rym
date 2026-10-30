@@ -9,8 +9,10 @@ import type {
 	ResolveData,
 	ResolveFunction,
 } from "../types";
+import { stripDiscogsArtistDisambiguator } from "./artist-name";
 import { client_key, client_secret } from "./auth";
 import type { Format, FormatDescription, Master, Release } from "./codec";
+import { getDiscogsCredits } from "./credits";
 import { regex } from "./regex";
 
 type LinkType = "release" | "master";
@@ -416,21 +418,49 @@ const resolveRelease = async (id: string): Promise<ResolveData> => {
 	const artists = response.artists.map((artist) =>
 		// id 194 = various artists
 		// we do this by id instead of name ('Various' on discogs) to allow for artists named 'Various'
-		artist.id === 194 ? "Various Artists" : artist.name,
+		artist.id === 194
+			? "Various Artists"
+			: stripDiscogsArtistDisambiguator(artist.name),
 	);
 	const date = response.released ? parseDate(response.released) : undefined;
-	const tracks = response.tracklist.map((track) => ({
-		position: track.position.replace("-", ".").replace(/(CD|DVD)\D?/, ""), // CD1-1 -> 1.1
-		title: track.title,
-		duration: track.duration,
-		header: track.type_ === "heading",
-	}));
+	const { trackCredits, unverifiedCredits } = getDiscogsCredits(
+		response.tracklist,
+		response.extraartists,
+	);
+	const tracks = response.tracklist.map((track, index) => {
+		const artists = track.artists
+			?.map((artist) => {
+				const name = artist.anv?.trim();
+				const displayName =
+					name === undefined || name.length === 0 ? artist.name : name;
+				return stripDiscogsArtistDisambiguator(displayName);
+			})
+			.filter(Boolean);
+		const credits = trackCredits[index];
+		return {
+			position: track.position.replace("-", ".").replace(/(CD|DVD)\D?/, ""), // CD1-1 -> 1.1
+			title: track.title,
+			duration: track.duration,
+			header: track.type_ === "heading",
+			...(artists?.length ? { artists } : {}),
+			...(credits?.length && track.type_ === "track" ? { credits } : {}),
+		};
+	});
 	const type = getReleaseType(title, tracks.length);
 	const coverArt = (response.images ?? [])
 		.map((image) => image.resource_url)
 		.filter((url) => url.length > 0);
-	const label: ReleaseLabel = response.labels[0];
-	if (label.catno === "none") label.catno = "n/a";
+	const labelNames = response.labels
+		.map((label) => label.name.trim())
+		.filter((name, index, names) => name && names.indexOf(name) === index)
+		.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+	const firstLabel = response.labels[0];
+	const label: ReleaseLabel | undefined = firstLabel
+		? {
+				...(labelNames.length ? { name: labelNames.join(" / ") } : {}),
+				catno: firstLabel.catno === "none" ? "n/a" : firstLabel.catno,
+			}
+		: undefined;
 	const countries = response.country
 		? parseCountries(response.country)
 		: undefined;
@@ -443,11 +473,12 @@ const resolveRelease = async (id: string): Promise<ResolveData> => {
 		type,
 		tracks,
 		coverArt,
-		label,
+		...(label ? { label } : {}),
 		countries,
+		...(unverifiedCredits.length ? { unverifiedCredits } : {}),
 	};
 
-	const format = response.formats[0];
+	const format = response.formats?.[0];
 	if (format) {
 		parseFormatDescriptions(data, format);
 		parseFormatName(data, format);

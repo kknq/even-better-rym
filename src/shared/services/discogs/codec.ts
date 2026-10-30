@@ -240,25 +240,37 @@ export type Format = {
 export type Release = {
 	uri: string;
 	title: string;
-	artists: [{ name: string; id: number }];
-	tracklist: [
-		{
-			position: string;
-			title: string;
-			duration: string;
-			type_: "heading" | "track";
-		},
-	];
-	images: [{ resource_url: string }];
-	formats: [Format];
-	labels: [
-		{
-			name: string;
-			catno: string;
-		},
-	];
+	artists: Artist[];
+	extraartists?: ExtraArtist[];
+	tracklist: TrackItem[];
+	images?: { resource_url: string }[];
+	formats?: Format[];
+	labels: {
+		name: string;
+		catno: string;
+	}[];
 	released?: string;
 	country?: string;
+};
+
+export type Artist = {
+	name: string;
+	id?: number;
+	anv?: string;
+};
+
+export type ExtraArtist = Artist & {
+	role?: string;
+	tracks?: string;
+};
+
+export type TrackItem = {
+	position: string;
+	title: string;
+	duration?: string;
+	type_: "heading" | "track" | "index";
+	artists?: Artist[];
+	extraartists?: ExtraArtist[];
 };
 
 export type Master = { main_release: number };

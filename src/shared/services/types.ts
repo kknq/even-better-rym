@@ -205,6 +205,11 @@ export type TrackCredit = {
 	role: string;
 };
 
+export type UnverifiedCredit = {
+	name: string;
+	role?: string;
+};
+
 export type Track = {
 	position?: string;
 	title?: string;
@@ -231,5 +236,6 @@ export type ResolveData = {
 	classifiers?: string[];
 	filedUnderCreditRole?: string;
 	tracks?: Track[];
+	unverifiedCredits?: UnverifiedCredit[];
 	countries?: string[];
 };
