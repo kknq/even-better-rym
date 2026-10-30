@@ -1,5 +1,10 @@
 import type { ReleaseType } from "../services/types";
 
+export const withVersion = (title: string, version?: string): string =>
+	version && !title.toLowerCase().includes(version.toLowerCase())
+		? `${title} (${version})`
+		: title;
+
 export const getReleaseType = (
 	title: string | undefined,
 	numberOfTracks: number,

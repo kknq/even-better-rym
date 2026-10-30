@@ -49,7 +49,7 @@ test("reads actual source-shaped featured, writer, composer and engineering cred
 	});
 	expect(result.credits).toContainEqual({
 		name: "Kanye West",
-		role: "composition",
+		role: "composer",
 	});
 	expect(result.credits).toContainEqual({
 		name: "Kanye West",
@@ -57,7 +57,7 @@ test("reads actual source-shaped featured, writer, composer and engineering cred
 	});
 	expect(result.credits).toContainEqual({
 		name: "Roark Bailey",
-		role: "mixing",
+		role: "mixing engineer",
 	});
 	expect(result.credits).toContainEqual({
 		name: "Marcus Fitz",
@@ -65,7 +65,7 @@ test("reads actual source-shaped featured, writer, composer and engineering cred
 	});
 	expect(result.credits).toContainEqual({
 		name: "Collin Leonard",
-		role: "mastering",
+		role: "mastering engineer",
 	});
 	expect(result.credits).toHaveLength(12);
 });
@@ -95,7 +95,7 @@ test.each([
 		Object.entries(roles).flatMap(([role, names]) =>
 			names.map((name) => ({
 				name,
-				role: role === "composer" ? "composition" : "songwriting",
+				role: role === "composer" ? "composer" : "songwriting",
 			})),
 		),
 	);
@@ -118,8 +118,8 @@ test("preserves collaborators and does not invent roles for main artist attribut
 	).toEqual({
 		artists: ["1000 EYES", "Tom Schley"],
 		credits: [
-			{ name: "Tom Schley", role: "composition" },
-			{ name: "Karl Barnes", role: "mastering" },
+			{ name: "Tom Schley", role: "composer" },
+			{ name: "Karl Barnes", role: "mastering engineer" },
 		],
 	});
 });
@@ -319,7 +319,7 @@ test("split-release writers keep their alternating scopes while composers cover 
 	const suggestions = getSuggestedCredits(tracks);
 	expect(
 		suggestions
-			.filter((credit) => credit.role === "composition")
+			.filter((credit) => credit.role === "composer")
 			.map((credit) => credit.positions),
 	).toEqual([[], [], []]);
 	expect(

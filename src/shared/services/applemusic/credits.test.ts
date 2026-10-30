@@ -51,9 +51,9 @@ test("reads people and each role from public song credits, ignoring non-credit s
 		{ name: "Jonah Abraham", role: "songwriting" },
 		{ name: "Jordan Carter", role: "songwriting" },
 		{ name: "Jonah Abraham", role: "producer" },
-		{ name: "Marcus Fitz", role: "mixing" },
+		{ name: "Marcus Fitz", role: "mixing engineer" },
 		{ name: "Marcus Fitz", role: "engineer" },
-		{ name: "Colin Leonard", role: "mastering" },
+		{ name: "Colin Leonard", role: "mastering engineer" },
 	]);
 });
 

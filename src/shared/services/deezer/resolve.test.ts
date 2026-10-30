@@ -341,7 +341,7 @@ describe("Deezer imports", () => {
 			})),
 		).toEqual([
 			{ name: "Guest", role: "featured", positions: ["1"] },
-			{ name: "Writer", role: "composition", positions: ["1"] },
+			{ name: "Writer", role: "composer", positions: ["1"] },
 		]);
 	});
 
