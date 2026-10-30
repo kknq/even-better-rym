@@ -16,5 +16,5 @@ export const Qobuz: Service & Searchable & Resolvable = {
 	foundIcon: QobuzFoundIcon,
 	notFoundIcon: QobuzNotFoundIcon,
 	search: withCache("qobuz-search", search),
-	resolve: withCache("qobuz-resolve-v2", resolve),
+	resolve: withCache("qobuz-resolve-v3", resolve),
 };

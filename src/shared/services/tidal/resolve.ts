@@ -1,6 +1,6 @@
 import { secondsToString, stringToDate } from "~/shared/utils/datetime";
 import { fetch } from "~/shared/utils/fetch";
-import { getReleaseType } from "~/shared/utils/music";
+import { getReleaseType, withVersion } from "~/shared/utils/music";
 
 import type { ReleaseType, ResolveFunction, Track } from "../types";
 import { requestToken } from "./auth";
@@ -55,12 +55,6 @@ function duration(value: string | undefined): string | undefined {
 			Number(match[2] ?? 0) * 60 +
 			Number(match[3] ?? 0),
 	);
-}
-
-function withVersion(title: string, version?: string) {
-	return version && !title.toLowerCase().includes(version.toLowerCase())
-		? `${title} (${version})`
-		: title;
 }
 
 export const resolve: ResolveFunction = async (url) => {

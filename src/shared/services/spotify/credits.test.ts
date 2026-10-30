@@ -98,12 +98,12 @@ describe("Spotify song credits", () => {
 	test("loads grouped web-player credits anonymously and normalizes roles without duplicating main artists", async () => {
 		const resolve = createSongCreditsResolver();
 		await expect(resolve(firstUrl)).resolves.toEqual([
-			{ name: "Writer One", role: "composition" },
-			{ name: "Writer Two", role: "composition" },
+			{ name: "Writer One", role: "composer" },
+			{ name: "Writer Two", role: "composer" },
 			{ name: "Writer One", role: "lyrics" },
 			{ name: "Producer", role: "producer" },
 			{ name: "Guest", role: "featured" },
-			{ name: "Mixer", role: "mixing" },
+			{ name: "Mixer", role: "mixing engineer" },
 			{ name: "Player", role: "guitar" },
 		]);
 		expect(fetch).toHaveBeenNthCalledWith(1, {
@@ -185,7 +185,7 @@ describe("Spotify song credits", () => {
 		});
 		const result = await createSongCreditsResolver()(firstUrl);
 		expect(result).toHaveLength(100);
-		expect(result[99]).toEqual({ name: "Writer 99", role: "composition" });
+		expect(result[99]).toEqual({ name: "Writer 99", role: "composer" });
 		expect(
 			vi
 				.mocked(fetch)
@@ -343,9 +343,9 @@ describe("Spotify song credits", () => {
 		expect(fetch).toHaveBeenCalledTimes(5);
 		expect(onProgress).toHaveBeenLastCalledWith(4, 4);
 		expect(getSuggestedCredits(result.tracks)).toMatchObject([
-			{ name: "William Jarboe", role: "composition", positions: [] },
-			{ name: "Damian Anton-Ojeda", role: "composition", positions: [] },
-			{ name: "Austyn Sullivan", role: "composition", positions: [] },
+			{ name: "William Jarboe", role: "composer", positions: [] },
+			{ name: "Damian Anton-Ojeda", role: "composer", positions: [] },
+			{ name: "Austyn Sullivan", role: "composer", positions: [] },
 			{ name: "William Jarboe", role: "lyrics", positions: ["1", "3"] },
 			{ name: "Damian Anton-Ojeda", role: "lyrics", positions: ["2", "4"] },
 		]);

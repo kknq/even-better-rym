@@ -3,8 +3,10 @@ import { GUEST_ROLE, getGuestArtists } from "../utils/guest-credits";
 import {
 	creditKey,
 	getFeaturedArtists,
+	getNonFeaturedTrackArtists,
 	getSuggestedCredits,
 	isSpecialCreditRole,
+	sortCreditsByTrackCoverage,
 } from "../utils/suggested-credits";
 import { isVariousArtistsRelease } from "../utils/track-artist-links";
 import { CreditPicker } from "./credit-picker";
@@ -45,9 +47,16 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 	}, []);
 	const guests = isVariousArtistsRelease(releaseArtists)
 		? []
-		: getGuestArtists(loadedTracks, releaseArtists);
-	const suggestions = getSuggestedCredits(loadedTracks).filter(
-		(credit) => !isReissue || isSpecialCreditRole(credit.role),
+		: sortCreditsByTrackCoverage(
+				getGuestArtists(loadedTracks, releaseArtists),
+				loadedTracks,
+				getNonFeaturedTrackArtists,
+			);
+	const suggestions = sortCreditsByTrackCoverage(
+		getSuggestedCredits(loadedTracks).filter(
+			(credit) => !isReissue || isSpecialCreditRole(credit.role),
+		),
+		loadedTracks,
 	);
 	return (
 		<>

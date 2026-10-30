@@ -47,6 +47,37 @@ export const getTrackCredits = (track: Track): TrackCredit[] => [
 	})),
 ];
 
+export function sortCreditsByTrackCoverage<T extends { name: string }>(
+	credits: T[],
+	tracks: Track[],
+	getNames: (track: Track) => string[] = (track) =>
+		getTrackCredits(track)
+			.filter((credit) => credit.role.trim())
+			.map((credit) => credit.name),
+): T[] {
+	const counts = new Map<string, number>();
+	for (const track of tracks) {
+		if (track.header) continue;
+		const names = new Set(getNames(track).map((name) => name.trim()));
+		for (const name of names) {
+			if (name) counts.set(name, (counts.get(name) ?? 0) + 1);
+		}
+	}
+	const blocks = new Map<string, T[]>();
+	for (const credit of credits) {
+		const block = blocks.get(credit.name) ?? [];
+		block.push(credit);
+		blocks.set(credit.name, block);
+	}
+	return [...blocks]
+		.sort(
+			([a], [b]) =>
+				(counts.get(b.trim()) ?? 0) - (counts.get(a.trim()) ?? 0) ||
+				a.localeCompare(b, undefined, { sensitivity: "base" }),
+		)
+		.flatMap(([, block]) => block);
+}
+
 export function getNonFeaturedTrackArtists(track: Track): string[] {
 	if (track.header) return [];
 	const featuredNames = new Set(
