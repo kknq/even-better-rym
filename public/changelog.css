@@ -75,6 +75,13 @@ main {
 	font-size: 12px;
 }
 
+.release-subtitle {
+	margin: 8px 0 0;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1.5;
+}
+
 .changes {
 	margin: 0;
 	padding: 0;
@@ -82,7 +89,9 @@ main {
 }
 
 .change {
-	display: flex;
+	display: grid;
+	grid-template-columns: 80px minmax(0, 1fr);
+	align-items: start;
 	gap: 12px;
 	padding: 16px;
 	border-bottom: 1px solid #f0f0f0;
@@ -125,6 +134,7 @@ main {
 	color: #666;
 	font-size: 13px;
 	line-height: 1.5;
+	overflow-wrap: anywhere;
 }
 
 .footer {
@@ -135,6 +145,30 @@ main {
 	text-align: center;
 }
 
-.footer a {
+.footer-links {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+}
+
+.footer-links a {
 	color: #4286c4;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.footer-thanks {
+	margin: 8px 0 0;
+}
+
+.footer-icon {
+	display: block;
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
+	object-fit: contain;
+	vertical-align: middle;
 }

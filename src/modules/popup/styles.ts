@@ -10,6 +10,31 @@ export const styles = {
 		background: "#f2f2f2",
 	} satisfies CSSProperties,
 
+	externalLinks: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: 8,
+		padding: "8px 10px 10px",
+		borderTop: "1px solid #e1e1e1",
+		color: "#999",
+		fontSize: 11,
+	} satisfies CSSProperties,
+
+	externalLink: {
+		display: "inline-flex",
+		alignItems: "center",
+		gap: 4,
+		color: "#4286c4",
+		textDecoration: "none",
+	} satisfies CSSProperties,
+
+	externalLinkIcon: {
+		display: "block",
+		flexShrink: 0,
+		objectFit: "contain",
+	} satisfies CSSProperties,
+
 	header: {
 		display: "flex",
 		alignItems: "center",

@@ -125,7 +125,54 @@ export function App() {
 				onToggleFeature={toggle}
 				onChangeView={setView}
 			/>
+			<nav aria-label="External links" style={styles.externalLinks}>
+				<a
+					href="https://github.com/kknq/even-better-rym"
+					target="_blank"
+					rel="noreferrer"
+					style={styles.externalLink}
+				>
+					<ExternalLinkIcon kind="github" />
+					GitHub
+				</a>
+				<span aria-hidden="true">|</span>
+				<a
+					href="https://rateyourmusic.com/list/kknq/evenbetterrym-browser-extension/"
+					target="_blank"
+					rel="noreferrer"
+					style={styles.externalLink}
+				>
+					<ExternalLinkIcon kind="rym" />
+					RYM List
+				</a>
+				<span aria-hidden="true">|</span>
+				<a
+					href="https://ko-fi.com/kknqqq"
+					target="_blank"
+					rel="noreferrer"
+					style={styles.externalLink}
+				>
+					<ExternalLinkIcon kind="kofi" />
+					Donate
+				</a>
+			</nav>
 		</div>
+	);
+}
+
+function ExternalLinkIcon({
+	kind,
+}: Readonly<{ kind: "github" | "rym" | "kofi" }>) {
+	return (
+		<img
+			src={browser.runtime.getURL(
+				kind === "rym" ? "icons/sonemic-16.png" : `icons/${kind}.svg`,
+			)}
+			width={14}
+			height={14}
+			alt=""
+			style={styles.externalLinkIcon}
+		/>
 	);
 }
 
