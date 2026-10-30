@@ -123,6 +123,33 @@ async function showApp() {
 }
 
 describe("App", () => {
+	test("shows external project and donation links at the bottom of the menu", async () => {
+		await showApp();
+		const links = [
+			...container.querySelectorAll("nav[aria-label='External links'] a"),
+		];
+		expect(
+			links.map((link) => [link.textContent, link.getAttribute("href")]),
+		).toEqual([
+			["GitHub", "https://github.com/kknq/even-better-rym"],
+			[
+				"RYM List",
+				"https://rateyourmusic.com/list/kknq/evenbetterrym-browser-extension/",
+			],
+			["Donate", "https://ko-fi.com/kknqqq"],
+		]);
+		expect(
+			links.every((link) => link.getAttribute("target") === "_blank"),
+		).toBe(true);
+		expect(
+			links.map((link) => link.querySelector("img")?.getAttribute("src")),
+		).toEqual([
+			"moz-extension://test/icons/github.svg",
+			"moz-extension://test/icons/sonemic-16.png",
+			"moz-extension://test/icons/kofi.svg",
+		]);
+	});
+
 	test("shows a loading indicator before feature settings resolve", async () => {
 		vi.mocked(getAllModulesEnabled).mockReturnValue(
 			new Promise(() => undefined),
@@ -225,7 +252,7 @@ describe("App", () => {
 		await act(() => findButton(group).click());
 		await act(() => featureRow(key).querySelector("button")?.click());
 		expect(container.querySelector("header")?.textContent).toContain(title);
-		expect(container.querySelector("img")).toBeNull();
+		expect(container.querySelector("header img")).toBeNull();
 
 		await act(() => findButton(child).click());
 		expect(

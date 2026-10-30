@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>What's new in EvenBetterRYM 2.8.2</title>
+    <title>What's new in EvenBetterRYM 3.0.0</title>
     <link rel="stylesheet" href="changelog.css" />
   </head>
   <body>
@@ -19,193 +19,245 @@
       <!-- Replace this release section with the notes for each new extension version. -->
       <section class="release" aria-labelledby="version">
         <header class="release-header">
-          <h2 class="version" id="version">2.8.2 Hotfixes</h2>
-          <p class="date">06 October 2026</p>
-        </header>
-        <ul class="changes">
-          <li class="change">
-            <span class="badge badge-hotfix">HOTFIX</span>
-            <div>
-              <h3 class="change-title">Wikipedia search reliability</h3>
-              <p class="change-description">
-                Moved Wikipedia searches to background fetching to make them function
-                in Firefox-based browsers.
-              </p>
-            </div>
-          </li>
-        </ul>
-      </section>
-
-      <section class="release" aria-labelledby="version-2-8-1">
-        <header class="release-header">
-          <h2 class="version" id="version-2-8-1">2.8.1 Hotfixes</h2>
-          <p class="date">05 October 2026</p>
-        </header>
-        <ul class="changes">
-          <li class="change">
-            <span class="badge badge-hotfix">HOTFIX</span>
-            <div>
-              <h3 class="change-title">Spotify search hotfix</h3>
-              <p class="change-description">
-                Spotify opened separate windows for each search result, which was fixed (I hope and pray)
-              </p>
-            </div>
-          </li>
-          <li class="change">
-            <span class="badge badge-hotfix">HOTFIX</span>
-            <div>
-              <h3 class="change-title">Reference link alignment</h3>
-              <p class="change-description">
-                Adjusted Wikipedia and WhoSampled link alignment beside release
-                titles, keeping artist information on its own line.
-              </p>
-            </div>
-          </li>
-          <li class="change">
-            <span class="badge badge-hotfix">HOTFIX</span>
-            <div>
-              <h3 class="change-title">Collection column management</h3>
-              <p class="change-description">
-                Added a toggle for custom collection columns and an option to
-                restore RYM's defaults. Toggling column management now updates
-                open music collections while preserving your saved column choices.
-              </p>
-            </div>
-          </li>
-        </ul>
-      </section>
-
-      <section class="release" aria-labelledby="version-2-8-0">
-        <header class="release-header">
-          <h2 class="version" id="version-2-8-0">Main 2.8.0 Version Changes</h2>
-          <p class="date">October 2026</p>
+          <h2 class="version" id="version">3.0.0</h2>
+          <p class="date">November 2026</p>
+          <p class="release-subtitle">First major release since I refactored the entire extension</p>
         </header>
         <ul class="changes">
           <li class="change">
             <span class="badge">Improved</span>
             <div>
-              <h3 class="change-title">Improved filters for collections</h3>
+              <h3 class="change-title">Suggested credits from imports</h3>
               <p class="change-description">
-                Added more filters, an ability to customize list of the columns and preserve it,
-                page sizes and other things. Everything can be enabled/disabled as always. Thanks
-                <a href="https://rateyourmusic.com/~carbonic">carbonic</a> for the link.
-                Expect issues, something is probably broken because that was a massive thing to implement.
+                The biggest thing in this update: less typing out credits by hand.
+                <a href="https://rateyourmusic.com/~ArkfallOverfall">ArkfallOverfall</a>
+                added a possibility to get guest artists from releases
+                when importing from Apple Music.
+                I used her base implementation, refined UI and UX
+                and have added the credits scraping for everything.
+                And then I did that for six more services.<br><br>
+                Imports can now suggest release and track credits from Apple
+                Music, Spotify, Deezer, Tidal, Qobuz, Discogs, and Bandcamp.
+                Review the suggestions and choose what to add to your submission.<br><br>
+                Bandcamp credit pulling is very messy, but it still makes
+                submitting easier. I haven't tested it on every album, so please
+                <a href="https://github.com/kknq/even-better-rym/issues">report anything unexpected</a>.<br><br>
+                I plan to do the same for other streaming services. These came
+                first because I personally use some of them and they have good
+                credit data (not Bandcamp, but I use it often). I wanted to do
+                all of them, but ran out of gas and got exhausted. More to come
+                once I've recovered a bit.
               </p>
             </div>
           </li>
           <li class="change">
             <span class="badge">New</span>
             <div>
-              <h3 class="change-title">See release reception at a glance</h3>
+              <h3 class="change-title">More places to import music from</h3>
               <p class="change-description">
-                Release pages now include a summary of rating reception, from
-                Panned to Acclaim, with a ranked breakdown of rating groups.
-                You can find it under the rating distribution. Thanks
-                <a href="https://greasyfork.org/en/users/1320826-polachek">polacheck</a>
-                for the first version of the implementation.
+                Added release imports from Traxsource, NTS Radio, Mixcloud,
+                Tidal, and Deezer.
               </p>
             </div>
           </li>
           <li class="change">
             <span class="badge">New</span>
             <div>
-              <h3 class="change-title">Browse more release artwork</h3>
+              <h3 class="change-title">Bonus track recognition</h3>
               <p class="change-description">
-                Pulls more images from matching Discogs release issues in a
-                carousel on music release pages. Idea and most of the implementation by
-                <a href="https://rateyourmusic.com/~MauroMauricio">MauroMauricio</a>
+                Imports can now recognize bonus tracks and tag them in the
+                tracklist. One less thing to fix manually.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Discogs authentication fixes</h3>
+              <p class="change-description">
+                Fixed authentication handling for Discogs imports.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Improved</span>
+            <div>
+              <h3 class="change-title">WhoSampled and Wikipedia button redesign</h3>
+              <p class="change-description">
+                Redesigned and moved the WhoSampled and Wikipedia buttons on release
+                pages. Their colors can also now be customized in the extension menu.
+                I think it is a good UX now, but let me know.
               </p>
             </div>
           </li>
           <li class="change">
             <span class="badge">New</span>
             <div>
-              <h3 class="change-title">Useful reference links</h3>
+              <h3 class="change-title">Jump straight into search</h3>
               <p class="change-description">
-                Find a release on Wikipedia or WhoSampled directly from its RYM
-                page. Idea and most of the implementation by
-                <a href="https://rateyourmusic.com/~MauroMauricio">MauroMauricio</a>.
-                Expect Wikipedia links on artist and genre pages in the future.
+                Press `<kbd>/</kbd>` while you're not typing in another field to
+                focus the search bar directly.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Hide Ratings on label and classifier pages</h3>
+              <p class="change-description">
+                Fixed Hide Ratings not working on label and classifier pages.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Page sizes on tag pages</h3>
+              <p class="change-description">
+                Fixed adding the configured collection page size to tag-page links.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Keep page sizes already in links</h3>
+              <p class="change-description">
+                Links that already specify a page size no longer have it
+                replaced by the extension's default.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">New</span>
+            <div>
+              <h3 class="change-title">Recent collection view</h3>
+              <p class="change-description">
+                Added the Recent view to the collection view options.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Image-resize arrows</h3>
+              <p class="change-description">
+                Added the arrow icons on the image-resize buttons to match
+                the direction they actually resize in.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">New</span>
+            <div>
+              <h3 class="change-title">Clear profile locations during submission</h3>
+              <p class="change-description">
+                Added clear buttons for location fields on the profile submission
+                form.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">New</span>
+            <div>
+              <h3 class="change-title">Search hints on artist profiles</h3>
+              <p class="change-description">
+                You can now see an artist's search hint directly on their
+                profile.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Profile image previews</h3>
+              <p class="change-description">
+                Fixed preview handling for images on profiles during edit of the other notes section.
               </p>
             </div>
           </li>
           <li class="change">
             <span class="badge">Improved</span>
             <div>
-              <h3 class="change-title">More reliable streaming links</h3>
+              <h3 class="change-title">Capitalization beyond English</h3>
               <p class="change-description">
-                Streaming searches now better respect your region.
-                Also changed how it functions with non-latin characters in almost every streaming service.
-                Should be more reliable.
+                Improved capitalization handling for non-English characters
+                in imported titles and tracklists.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Apple Music links without the extra blank tab</h3>
+              <p class="change-description">
+                Fixed Apple Music links opening an unnecessary blank tab on Safari.
+                Also should fix an annoying thing when it tried to open iTunes.
               </p>
             </div>
           </li>
           <li class="change">
             <span class="badge">Improved</span>
             <div>
-              <h3 class="change-title">Fine-tune image crops</h3>
-              <h3 class="change-title">Spotify search overhaul</h3>
+              <h3 class="change-title">Spotify search and error logging</h3>
               <p class="change-description">
-                Spotify search moved from API to UI scraping.
-                It is slower but shouldn't get rate-limited now.
-                Probably the ugliest code I've ever written.
+                Improved Spotify search diagnostics and error logging, so when
+                something goes wrong there is more useful information to work
+                with. Spotify is a mess and the more I work with it the more I hate it.
               </p>
             </div>
           </li>
           <li class="change">
-            <span class="badge">Fixes</span>
+            <span class="badge">Improved</span>
             <div>
-              <h3 class="change-title">Hide-page bugfix</h3>
+              <h3 class="change-title">Qobuz Search improvements</h3>
               <p class="change-description">
-                Fixed Hide Ratings on automatic recommendations
+                The chance that Qobuz search will return the correct release has been improved.
               </p>
             </div>
           </li>
           <li class="change">
-            <span class="badge">Fixes</span>
+            <span class="badge">And...</span>
             <div>
-              <h3 class="change-title">Discogs country bugfix</h3>
+              <h3 class="change-title">Probably more things that I've done while working on this</h3>
               <p class="change-description">
-                Country was not pulled correctly if issuing country on Discogs was set to Russia.
+                It has been that kind of update.
               </p>
             </div>
           </li>
           <li class="change">
-            <span class="badge">Fixes</span>
+            <span class="badge">Support</span>
             <div>
-              <h3 class="change-title">+ [unknown artist] button works again</h3>
+              <h3 class="change-title">Buy me an energy drink?</h3>
               <p class="change-description">
-                The + [unknown artist] button now functions correctly.
-              </p>
-            </div>
-          </li>
-          <li class="change">
-            <span class="badge">Fixes</span>
-            <div>
-              <h3 class="change-title">Timeline handling of bands without roles</h3>
-              <p class="change-description">
-                Timeline feature used to brake if there was no role information. Added a fallback for those cases.
-              </p>
-            </div>
-          </li>
-          <li class="change">
-            <span class="badge">Fixes</span>
-            <div>
-              <h3 class="change-title">+ (no label) button bugfix</h3>
-              <p class="change-description">
-                The + (no label) button could rarely jump to other fields
-                because it was connected to the clear button and not to the label field. That was patched.
+                Someone asked if there was a way to support the project. After
+                going a bit feral getting this update out, I figured I earned
+                an energy drink. <a href="https://ko-fi.com/kknqqq">You can do it here</a>.
               </p>
             </div>
           </li>
         </ul>
       </section>
 
-      <p class="footer">
-        Thanks for using EvenBetterRYM. Find the project on
-        <a href="https://github.com/kknq/even-better-rym">GitHub</a>
-        or <a href="https://rateyourmusic.com/list/kknq/evenbetterrym-browser-extension/">RYM</a>.
-      </p>
+      <footer class="footer">
+        <nav class="footer-links" aria-label="External links">
+          <a href="https://github.com/kknq/even-better-rym">
+            <img class="footer-icon" src="icons/github.svg" width="14" height="14" alt="" />
+            Extension Repository
+          </a>
+          <span aria-hidden="true">|</span>
+          <a href="https://rateyourmusic.com/list/kknq/evenbetterrym-browser-extension/">
+            <img class="footer-icon" src="icons/sonemic-16.png" width="14" height="14" alt="" />
+            Extension RYM List
+          </a>
+          <span aria-hidden="true">|</span>
+          <a href="https://ko-fi.com/kknqqq">
+            <img class="footer-icon" src="icons/kofi.svg" width="14" height="14" alt="" />
+            Buy me an energy drink with Ko-fi
+          </a>
+        </nav>
+        <p class="footer-thanks">Thanks for using EvenBetterRYM.</p>
+      </footer>
     </main>
   </body>
 </html>
