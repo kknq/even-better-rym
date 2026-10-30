@@ -16,6 +16,7 @@ import { download } from "./download";
 import { backgroundFetch } from "./fetch";
 import { script } from "./script";
 import { spotifySearch } from "./spotify-search";
+import { tidalCredits } from "./tidal-credits";
 import { wikipediaSearch } from "./wikipedia-search";
 
 const CHART_PAGE_PATTERN = "*://*.rateyourmusic.com/charts/*";
@@ -38,6 +39,7 @@ const getResponse = (
 		if (message.type === "download") return download(message);
 		if (message.type === "script") return script(message, tabId);
 		if (message.type === "spotifySearch") return spotifySearch(message);
+		if (message.type === "tidalCredits") return tidalCredits(message);
 		if (message.type === "wikipediaSearch") return wikipediaSearch(message);
 	}
 	throw new Error(`Invalid message: ${JSON.stringify(message)}`);

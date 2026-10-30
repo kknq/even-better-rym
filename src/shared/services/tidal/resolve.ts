@@ -153,19 +153,19 @@ export const resolve: ResolveFunction = async (url) => {
 		if (!track.attributes.title) {
 			throw new Error(`Could not parse Tidal track ${index + 1}`);
 		}
-		let title = withVersion(track.attributes.title, track.attributes.version);
+		const title = withVersion(track.attributes.title, track.attributes.version);
 		const trackArtists = getArtists(track);
-		if (
-			trackArtists.length > 0 &&
-			!trackArtists.some((artist) => artists.includes(artist))
-		) {
-			title = `${trackArtists.join(", ")} - ${title}`;
-		}
 		const position =
 			(album.attributes.numberOfVolumes ?? 1) > 1 && item.meta
 				? `${item.meta.volumeNumber}.${item.meta.trackNumber}`
 				: String(item.meta?.trackNumber ?? index + 1);
-		return { position, title, duration: duration(track.attributes.duration) };
+		return {
+			position,
+			title,
+			duration: duration(track.attributes.duration),
+			artists: trackArtists,
+			creditsUrl: `https://tidal.com/album/${id}/track/${item.id}`,
+		};
 	});
 	const artworkFiles = (album.relationships?.coverArt?.data ?? []).flatMap(
 		(artwork) => getResource(artwork).attributes.files ?? [],

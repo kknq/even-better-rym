@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { resolveSongCredits } from "~/shared/services/applemusic/credits";
 import { resolveSongDetails as resolveDeezerDetails } from "~/shared/services/deezer/credits";
 import { createSongCreditsResolver } from "~/shared/services/spotify/credits";
+import { createSongCreditsResolver as createTidalCreditsResolver } from "~/shared/services/tidal/credits";
 import { loadCreditSuggestions } from "./load-credit-suggestions";
 
 vi.mock("~/shared/services/applemusic/credits", () => ({
@@ -13,15 +14,84 @@ vi.mock("~/shared/services/deezer/credits", () => ({
 vi.mock("~/shared/services/spotify/credits", () => ({
 	createSongCreditsResolver: vi.fn(),
 }));
+vi.mock("~/shared/services/tidal/credits", () => ({
+	createSongCreditsResolver: vi.fn(),
+}));
 const resolveSpotifyCredits = vi.fn();
+const resolveTidalCredits = vi.fn();
 beforeEach(() => {
 	vi.mocked(createSongCreditsResolver).mockReturnValue(resolveSpotifyCredits);
+	vi.mocked(createTidalCreditsResolver).mockReturnValue(resolveTidalCredits);
 });
 afterEach(() => vi.clearAllMocks());
 
 const appleSong = (id: number) =>
 	`https://music.apple.com/us/song/example/${id}`;
 const spotifySong = "https://open.spotify.com/track/1234567890123456789012";
+
+test("dispatches Tidal references through one import-scoped album reader and preserves source metadata", async () => {
+	resolveTidalCredits.mockResolvedValue([
+		{ name: "Guest", role: "featured" },
+		{ name: "Writer", role: "composer" },
+	]);
+	const tracks = [
+		{
+			title: "Song",
+			artists: ["Main", "Guest"],
+			creditsUrl: "https://tidal.com/album/123/track/101",
+			credits: [{ name: "Existing", role: "producer" }],
+		},
+		{ creditsUrl: "https://tidal.com/album/123/track/102" },
+	];
+	const original = JSON.stringify(tracks);
+	const isActive = () => true;
+	const onProgress = vi.fn();
+	const result = await loadCreditSuggestions(tracks, { isActive, onProgress });
+	expect(createTidalCreditsResolver).toHaveBeenCalledExactlyOnceWith(
+		isActive,
+		tracks,
+	);
+	expect(resolveTidalCredits).toHaveBeenCalledTimes(2);
+	expect(result.tracks[0]?.credits).toEqual([
+		{ name: "Existing", role: "producer" },
+		{ name: "Guest", role: "featured" },
+		{ name: "Writer", role: "composer" },
+	]);
+	expect(result.tracks[0]?.artists).toEqual(["Main", "Guest"]);
+	expect(result.failedPositions).toEqual([]);
+	expect(onProgress).toHaveBeenLastCalledWith(2, 2);
+	expect(JSON.stringify(tracks)).toBe(original);
+	await loadCreditSuggestions(tracks, { isActive, onProgress });
+	expect(createTidalCreditsResolver).toHaveBeenCalledTimes(2);
+});
+
+test("shares a failed Tidal reader initialization and reports every affected track", async () => {
+	vi.mocked(createTidalCreditsResolver).mockImplementationOnce(() => {
+		throw new Error("Tidal reader unavailable");
+	});
+	const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+	try {
+		const result = await loadCreditSuggestions(
+			[
+				{
+					position: "1",
+					creditsUrl: "https://tidal.com/album/123/track/101",
+				},
+				{
+					position: "2",
+					creditsUrl: "https://tidal.com/album/123/track/102",
+				},
+			],
+			{ isActive: () => true, onProgress: vi.fn() },
+		);
+		expect(createTidalCreditsResolver).toHaveBeenCalledOnce();
+		expect(resolveTidalCredits).not.toHaveBeenCalled();
+		expect(result.failedPositions).toEqual(["1", "2"]);
+		expect(warn).toHaveBeenCalledTimes(2);
+	} finally {
+		warn.mockRestore();
+	}
+});
 
 test("fetches each unique song once, keeping track order and existing metadata", async () => {
 	vi.mocked(resolveSongCredits).mockResolvedValue([
@@ -112,6 +182,7 @@ test("dispatches mixed-service credits correctly and caches duplicate Spotify so
 	expect(createSongCreditsResolver).toHaveBeenCalledExactlyOnceWith(isActive);
 	expect(resolveSpotifyCredits).toHaveBeenCalledExactlyOnceWith(spotifySong);
 	expect(resolveSongCredits).toHaveBeenCalledExactlyOnceWith(appleSong(1));
+	expect(createTidalCreditsResolver).not.toHaveBeenCalled();
 	expect(result.tracks[0]?.credits).toEqual([
 		{ name: "Existing", role: "producer" },
 		{ name: "Spotify Writer", role: "composition" },

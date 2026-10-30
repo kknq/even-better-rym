@@ -1,6 +1,7 @@
 import { resolveSongCredits as resolveAppleMusicCredits } from "~/shared/services/applemusic/credits";
 import { resolveSongDetails as resolveDeezerDetails } from "~/shared/services/deezer/credits";
 import { createSongCreditsResolver as createSpotifyCreditsResolver } from "~/shared/services/spotify/credits";
+import type { createSongCreditsResolver as createTidalCreditsResolver } from "~/shared/services/tidal/credits";
 import type { Track, TrackCredit } from "~/shared/services/types";
 import { normalizeArtistName } from "./release-artist-links";
 import { getTrackPosition } from "./track-position";
@@ -30,6 +31,9 @@ export async function loadCreditSuggestions(
 	let spotifyResolver:
 		| ReturnType<typeof createSpotifyCreditsResolver>
 		| undefined;
+	let tidalResolver:
+		| Promise<ReturnType<typeof createTidalCreditsResolver>>
+		| undefined;
 	const resolveSongCredits = async (url: string): Promise<CreditDetails> => {
 		const parsed = new URL(url);
 		if (!parsed.username && !parsed.password) {
@@ -38,6 +42,14 @@ export async function loadCreditSuggestions(
 			if (parsed.origin === "https://open.spotify.com") {
 				spotifyResolver ??= createSpotifyCreditsResolver(isActive);
 				return { credits: await spotifyResolver(url) };
+			}
+			if (parsed.origin === "https://tidal.com") {
+				tidalResolver ??= import("~/shared/services/tidal/credits").then(
+					({ createSongCreditsResolver }) =>
+						createSongCreditsResolver(isActive, tracks),
+				);
+				const resolve = await tidalResolver;
+				return { credits: await resolve(url) };
 			}
 			if (
 				["https://www.deezer.com", "https://deezer.com"].includes(parsed.origin)
