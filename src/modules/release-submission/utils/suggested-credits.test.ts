@@ -7,6 +7,7 @@ import {
 	getSuggestedCredits,
 	getUnverifiedCreditSuggestions,
 	sortCreditsByTrackCoverage,
+	stripFeaturedArtistTags,
 } from "./suggested-credits";
 
 test("ranks name blocks by distinct songs across roles, including whole-release and repeated positions", () => {
@@ -249,6 +250,32 @@ test("finds multiple bracketed featured artists, deduplicating title and metadat
 			},
 		]),
 	).toHaveLength(1);
+});
+
+test.each([
+	[
+		"Radiation (Lung Pollution) [feat.Supasortahuman]",
+		["Supasortahuman"],
+		"Radiation (Lung Pollution)",
+	],
+	[
+		"RADIATION(LUNG POLLUTION) FT SUPA SORTAHUMAN",
+		["SUPA SORTAHUMAN"],
+		"RADIATION(LUNG POLLUTION)",
+	],
+	["Song [ft. Guest]", ["Guest"], "Song"],
+	["Song (Ft Guest)", ["Guest"], "Song"],
+])("extracts featured names and strips supported suffixes from %j", (title, names, cleaned) => {
+	expect(getFeaturedArtists(title)).toEqual(names);
+	expect(stripFeaturedArtistTags(title)).toBe(cleaned);
+	expect(
+		getSuggestedCredits([
+			{ position: "4", title },
+			{ position: "5", title: "Another track" },
+		]).map(({ name, role, positions }) => ({ name, role, positions })),
+	).toEqual(
+		names.map((name) => ({ name, role: "featured", positions: ["4"] })),
+	);
 });
 
 test("uses the shared position fallback and does not mistake missing credits for all-track coverage", () => {

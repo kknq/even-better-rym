@@ -7,7 +7,7 @@ import { normalizeArtistName } from "./release-artist-links";
 import { getTrackPosition } from "./track-position";
 
 const FEATURED_ARTIST_PATTERN =
-	/\s*(?:\(\s*(?:feat\.?|featuring)\s+([^()]+)\)|\[\s*(?:feat\.?|featuring)\s+([^[\]]+)\])\s*/gi;
+	/\s*(?:\(\s*(?:feat(?:uring)?|ft)\.?\s*([^()]+)\)|\[\s*(?:feat(?:uring)?|ft)\.?\s*([^[\]]+)\]|\s+ft\.?\s+(.+)$)\s*/gi;
 
 export const stripFeaturedArtistTags = (title: string): string => {
 	const stripped = title.replace(FEATURED_ARTIST_PATTERN, " ");
@@ -32,7 +32,7 @@ export function getFeaturedArtists(
 ): string[] {
 	const artists = new Set<string>();
 	for (const match of title.matchAll(FEATURED_ARTIST_PATTERN)) {
-		const credited = (match[1] ?? match[2] ?? "").trim();
+		const credited = (match[1] ?? match[2] ?? match[3] ?? "").trim();
 		if (knownArtists.includes(credited)) {
 			artists.add(credited);
 			continue;
