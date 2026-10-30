@@ -1,4 +1,5 @@
 import { runModule } from "~/shared/page-settings";
+import { getReferenceLinkSettings } from "~/shared/reference-links/settings";
 import { getReleaseTitleData } from "~/shared/release-title";
 import { waitForDocumentReady } from "~/shared/utils/dom";
 import type {
@@ -6,6 +7,10 @@ import type {
 	WikipediaSearchResponse,
 } from "~/shared/utils/messaging";
 import { sendBackgroundMessage } from "~/shared/utils/messaging";
+import {
+	appendAlbumIdControl,
+	reduceTitleTopSpacing,
+} from "./album-id-control";
 import whoSampledLogo from "./assets/whosampled.svg";
 import wikipediaLogo from "./assets/wikipedia.svg";
 import { toSlug } from "./helpers";
@@ -30,6 +35,7 @@ const getReferenceContainer = (titleElement: HTMLElement): HTMLDivElement => {
 const appendWhoSampledLink = (
 	titleElement: HTMLElement,
 	release: ReturnType<typeof getReleaseTitleData>,
+	color: string,
 ): void => {
 	if (!release) return;
 
@@ -39,6 +45,7 @@ const appendWhoSampledLink = (
 	const whoSampled = document.createElement("a");
 	whoSampled.className =
 		"btn blue_btn btn_small ebr-reference-link ebr-whosampled-link";
+	whoSampled.style.setProperty("--ebr-reference-button-color", color);
 	whoSampled.href = `https://www.whosampled.com/album/${toSlug(release.artistName)}/${toSlug(release.albumTitle)}/`;
 	whoSampled.target = "_blank";
 	whoSampled.rel = "noreferrer";
@@ -59,6 +66,7 @@ const appendWhoSampledLink = (
 const appendWikipediaButton = (
 	titleElement: HTMLElement,
 	release: ReturnType<typeof getReleaseTitleData>,
+	color: string,
 ): void => {
 	if (!release) return;
 
@@ -69,6 +77,7 @@ const appendWikipediaButton = (
 	wikipedia.type = "button";
 	wikipedia.className =
 		"btn blue_btn btn_small ebr-reference-link ebr-wikipedia-link";
+	wikipedia.style.setProperty("--ebr-reference-button-color", color);
 	const logo = document.createElement("img");
 	logo.className = "ebr-wikipedia-logo";
 	logo.src = wikipediaLogo;
@@ -117,13 +126,21 @@ async function main(): Promise<void> {
 	const titleElement = document.querySelector<HTMLElement>(".album_title");
 	const release = getReleaseTitleData();
 	if (!titleElement || !release) return;
+	const settings = await getReferenceLinkSettings();
 
-	void runModule("whoSampled", () => {
-		appendWhoSampledLink(titleElement, release);
-	});
-	void runModule("wikipedia", () => {
-		appendWikipediaButton(titleElement, release);
-	});
+	await Promise.all([
+		runModule("whoSampled", () => {
+			appendWhoSampledLink(titleElement, release, settings.buttonColor);
+		}),
+		runModule("wikipedia", () => {
+			appendWikipediaButton(titleElement, release, settings.buttonColor);
+		}),
+	]);
+
+	if (document.querySelector(".ebr-whosampled-link, .ebr-wikipedia-link")) {
+		appendAlbumIdControl(titleElement, settings.buttonColor);
+		reduceTitleTopSpacing(titleElement);
+	}
 }
 
 void main();

@@ -6,6 +6,7 @@ import type { PageKey } from "~/shared/pages";
 import { featureGroups, pageHints, pageLabels } from "~/shared/pages";
 
 import { CollectionView } from "./collection-view";
+import { ReferenceLinksView } from "./reference-links-view";
 import { ShortcutView } from "./shortcut-view";
 import { styles } from "./styles";
 import { RatingVisibilityView, ReviewVisibilityView } from "./visibility-view";
@@ -18,6 +19,7 @@ type View =
 	| "hideRatings"
 	| "hideReviews"
 	| "hideVotes"
+	| "referenceLinks"
 	| "userCollection"
 	| "filmCollection";
 
@@ -27,6 +29,7 @@ const viewTitles: Record<View, string> = {
 	hideRatings: "Hide Ratings",
 	hideReviews: "Hide Reviews",
 	hideVotes: "Hide Votes",
+	referenceLinks: "External Reference Links",
 	userCollection: "Music Collection",
 	filmCollection: "Film Collection",
 };
@@ -37,6 +40,7 @@ const viewSubtitles: Record<View, string> = {
 	hideRatings: "Configure visibility",
 	hideReviews: "Configure visibility",
 	hideVotes: "Configure visibility",
+	referenceLinks: "Customize button colors",
 	userCollection: "Customize filters and columns",
 	filmCollection: "Customize filters and columns",
 };
@@ -153,6 +157,8 @@ function SettingsContent({
 			);
 		case "chartShortcuts":
 			return <ShortcutView onSettingsChange={onSettingsChange} />;
+		case "referenceLinks":
+			return <ReferenceLinksView onSettingsChange={onSettingsChange} />;
 		case "hideRatings":
 			return <RatingVisibilityView onSettingsChange={onSettingsChange} />;
 		case "hideReviews":
@@ -233,14 +239,24 @@ function FeatureList({
 									{(key === "hideRatings" ||
 										key === "hideReviews" ||
 										key === "hideVotes" ||
+										key === "whoSampled" ||
+										key === "wikipedia" ||
 										key === "userCollection" ||
 										key === "filmCollection") && (
 										<button
 											type="button"
-											onClick={() => onChangeView(key)}
+											onClick={() =>
+												onChangeView(
+													key === "whoSampled" || key === "wikipedia"
+														? "referenceLinks"
+														: key,
+												)
+											}
 											style={styles.customizeButton}
 										>
-											Configure
+											{key === "whoSampled" || key === "wikipedia"
+												? "Button colors"
+												: "Configure"}
 										</button>
 									)}
 									<Toggle

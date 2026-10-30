@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
 				additionalInputs: {
 					html: [
 						{
-							fileName: "src/modules/spotify-search/offscreen.html",
+							fileName: "src/modules/hidden-page/offscreen.html",
 							webAccessible: false,
 						},
 					],
