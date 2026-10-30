@@ -3,8 +3,9 @@
 import { render } from "preact";
 import { act } from "preact/test-utils";
 import { expect, test, vi } from "vitest";
-
+import { resolve } from "~/shared/services/bandcamp/resolve";
 import { runScript } from "~/shared/utils/dom";
+import { fetch } from "~/shared/utils/fetch";
 import { importRelease } from "../utils/import-release";
 import {
 	startArtistSearch,
@@ -14,6 +15,7 @@ import type { ReleaseOptions } from "../utils/types";
 import injectArtistLinkPicker from "./artist-link-picker";
 
 vi.mock("webextension-polyfill", () => ({ default: {} }));
+vi.mock("~/shared/utils/fetch", () => ({ fetch: vi.fn() }));
 vi.mock("../utils/shortcut-popup", () => ({
 	cancelPendingArtistSearch: vi.fn(),
 	startArtistSearch: vi.fn().mockResolvedValue(undefined),
@@ -165,6 +167,122 @@ test("bases picker titles on the completed import, not the pre-import tracklist"
 	} finally {
 		if (container) render(null, container);
 		document.body.replaceChildren();
+	}
+});
+
+test("Bandcamp compilation artist buttons update individual tracks without duplicating names", async () => {
+	const source = {
+		id: 789,
+		artist: "Sello Impermanente",
+		item_type: "album",
+		current: { title: "Latinameric Anfútbol", about: "Un split/compilación" },
+		trackinfo: [
+			{
+				artist: "Cámara Chilena De La Destrucción",
+				title: "Cámara Chilena De La Destrucción - GTA Santiago",
+				duration: 180,
+				track_num: 1,
+			},
+			{
+				artist: "Kidchen",
+				title: "Kidchen - Asamblea Internacional de Máscaras",
+				duration: 120,
+				track_num: 2,
+			},
+		],
+	};
+	vi.mocked(fetch).mockResolvedValue(
+		`<script data-tralbum="${JSON.stringify(source).replaceAll('"', "&quot;")}"></script>`,
+	);
+	const data = await resolve(
+		"https://selloimpermanente.bandcamp.com/album/latinameric-anf-tbol",
+	);
+	document.body.innerHTML = `
+		<div><div id="tracks_simp"><table><tbody><tr id="track_base"></tr></tbody></table></div>
+		<div id="tracks_adv"><textarea id="track_advanced"></textarea></div></div>
+		<textarea id="notes"></textarea>
+	`;
+	await act(async () => {
+		await injectArtistLinkPicker();
+	});
+	const container = document.querySelector("#tracks_adv")?.nextElementSibling;
+	const readText = () =>
+		document.querySelector<HTMLTextAreaElement>("#track_advanced")?.value;
+	const click = async (value: string, index = 0) => {
+		await act(() => {
+			const button = document.querySelectorAll<HTMLInputElement>(
+				`input[value="${value}"]`,
+			)[index];
+			if (!button) throw new Error(`Missing ${value} button`);
+			button.click();
+		});
+	};
+	try {
+		vi.mocked(runScript).mockResolvedValue(undefined);
+		await act(async () => {
+			await importRelease(data, {
+				capitalization: "as-is",
+				preserveTrackLengths: false,
+				fillFields: {
+					tracks: true,
+					artists: false,
+					credits: false,
+					label: false,
+					type: false,
+					date: false,
+					title: false,
+					format: false,
+					discSize: false,
+					attributes: false,
+					countries: false,
+				},
+			});
+		});
+		const original =
+			"1|Cámara Chilena De La Destrucción - GTA Santiago|3:00\n2|Kidchen - Asamblea Internacional de Máscaras|2:00";
+		await vi.waitFor(() => expect(readText()).toBe(original));
+		await click("Leave out");
+		await vi.waitFor(() =>
+			expect(readText()).toBe(
+				"1|GTA Santiago|3:00\n2|Kidchen - Asamblea Internacional de Máscaras|2:00",
+			),
+		);
+		await click("Undo");
+		await vi.waitFor(() => expect(readText()).toBe(original));
+		await click("Redo");
+		await vi.waitFor(() => expect(readText()).toContain("1|GTA Santiago|"));
+		await click("Find on RYM", 1);
+		await act(() => {
+			vi.mocked(watchArtistResultClicks).mock.calls.at(-1)?.[0]("123");
+		});
+		await vi.waitFor(() =>
+			expect(readText()).toBe(
+				"1|GTA Santiago|3:00\n2|[Artist123] - Asamblea Internacional de Máscaras|2:00",
+			),
+		);
+		await click("Put in plain text");
+		await vi.waitFor(() =>
+			expect(readText()).toContain(
+				"1|Cámara Chilena De La Destrucción - GTA Santiago|",
+			),
+		);
+		await act(() => {
+			const textarea =
+				document.querySelector<HTMLTextAreaElement>("#track_advanced");
+			if (!textarea) throw new Error("Missing tracklist");
+			textarea.value = textarea.value.replace("GTA Santiago", "Manual title");
+			textarea.dispatchEvent(new Event("input", { bubbles: true }));
+		});
+		await click("Leave out");
+		await vi.waitFor(() =>
+			expect(readText()).toContain(
+				"1|Cámara Chilena De La Destrucción - Manual title|",
+			),
+		);
+	} finally {
+		if (container) render(null, container);
+		document.body.replaceChildren();
+		vi.mocked(fetch).mockReset();
 	}
 });
 

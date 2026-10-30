@@ -48,6 +48,18 @@ describe("normalizeArtistName", () => {
 		expect(normalizeArtistName("坂本 龍一")).toBe("坂本龍一");
 	});
 
+	test("ignores a cross-script localized name in trailing square brackets", () => {
+		expect(normalizeArtistName("Голландский Штурвал")).toBe(
+			normalizeArtistName("Голландский штурвал [Gollandskiy Shturval]"),
+		);
+		expect(normalizeArtistName("Gollandskiy Shturval")).toBe(
+			normalizeArtistName("Gollandskiy Shturval [Голландский штурвал]"),
+		);
+		expect(normalizeArtistName("The Artist")).not.toBe(
+			normalizeArtistName("The Artist [Live]"),
+		);
+	});
+
 	test("falls back to lowercase for punctuation-only names", () => {
 		expect(normalizeArtistName("!!!")).toBe("!!!");
 	});
@@ -68,6 +80,20 @@ describe("pairInheritedArtists", () => {
 
 	test("doesn't pair different names", () => {
 		expect(pairInheritedArtists(["Thom Schley"], [ENTRY_C]).size).toBe(0);
+	});
+
+	test("pairs a source artist with a RYM name's cross-script localization", () => {
+		const localizedEntry = {
+			id: "42",
+			name: "Голландский штурвал [Gollandskiy Shturval]",
+		};
+		expect(
+			pairInheritedArtists(["Голландский Штурвал"], [localizedEntry]),
+		).toEqual(
+			new Map([
+				["Голландский Штурвал", { kind: "inherited", entry: localizedEntry }],
+			]),
+		);
 	});
 });
 
@@ -181,6 +207,23 @@ describe("getReleaseArtistLabels", () => {
 					new Map([["zavet", { kind: "skipped" }]]),
 				),
 			).toBeUndefined();
+		});
+
+		test("does not turn a localized RYM name into a credited alias", () => {
+			const importedName = "Голландский Штурвал";
+			const entry = {
+				id: "42",
+				name: "Голландский штурвал [Gollandskiy Shturval]",
+			};
+			const choices = new Map([
+				[importedName, { kind: "linked" as const, entry }],
+			]);
+			expect(
+				getReleaseArtistCreditName([importedName], choices),
+			).toBeUndefined();
+			expect(getReleaseArtistLabels(choices)).toEqual(
+				new Map([[importedName, "[Artist42]"]]),
+			);
 		});
 
 		test("does not invent a combined custom name for multiple artists", () => {

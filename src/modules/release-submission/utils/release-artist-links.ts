@@ -5,6 +5,9 @@ import { hasSameMembers } from "./track-artist-links";
 const ARTIST_TOKEN_PATTERN = /^\[Artist(\d+)(?:,([^\]\r\n]+))?]$/;
 const DIACRITIC_PATTERN = /\p{M}/gu;
 const NON_ALPHANUMERIC_PATTERN = /[^\p{L}\p{N}]/gu;
+const LATIN_LETTER = /\p{Script=Latin}/u;
+const CYRILLIC_LETTER = /\p{Script=Cyrillic}/u;
+const LOCALIZED_NAME_SUFFIX = /^(.+?)\s+\[([^\]]+)\]\s*$/u;
 
 // One artist in RYM's "filed under performer" list.
 export type FiledUnderEntry = {
@@ -65,10 +68,27 @@ export const parseArtistToken = (
 export const parseArtistTokenId = (token: string): string | undefined =>
 	parseArtistToken(token)?.id;
 
+// RYM may add a localized name in brackets after an artist's primary name.
+// Ignore that suffix only when it uses a different Latin/Cyrillic script.
+const getComparableArtistName = (name: string): string => {
+	const match = LOCALIZED_NAME_SUFFIX.exec(name);
+	const primary = match?.[1];
+	const localized = match?.[2];
+	if (
+		primary !== undefined &&
+		localized !== undefined &&
+		((CYRILLIC_LETTER.test(primary) && LATIN_LETTER.test(localized)) ||
+			(LATIN_LETTER.test(primary) && CYRILLIC_LETTER.test(localized)))
+	) {
+		return primary;
+	}
+	return name;
+};
+
 // Returns the name with case, accents, punctuation and spacing removed, or
 // just lowercased if that would leave nothing (e.g. "!!!").
 export const normalizeArtistName = (name: string): string => {
-	const lowercased = name.toLowerCase();
+	const lowercased = getComparableArtistName(name).toLowerCase();
 	const normalized = lowercased
 		.normalize("NFD")
 		.replace(DIACRITIC_PATTERN, "")

@@ -47,8 +47,8 @@ const ENG_DO_NOT_CAPITALIZE_FORCE = new Set(["etc", "etc."]);
 
 const UPPERCASE_EXCEPTIONS = ["ep", "lp", "nts"];
 const UPPERCASE_EXCEPTION_PATTERN = new RegExp(
-	`\\b(?:${UPPERCASE_EXCEPTIONS.join("|")})\\b`,
-	"gi",
+	`(?<![\\p{L}\\p{M}\\p{N}_])(?:${UPPERCASE_EXCEPTIONS.join("|")})(?![\\p{L}\\p{M}\\p{N}_])`,
+	"giu",
 );
 
 const isWord = ({ type }: Token) => type === "word" || type === "romanNumeral";

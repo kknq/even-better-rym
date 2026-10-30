@@ -3,12 +3,15 @@ export type TrackData = {
 	album_release_date: string | null;
 	artist: string;
 	current: {
+		about?: string | null;
+		credits?: string | null;
 		release_date: string | null;
 		publish_date: string;
 		title: string;
 	};
 	item_type: "track";
 	trackinfo: {
+		artist?: string | null;
 		duration: number;
 		title: string;
 	}[];
@@ -20,12 +23,15 @@ export type AlbumData = {
 	album_release_date: string | null;
 	artist: string;
 	current: {
+		about?: string | null;
+		credits?: string | null;
 		release_date: string | null;
 		publish_date: string;
 		title: string;
 	};
 	item_type: "album";
 	trackinfo: {
+		artist?: string | null;
 		duration: number;
 		title: string;
 		track_num: number;
@@ -40,7 +46,7 @@ export type EmbedAlbumData = {
 };
 
 export type EmbedTrackData = {
-	artist: string;
+	artist?: string | null;
 	duration: number;
 	id: number;
 	title: string;

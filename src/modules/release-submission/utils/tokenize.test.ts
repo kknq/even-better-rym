@@ -63,4 +63,29 @@ describe("tokenize", () => {
 
 	test.each(tests)("correctly tokenizes %p", (input, output) =>
 		expect(tokenizePhrase(input)).toEqual(output));
+
+	test.each([
+		"máscaras",
+		"müller",
+		"días",
+		"xénon",
+		"di\u0301as",
+		"młodość",
+		"córka",
+		"dźwięk",
+		"łódź",
+		"dívka",
+		"láska",
+		"člověk",
+		"český",
+		"müde",
+		"märchen",
+		"löffel",
+		"dörfer",
+		"straße",
+		"über",
+		"mu\u0308de",
+	])("keeps %j as one word rather than a Roman numeral prefix", (word) => {
+		expect(tokenizePhrase(word)).toEqual([{ text: word, type: "word" }]);
+	});
 });

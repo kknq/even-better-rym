@@ -10,7 +10,10 @@ import {
 	attachCreditRoleSuggestions,
 	updateCreditDetails,
 } from "../utils/page-functions";
-import { watchArtistResultClicks } from "../utils/shortcut-popup";
+import {
+	startArtistSearch,
+	watchArtistResultClicks,
+} from "../utils/shortcut-popup";
 import injectArtistLinkPicker from "./artist-link-picker";
 import injectGuestCreditPicker from "./guest-credit-picker";
 
@@ -186,7 +189,7 @@ test("sorts both credit tables by artist coverage then name without reordering s
 	]);
 	expect(
 		rows().map((row) => [
-			row.cells[0]?.textContent,
+			row.cells[0]?.querySelector("input")?.value,
 			row.cells[1]?.querySelector("input")?.value,
 			row.cells[2]?.querySelector("input")?.value,
 		]),
@@ -278,7 +281,7 @@ test("deduplicates WLR's loaded featured credits against guests using one shared
 	);
 	expect(
 		rows().map((row) => [
-			row.cells[0]?.textContent,
+			row.cells[0]?.querySelector("input")?.value,
 			row.cells[1]?.querySelector("input")?.value,
 			row.cells[2]?.querySelector("input")?.value,
 		]),
@@ -421,7 +424,7 @@ test("shares newly discovered co-main artists with the track picker without sugg
 		"Tom Schley",
 	]);
 	expect(document.querySelector("#ebr-guest-credit-picker")).toBeNull();
-	expect(rows()[0]?.cells[0]?.textContent).toBe("Tom Schley");
+	expect(rows()[0]?.cells[0]?.querySelector("input")?.value).toBe("Tom Schley");
 	expect(rows()[0]?.cells[1]?.querySelector("input")?.value).toBe(
 		"composition",
 	);
@@ -922,7 +925,7 @@ test("retains title-based featured suggestions when song-credit loading partiall
 			"tracks 2",
 		),
 	);
-	expect(rows()[0]?.cells[0]?.textContent).toBe("Kanye West");
+	expect(rows()[0]?.cells[0]?.querySelector("input")?.value).toBe("Kanye West");
 	expect(rows()[0]?.cells[1]?.querySelector("input")?.value).toBe("featured");
 	expect(rows()[0]?.cells[2]?.querySelector("input")?.value).toBe("2");
 	const guest = document.querySelector("#ebr-guest-credit-picker tbody tr");
@@ -1048,11 +1051,9 @@ test("puts unverified names last and prevents placeholder values from being subm
 		],
 	});
 	await vi.waitFor(() => expect(rows()).toHaveLength(3));
-	expect(rows().map((row) => row.cells[0]?.textContent)).toEqual([
-		"Track Person",
-		"Release Person",
-		"Description Person",
-	]);
+	expect(
+		rows().map((row) => row.cells[0]?.querySelector("input")?.value),
+	).toEqual(["Track Person", "Release Person", "Description Person"]);
 	expect(rows()[1]?.cells[1]?.querySelector("input")?.value).toBe(
 		"mixing engineer",
 	);
@@ -1130,6 +1131,210 @@ async function editDetail(column: number, value: string) {
 		input.dispatchEvent(new Event("change", { bubbles: true }));
 	});
 }
+
+test("uses a corrected artist name for plain-text credits without changing imported data", async () => {
+	const data: ResolveData = {
+		tracks: [
+			{
+				credits: [
+					{ name: "Matt Redenbo (studio)", role: "recording engineer" },
+				],
+			},
+		],
+	};
+	const original = JSON.stringify(data);
+	await setup(data);
+	await vi.waitFor(() => expect(rows()).toHaveLength(1));
+	expect(
+		rows()[0]?.cells[0]?.querySelector("input")?.getAttribute("aria-label"),
+	).toBe("Artist name for Matt Redenbo (studio) (recording engineer)");
+	await editDetail(0, " Matt Redenbo ");
+	expect(addCreditLine).not.toHaveBeenCalled();
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Credit in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenCalledExactlyOnceWith({
+			id: undefined,
+			name: "Matt Redenbo",
+			role: "recording engineer",
+			tracks: "",
+		}),
+	);
+	expect(JSON.stringify(data)).toBe(original);
+});
+
+test("searches using the corrected name and keeps it as the linked credited name", async () => {
+	await setup({
+		tracks: [{ credits: [{ name: "Matt", role: "recording engineer" }] }],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(1));
+	await editDetail(0, "Matt Redenbo");
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
+			?.click(),
+	);
+	expect(startArtistSearch).toHaveBeenCalledExactlyOnceWith(
+		"ebr-suggested-credit-picker",
+		"Matt Redenbo",
+	);
+	await act(() =>
+		vi.mocked(watchArtistResultClicks).mock.calls.at(-1)?.[0]("12"),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenCalledExactlyOnceWith({
+			id: "12",
+			name: "Matt Redenbo",
+			creditedName: "Matt Redenbo",
+			role: "recording engineer",
+			tracks: "",
+		}),
+	);
+	expect(rows()[0]?.cells[3]?.textContent).toBe("[Artist12,Matt Redenbo]");
+});
+
+test("keeps an inherited artist link when correcting one suggested row without renaming other roles", async () => {
+	await setup({
+		tracks: [
+			{
+				position: "1",
+				credits: [
+					{ name: "Matt", role: "producer" },
+					{ name: "Matt", role: "vocals" },
+				],
+			},
+			{ position: "2", credits: [{ name: "Matt", role: "producer" }] },
+		],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(2));
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistLabelsEvent", {
+				detail: { names: ["Matt"], labels: new Map([["Matt", "[Artist12]"]]) },
+			}),
+		);
+	});
+	await editDetail(0, "Matt Redenbo");
+	expect(rows()[1]?.cells[0]?.querySelector("input")?.value).toBe("Matt");
+	expect(rows()[0]?.cells[3]?.textContent).toBe(
+		"[Artist12,Matt Redenbo] (not credited)",
+	);
+	expect(addCreditLine).not.toHaveBeenCalled();
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>(
+				'input[value="Credit with artist link"]',
+			)
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenCalledExactlyOnceWith({
+			id: "12",
+			name: "Matt Redenbo",
+			creditedName: "Matt Redenbo",
+			role: "producer",
+			tracks: "",
+		}),
+	);
+	expect(rows()[1]?.cells[3]?.textContent).toBe("[Artist12] (not credited)");
+});
+
+test.each([
+	false,
+	true,
+])("updates an accepted name in place and preserves its artist choice (linked=%s)", async (linked) => {
+	await setup({
+		tracks: [{ credits: [{ name: "Matt", role: "recording engineer" }] }],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(1));
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>(
+				`input[value="${linked ? "Find on RYM" : "Credit in plain text"}"]`,
+			)
+			?.click(),
+	);
+	if (linked)
+		await act(() =>
+			vi.mocked(watchArtistResultClicks).mock.calls.at(-1)?.[0]("12"),
+		);
+	await vi.waitFor(() => expect(addCreditLine).toHaveBeenCalledOnce());
+	await editDetail(0, "Matt Redenbo");
+	await vi.waitFor(() =>
+		expect(updateCreditDetails).toHaveBeenCalledExactlyOnceWith(
+			"1",
+			"recording engineer",
+			"",
+			linked ? "[Artist12,Matt Redenbo]" : "Matt Redenbo",
+		),
+	);
+	expect(rows()[0]?.cells[3]?.textContent).toBe(
+		linked ? "[Artist12,Matt Redenbo]" : "credited in plain text",
+	);
+	await editDetail(1, "mixing engineer");
+	await vi.waitFor(() =>
+		expect(updateCreditDetails).toHaveBeenLastCalledWith(
+			"1",
+			"mixing engineer",
+			"",
+		),
+	);
+	expect(rows()[0]?.cells[3]?.textContent).toBe(
+		linked ? "[Artist12,Matt Redenbo]" : "credited in plain text",
+	);
+	expect(addCreditLine).toHaveBeenCalledOnce();
+	expect(removeCreditLine).not.toHaveBeenCalled();
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Don\'t credit"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(removeCreditLine).toHaveBeenCalledExactlyOnceWith("1"),
+	);
+	expect(rows()[0]?.cells[3]?.textContent).toBe("not credited");
+});
+
+test("rejects blank names and cancels an active search when its name is edited", async () => {
+	await setup({
+		tracks: [{ credits: [{ name: "Matt", role: "recording engineer" }] }],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(1));
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
+			?.click(),
+	);
+	await editDetail(0, " ");
+	expect(
+		rows()[0]?.querySelector('input[value="Cancel selection"]'),
+	).toBeNull();
+	expect(
+		rows()[0]
+			?.querySelector('[role="alert"] button')
+			?.getAttribute("aria-label"),
+	).toBe("Enter an artist name.");
+	for (const value of [
+		"Find on RYM",
+		"Credit with artist link",
+		"Credit in plain text",
+	]) {
+		expect(
+			rows()[0]?.querySelector<HTMLInputElement>(`input[value="${value}"]`)
+				?.disabled,
+		).toBe(true);
+	}
+	expect(addCreditLine).not.toHaveBeenCalled();
+	expect(updateCreditDetails).not.toHaveBeenCalled();
+	await editDetail(0, "Matt Redenbo");
+	expect(
+		rows()[0]?.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
+			?.disabled,
+	).toBe(false);
+});
 
 test("attaches RYM's role suggestions only to the focused role field", async () => {
 	await setup({

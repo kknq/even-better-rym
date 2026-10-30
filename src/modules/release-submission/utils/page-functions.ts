@@ -70,12 +70,24 @@ export const updateCreditDetails = (
 	line: string,
 	role: string,
 	tracks: string,
+	artist?: string,
 ): Promise<void> =>
 	runScript(`
 		(function () {
 			var role = document.getElementById(${JSON.stringify(`credits_roles_${line}`)});
 			var tracks = document.getElementById(${JSON.stringify(`credits_tracks_${line}`)});
 			if (!role || !tracks) throw new Error("Could not find the credit fields");
+			${
+				artist === undefined
+					? ""
+					: `
+				var artist = document.getElementById(${JSON.stringify(`credits_artist_${line}`)});
+				if (!artist) throw new Error("Could not find the credit artist field");
+				artist.value = ${JSON.stringify(artist)};
+				updateArtistPreview(${JSON.stringify(line)}, 'credits');
+				artist.dispatchEvent(new Event("change", { bubbles: true }));
+			`
+			}
 			role.value = ${JSON.stringify(role)};
 			tracks.value = ${JSON.stringify(tracks)};
 			role.dispatchEvent(new Event("change", { bubbles: true }));
@@ -88,7 +100,10 @@ export const updateCreditDetails = (
 export const addArtistCredit = (credit: ArtistCredit): Promise<void> => {
 	const typeUnlinkedName =
 		credit.id === undefined
-			? `document.getElementById('credits_artist_' + credits_num).value = ${JSON.stringify(credit.name)};`
+			? `
+				document.getElementById('credits_artist_' + credits_num).value = ${JSON.stringify(credit.name)};
+				updateArtistPreview(credits_num, 'credits');
+			`
 			: "";
 	const typeCreditedName =
 		credit.id !== undefined && credit.creditedName !== undefined

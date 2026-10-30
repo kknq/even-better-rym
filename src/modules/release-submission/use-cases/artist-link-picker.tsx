@@ -33,6 +33,7 @@ import {
 	getDistinctTrackArtists,
 	getUntetheredKeys,
 	hasDifferingTrackArtists,
+	isVariousArtistsRelease,
 	prefixesTrackArtists,
 	withReleaseArtistFallback,
 } from "../utils/track-artist-links";
@@ -65,7 +66,10 @@ export default async function injectArtistLinkPicker() {
 	render(<ArtistLinkPicker />, container);
 }
 
-type TrackPickerSession = PickerSession & { automatic: boolean };
+type TrackPickerSession = PickerSession & {
+	automatic: boolean;
+	variousArtists: boolean;
+};
 
 // Keeps the imported tracks available for explicit release-artist requests,
 // even on releases that do not normally need artist prefixes.
@@ -89,7 +93,12 @@ function getPickerSession(
 	if (names.length === 0) {
 		return undefined;
 	}
-	return { tracks, names, automatic };
+	return {
+		tracks,
+		names,
+		automatic,
+		variousArtists: isVariousArtistsRelease(releaseArtists),
+	};
 }
 
 // Tracks the release artists and labels the release-artist picker most
@@ -172,9 +181,14 @@ function TrackPickerPanel({
 	const tracklist = useTracklistHistory(
 		session,
 		release,
-		session.automatic
+		session.automatic && !session.variousArtists
 			? undefined
-			: new Map(session.names.map((name) => [name, { kind: "skipped" }])),
+			: new Map(
+					session.names.map((name) => [
+						name,
+						{ kind: session.variousArtists ? "text" : "skipped" },
+					]),
+				),
 	);
 	const resetSlots = useResetSlots();
 	const { choices } = tracklist.state;

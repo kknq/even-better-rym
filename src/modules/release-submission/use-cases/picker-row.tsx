@@ -167,7 +167,7 @@ export function PickerPanel({
 }
 
 type PickerRowProps = {
-	name: string;
+	name: ComponentChildren;
 	status: string;
 	tone: ChoiceTone;
 	active: boolean;

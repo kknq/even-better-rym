@@ -74,7 +74,9 @@ test.each([
 	creditedName,
 	expected,
 }) => {
-	const preview = vi.fn();
+	const preview = vi.fn(
+		() => document.querySelector<HTMLInputElement>("#credits_artist_1")?.value,
+	);
 	vi.mocked(runScript).mockImplementation((script) =>
 		Promise.resolve().then(() => {
 			runInNewContext(script, {
@@ -110,8 +112,12 @@ test.each([
 	expect(
 		document.querySelector<HTMLInputElement>("#credits_tracks_1")?.value,
 	).toBe("1, 3");
-	if (creditedName === undefined) expect(preview).not.toHaveBeenCalled();
-	else expect(preview).toHaveBeenCalledExactlyOnceWith(1, "credits");
+	if (id !== undefined && creditedName === undefined) {
+		expect(preview).not.toHaveBeenCalled();
+	} else {
+		expect(preview).toHaveBeenCalledExactlyOnceWith(1, "credits");
+		expect(preview).toHaveReturnedWith(expected);
+	}
 });
 
 test("reports unavailable native role suggestions", async () => {
@@ -152,4 +158,46 @@ test("updates existing credit fields without recreating a row or changing native
 	await expect(updateCreditDetails("missing", "producer", "")).rejects.toThrow(
 		"Could not find the credit fields",
 	);
+});
+
+test.each([
+	"Matt Redenbo",
+	'[Artist12,Matt "Redenbo"]',
+])("updates the existing credit artist field safely to %j", async (artist) => {
+	document.body.innerHTML = `
+		<input id="credits_artist_1" value="[Artist12]">
+		<input id="credits_roles_1" value="producer">
+		<input id="credits_tracks_1" value="1">
+	`;
+	const field = document.querySelector<HTMLInputElement>("#credits_artist_1");
+	const changed = vi.fn();
+	field?.addEventListener("change", changed);
+	const preview = vi.fn();
+	vi.mocked(runScript).mockImplementation((script) =>
+		Promise.resolve().then(() => {
+			runInNewContext(script, {
+				document,
+				Event,
+				updateArtistPreview: preview,
+			});
+		}),
+	);
+	await updateCreditDetails("1", "recording engineer", "", artist);
+	expect(field?.value).toBe(artist);
+	expect(document.getElementById("credits_artist_1")).toBe(field);
+	expect(preview).toHaveBeenCalledExactlyOnceWith("1", "credits");
+	expect(changed).toHaveBeenCalledOnce();
+	expect(
+		document.querySelector<HTMLInputElement>("#credits_roles_1")?.value,
+	).toBe("recording engineer");
+	expect(
+		document.querySelector<HTMLInputElement>("#credits_tracks_1")?.value,
+	).toBe("");
+	field?.remove();
+	await expect(updateCreditDetails("1", "mixing", "2", artist)).rejects.toThrow(
+		"Could not find the credit artist field",
+	);
+	expect(
+		document.querySelector<HTMLInputElement>("#credits_roles_1")?.value,
+	).toBe("recording engineer");
 });

@@ -84,7 +84,7 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 					key="suggested"
 					id="ebr-suggested-credit-picker"
 					title="Suggested credits"
-					hint="Review artist identities and roles before adding. Blank Tracks means the whole release. Ordinary roles for the same artist covering identical tracks are combined. Resolve ??? fields before crediting unverified suggestions."
+					hint="Edit artist names and roles before adding. Name corrections preserve chosen RYM links and update the credited name. Blank Tracks means the whole release. Ordinary roles for the same artist covering identical tracks are combined. Resolve ??? fields before crediting unverified suggestions."
 					credits={suggestions}
 					showDetails
 					loading={loading}
