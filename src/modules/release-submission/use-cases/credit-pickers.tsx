@@ -5,6 +5,7 @@ import {
 	getFeaturedArtists,
 	getNonFeaturedTrackArtists,
 	getSuggestedCredits,
+	getUnverifiedCreditSuggestions,
 	isSpecialCreditRole,
 	sortCreditsByTrackCoverage,
 } from "../utils/suggested-credits";
@@ -26,13 +27,14 @@ export function CreditPickers() {
 function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 	const { tracks: loadedTracks, loading, progress, error } = session;
 	const releaseArtists = session.data.artists ?? [];
-	const showSuggestions = (session.data.tracks ?? []).some(
-		(track) =>
-			!track.header &&
-			(Boolean(track.creditsUrl) ||
-				(track.credits?.length ?? 0) > 0 ||
-				getFeaturedArtists(track.title ?? "", track.artists).length > 0),
-	);
+	const showSuggestions =
+		(session.data.tracks ?? []).some(
+			(track) =>
+				!track.header &&
+				(Boolean(track.creditsUrl) ||
+					(track.credits?.length ?? 0) > 0 ||
+					getFeaturedArtists(track.title ?? "", track.artists).length > 0),
+		) || Boolean(session.data.unverifiedCredits?.length);
 	const readReissue = () => {
 		const parent = document.querySelector<HTMLInputElement | HTMLSelectElement>(
 			"#parent_id",
@@ -52,12 +54,15 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 				loadedTracks,
 				getNonFeaturedTrackArtists,
 			);
-	const suggestions = sortCreditsByTrackCoverage(
-		getSuggestedCredits(loadedTracks).filter(
-			(credit) => !isReissue || isSpecialCreditRole(credit.role),
+	const suggestions = [
+		...sortCreditsByTrackCoverage(
+			getSuggestedCredits(loadedTracks).filter(
+				(credit) => !isReissue || isSpecialCreditRole(credit.role),
+			),
+			loadedTracks,
 		),
-		loadedTracks,
-	);
+		...getUnverifiedCreditSuggestions(session.data.unverifiedCredits ?? []),
+	];
 	return (
 		<>
 			{guests.length > 0 && (
@@ -79,7 +84,7 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 					key="suggested"
 					id="ebr-suggested-credit-picker"
 					title="Suggested credits"
-					hint="Review artist identities and roles before adding. Blank Tracks means the whole release. Ordinary roles for the same artist covering identical tracks are combined."
+					hint="Review artist identities and roles before adding. Blank Tracks means the whole release. Ordinary roles for the same artist covering identical tracks are combined. Resolve ??? fields before crediting unverified suggestions."
 					credits={suggestions}
 					showDetails
 					loading={loading}

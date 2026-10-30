@@ -45,14 +45,22 @@ export const formatCreditTracks = (positions: string[]): string => {
 	const runs: string[][] = [];
 	let run: string[] = [];
 	let previous = Number.NaN;
+	let previousPrefix: string | undefined;
 	for (const position of positions) {
-		const number = /^[1-9]\d*$/.test(position) ? Number(position) : Number.NaN;
-		if (!Number.isSafeInteger(number) || number !== previous + 1) {
+		const match = /^([A-Za-z]?)([1-9]\d*)$/.exec(position);
+		const prefix = match?.[1];
+		const number = match ? Number(match[2]) : Number.NaN;
+		if (
+			!Number.isSafeInteger(number) ||
+			prefix !== previousPrefix ||
+			number !== previous + 1
+		) {
 			run = [];
 			runs.push(run);
 		}
 		run.push(position);
 		previous = Number.isSafeInteger(number) ? number : Number.NaN;
+		previousPrefix = prefix;
 	}
 	return runs
 		.map((positions) => {

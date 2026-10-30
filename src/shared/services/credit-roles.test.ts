@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { normalizeCreditRole } from "./credit-roles";
+import { matchCreditRole, normalizeCreditRole } from "./credit-roles";
 
 test.each([
 	["Songwriter", "songwriting"],
@@ -30,8 +30,15 @@ test.each([
 	["featuring", "featured"],
 	["featured_artist", "featured"],
 	["mixingengineer", "mixing engineer"],
+	["Mixed By", "mixing engineer"],
 	["masteringengineer", "mastering engineer"],
+	["Mastered By", "mastering engineer"],
 	["recordingengineer", "recording engineer"],
+	["Recorded By", "recording engineer"],
+	["Written-By", "writer"],
+	["Remix", "remixer"],
+	["Lacquer Cut By", "lacquer cut"],
+	["Artwork By", "artwork"],
 	["Mixing_Engineer", "mixing engineer"],
 	["Mastering_Engineer", "mastering engineer"],
 	["CO_PRODUCER", "co-producer"],
@@ -48,4 +55,15 @@ test.each([
 	["", ""],
 ])("preserves unknown roles as reviewable text: %j", (source, expected) => {
 	expect(normalizeCreditRole(source)).toBe(expected);
+});
+
+test.each([
+	["Producer", "producer"],
+	["Written-By", "writer"],
+	["Lacquer Cut By", "lacquer cut"],
+	["Artwork By", "artwork"],
+	["Design", undefined],
+	["Engineer [Mixing Engineer]", undefined],
+])("only matches known source roles %j", (source, expected) => {
+	expect(matchCreditRole(source)).toBe(expected);
 });

@@ -52,6 +52,19 @@ type CreditPickerProps = {
 
 type CreditDetails = { role: string; tracks: string };
 
+const getInitialCreditDetails = (credit: CreditSuggestion): CreditDetails => ({
+	role: credit.role,
+	tracks: credit.unverified ? "???" : formatCreditTracks(credit.positions),
+});
+
+const hasUnresolvedDetails = (
+	credit: CreditSuggestion,
+	details: CreditDetails,
+): boolean =>
+	!details.role.trim() ||
+	(credit.unverified === true &&
+		(details.role.trim() === "???" || details.tracks.trim() === "???"));
+
 export function CreditPicker({
 	id,
 	title,
@@ -91,11 +104,10 @@ export function CreditPicker({
 			if (!isActive.current) return;
 			const previous = latest.current.get(credit.key);
 			if (updateOnly && (!previous || previous.kind === "skipped")) return;
-			const details = drafts.latest.current.get(credit.key) ?? {
-				role: credit.role,
-				tracks: formatCreditTracks(credit.positions),
-			};
-			if (!skip && !details.role.trim()) return;
+			const details =
+				drafts.latest.current.get(credit.key) ??
+				getInitialCreditDetails(credit);
+			if (!skip && hasUnresolvedDetails(credit, details)) return;
 			if (updateOnly && previous && previous.kind !== "skipped") {
 				if (previous.line === undefined)
 					throw new Error("Could not identify the credit to update");
@@ -198,11 +210,9 @@ export function CreditPicker({
 							: choice.kind === "text"
 								? "credited in plain text"
 								: choice.token;
-				const details = drafts.state.get(credit.key) ?? {
-					role: credit.role,
-					tracks: formatCreditTracks(credit.positions),
-				};
-				const invalidRole = !details.role.trim();
+				const details =
+					drafts.state.get(credit.key) ?? getInitialCreditDetails(credit);
+				const invalidDetails = hasUnresolvedDetails(credit, details);
 				const editField = (field: keyof CreditDetails, value: string) => {
 					drafts.commit(
 						new Map(drafts.latest.current).set(credit.key, {
@@ -223,7 +233,11 @@ export function CreditPicker({
 						tone={getChoiceTone(choice)}
 						active={credit.key === activeKey}
 						error={
-							showDetails && invalidRole ? "Enter a credit role." : undefined
+							showDetails && invalidDetails
+								? credit.unverified
+									? "Resolve the suggested role and track scope before crediting."
+									: "Enter a credit role."
+								: undefined
 						}
 						cells={
 							showDetails &&
@@ -265,7 +279,7 @@ export function CreditPicker({
 						}
 					>
 						<SearchButton
-							disabled={loading || invalidRole}
+							disabled={loading || invalidDetails}
 							active={credit.key === activeKey}
 							hasLink={knownId !== undefined}
 							title="Search RYM for this artist, then click a result to credit them"
@@ -279,7 +293,7 @@ export function CreditPicker({
 						/>
 						<PickerButton
 							value="Credit with artist link"
-							disabled={loading || invalidRole || knownId === undefined}
+							disabled={loading || invalidDetails || knownId === undefined}
 							title={
 								knownId === undefined
 									? "Choose a RYM artist link first"
@@ -292,7 +306,7 @@ export function CreditPicker({
 						/>
 						<PickerButton
 							value="Credit in plain text"
-							disabled={loading || invalidRole}
+							disabled={loading || invalidDetails}
 							title="Credit the artist as plain text, without a link"
 							onClick={() => {
 								stopSearchingFor(credit.key);

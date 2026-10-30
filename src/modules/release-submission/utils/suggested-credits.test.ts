@@ -5,6 +5,7 @@ import {
 	getFeaturedArtists,
 	getNonFeaturedTrackArtists,
 	getSuggestedCredits,
+	getUnverifiedCreditSuggestions,
 	sortCreditsByTrackCoverage,
 } from "./suggested-credits";
 
@@ -100,6 +101,39 @@ test("ranks Roark's whole-album credits ahead of Carti's subset role despite who
 			({ name }) => name,
 		),
 	).toEqual(["Roark Bailey", "Playboi Carti"]);
+});
+
+test("keeps unverified credits distinct, marks them for review, and preserves their source order", () => {
+	const credits = getUnverifiedCreditSuggestions([
+		{ name: "Release Person", role: "producer" },
+		{ name: "Unknown Person" },
+		{ name: "Whitespace Role", role: "  " },
+		{ name: "Release Person", role: "producer" },
+	]);
+
+	expect(credits).toEqual([
+		{
+			key: JSON.stringify(["unverified", "Release Person", "producer"]),
+			name: "Release Person",
+			role: "producer",
+			positions: [],
+			unverified: true,
+		},
+		{
+			key: JSON.stringify(["unverified", "Unknown Person", "???"]),
+			name: "Unknown Person",
+			role: "???",
+			positions: [],
+			unverified: true,
+		},
+		{
+			key: JSON.stringify(["unverified", "Whitespace Role", "???"]),
+			name: "Whitespace Role",
+			role: "???",
+			positions: [],
+			unverified: true,
+		},
+	]);
 });
 
 test("guest ranking counts only eligible guest appearances, not other roles or featured appearances", () => {

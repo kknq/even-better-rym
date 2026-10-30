@@ -1,4 +1,8 @@
-import type { Track, TrackCredit } from "~/shared/services/types";
+import type {
+	Track,
+	TrackCredit,
+	UnverifiedCredit,
+} from "~/shared/services/types";
 import { normalizeArtistName } from "./release-artist-links";
 import { getTrackPosition } from "./track-position";
 
@@ -13,6 +17,7 @@ export const stripFeaturedArtistTags = (title: string): string => {
 export type CreditSuggestion = TrackCredit & {
 	key: string;
 	positions: string[];
+	unverified?: boolean;
 };
 
 export const creditKey = (name: string, role: string): string =>
@@ -136,4 +141,27 @@ export function getSuggestedCredits(tracks: Track[]): CreditSuggestion[] {
 		});
 	}
 	return [...grouped.values()];
+}
+
+export function getUnverifiedCreditSuggestions(
+	credits: UnverifiedCredit[],
+): CreditSuggestion[] {
+	const suggestions = new Map<string, CreditSuggestion>();
+	for (const credit of credits) {
+		const name = credit.name.trim();
+		if (!name) continue;
+		const sourceRole = credit.role?.trim();
+		const role =
+			sourceRole === undefined || sourceRole.length === 0 ? "???" : sourceRole;
+		const key = JSON.stringify(["unverified", name, role]);
+		if (suggestions.has(key)) continue;
+		suggestions.set(key, {
+			key,
+			name,
+			role,
+			positions: [],
+			unverified: true,
+		});
+	}
+	return [...suggestions.values()];
 }

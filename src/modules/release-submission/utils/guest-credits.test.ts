@@ -186,7 +186,16 @@ describe("formatCreditTracks", () => {
 		{ positions: ["3", "2", "1"], expected: "3, 2, 1" },
 		{ positions: ["1", "1", "2"], expected: "1, 1, 2" },
 		{ positions: ["01", "02", "03"], expected: "01, 02, 03" },
-		{ positions: ["A1", "A2", "A3", "B1"], expected: "A1, A2, A3, B1" },
+		{ positions: ["A1", "A2", "A3", "B1"], expected: "A1-A3, B1" },
+		{
+			positions: ["A1", "A2", "A3", "A4", "B1", "B3", "B4"],
+			expected: "A1-A4, B1, B3, B4",
+		},
+		{ positions: ["A1", "A2", "B3", "B4", "B5"], expected: "A1, A2, B3-B5" },
+		{ positions: ["A9", "A10", "A11"], expected: "A9-A11" },
+		{ positions: ["A3", "A2", "A1"], expected: "A3, A2, A1" },
+		{ positions: ["A01", "A02", "A03"], expected: "A01, A02, A03" },
+		{ positions: ["A1", "B2", "C3"], expected: "A1, B2, C3" },
 		{ positions: ["1.1", "1.2", "1.3", "2.1"], expected: "1.1, 1.2, 1.3, 2.1" },
 		{ positions: ["1", "2", "A1", "3", "4", "5"], expected: "1, 2, A1, 3-5" },
 	])("formats $positions as $expected without changing the source", ({
