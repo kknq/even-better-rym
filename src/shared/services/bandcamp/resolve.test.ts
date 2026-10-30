@@ -97,6 +97,37 @@ Sample on track 4 from Mysterious Skin`,
 	expect(fetch).toHaveBeenCalledOnce();
 });
 
+test("imports a trailing unbracketed FT artist as a featured suggestion", async () => {
+	const release = {
+		id: 1274375993,
+		artist: "LIL UGLY MANE",
+		current: { title: "MISTA THUG ISOLATION" },
+		item_type: "album",
+		trackinfo: [
+			{
+				title: "RADIATION(LUNG POLLUTION) FT SUPA SORTAHUMAN",
+				duration: 271,
+				track_num: 4,
+			},
+			{ title: "Other Song", duration: 180, track_num: 5 },
+		],
+		url: "https://liluglymane.bandcamp.com/album/mista-thug-isolation",
+	};
+	vi.mocked(fetch).mockResolvedValue(
+		`<script data-tralbum="${JSON.stringify(release).replaceAll('"', "&quot;")}"></script>`,
+	);
+	const result = await resolve(release.url);
+	expect(
+		getSuggestedCredits(result.tracks ?? []).map(
+			({ name, role, positions }) => ({
+				name,
+				role,
+				positions,
+			}),
+		),
+	).toEqual([{ name: "SUPA SORTAHUMAN", role: "featured", positions: ["4"] }]);
+});
+
 test("keeps the normal metadata import when no description credits match", async () => {
 	const release = {
 		id: 456,
