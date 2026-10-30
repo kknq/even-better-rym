@@ -126,6 +126,17 @@ export const styles = {
 		fontSize: 12,
 	} satisfies CSSProperties,
 
+	colorInput: {
+		flexShrink: 0,
+		width: 40,
+		height: 28,
+		padding: 2,
+		border: "1px solid #d0d0d0",
+		borderRadius: 4,
+		background: "#fff",
+		cursor: "pointer",
+	} satisfies CSSProperties,
+
 	rowDivider: {
 		borderBottom: "1px solid #f0f0f0",
 	} satisfies CSSProperties,

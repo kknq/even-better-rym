@@ -37,6 +37,17 @@ vi.mock("./shortcut-view", () => ({
 		</button>
 	),
 }));
+vi.mock("./reference-links-view", () => ({
+	ReferenceLinksView: ({
+		onSettingsChange,
+	}: {
+		onSettingsChange: () => void;
+	}) => (
+		<button type="button" onClick={onSettingsChange}>
+			Reference link settings
+		</button>
+	),
+}));
 vi.mock("./visibility-view", () => ({
 	RatingVisibilityView: ({
 		onSettingsChange,
@@ -188,6 +199,12 @@ describe("App", () => {
 
 	test.each([
 		["Charts", "chartShortcuts", "Chart Shortcuts", "Shortcut settings"],
+		[
+			"External reference links",
+			"whoSampled",
+			"External Reference Links",
+			"Reference link settings",
+		],
 		["Content visibility", "hideRatings", "Hide Ratings", "Rating settings"],
 		["Content visibility", "hideReviews", "Hide Reviews", "Review settings"],
 		["Content visibility", "hideVotes", "Hide Votes", "Vote settings"],
