@@ -2,6 +2,7 @@ import { render } from "preact";
 
 import { waitForElement } from "~/shared/utils/dom";
 
+import { insertStreamLinks } from "./placement";
 import { StreamLinks } from "./stream-links";
 
 export const main = async () => {
@@ -14,10 +15,10 @@ export const main = async () => {
 		);
 		siblingElement.after(app);
 	} catch {
-		const siblingElement = await waitForElement(
+		const siblingElement = await waitForElement<HTMLElement>(
 			".page_release_art_frame .hide-for-small",
 		);
-		siblingElement.prepend(app);
+		insertStreamLinks(siblingElement, app);
 	}
 
 	render(<StreamLinks />, app);

@@ -29,4 +29,18 @@ describe("getFullLink for Apple Music", () => {
 			getFullLink("applemusic", appleMusicLink, { service_regions: {} }),
 		).toBe("https://music.apple.com/us/album/album-name/123456789");
 	});
+
+	test("uses the music video route and lowercase region for videos", () => {
+		expect(
+			getFullLink(
+				"applemusic",
+				{
+					video: "burn-the-witch",
+					loc: "pl",
+					media_id: "1441494361",
+				},
+				{ service_regions: { applemusic: "PL" } },
+			),
+		).toBe("https://music.apple.com/pl/music-video/burn-the-witch/1441494361");
+	});
 });
