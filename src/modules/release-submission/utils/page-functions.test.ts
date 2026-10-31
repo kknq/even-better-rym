@@ -74,9 +74,12 @@ test.each([
 	creditedName,
 	expected,
 }) => {
-	const preview = vi.fn(
-		() => document.querySelector<HTMLInputElement>("#credits_artist_1")?.value,
-	);
+	const preview = vi.fn(() => {
+		expect(
+			document.getElementById("credits_artist_1_preview_formatted"),
+		).not.toBeNull();
+		return document.querySelector<HTMLInputElement>("#credits_artist_1")?.value;
+	});
 	vi.mocked(runScript).mockImplementation((script) =>
 		Promise.resolve().then(() => {
 			runInNewContext(script, {
@@ -84,7 +87,10 @@ test.each([
 				credits_num: 1,
 				addCredit: (_type: string, artistId: string) => {
 					document.body.innerHTML = `
-						<input id="credits_artist_1">
+						<div>
+							<input id="credits_artist_1">
+							<div id="credits_artist_1_preview"></div>
+						</div>
 						<input id="credits_roles_1">
 						<input id="credits_tracks_1">
 					`;
@@ -117,6 +123,10 @@ test.each([
 	} else {
 		expect(preview).toHaveBeenCalledExactlyOnceWith(1, "credits");
 		expect(preview).toHaveReturnedWith(expected);
+		expect(
+			document.getElementById("credits_artist_1_preview_formatted")?.style
+				.display,
+		).toBe("none");
 	}
 });
 
@@ -165,7 +175,10 @@ test.each([
 	'[Artist12,Matt "Redenbo"]',
 ])("updates the existing credit artist field safely to %j", async (artist) => {
 	document.body.innerHTML = `
-		<input id="credits_artist_1" value="[Artist12]">
+		<div>
+			<input id="credits_artist_1" value="[Artist12]">
+			<div id="credits_artist_1_preview"></div>
+		</div>
 		<input id="credits_roles_1" value="producer">
 		<input id="credits_tracks_1" value="1">
 	`;
@@ -183,6 +196,10 @@ test.each([
 		}),
 	);
 	await updateCreditDetails("1", "recording engineer", "", artist);
+	expect(
+		document.getElementById("credits_artist_1_preview_formatted")?.style
+			.display,
+	).toBe("none");
 	expect(field?.value).toBe(artist);
 	expect(document.getElementById("credits_artist_1")).toBe(field);
 	expect(preview).toHaveBeenCalledExactlyOnceWith("1", "credits");

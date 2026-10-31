@@ -257,8 +257,8 @@ export function getFullLink(
 			const data = linkData as AppleMusicLinkData;
 			const region =
 				streamingPreferences.service_regions.applemusic ?? data.loc;
-			return `https://music.apple.com/${region}/${
-				data.album ? "album" : "video"
+			return `https://music.apple.com/${region.toLowerCase()}/${
+				data.album ? "album" : "music-video"
 			}/${data.album ?? data.video}/${data.media_id}`;
 		}
 

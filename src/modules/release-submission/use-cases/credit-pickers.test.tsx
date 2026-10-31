@@ -635,10 +635,40 @@ test("reuses release-artist links on matching suggestions without adding credits
 		rows()[1]?.querySelector<HTMLInputElement>(
 			'input[value="Credit with artist link"]',
 		)?.disabled,
-	).toBe(true);
+	).toBe(false);
+	await act(() =>
+		rows()[1]
+			?.querySelector<HTMLInputElement>(
+				'input[value="Credit with artist link"]',
+			)
+			?.click(),
+	);
+	expect(
+		rows()[1]
+			?.querySelector('[role="alert"] button')
+			?.getAttribute("aria-label"),
+	).toBe('Link Other to a RYM artist first, or use "Credit in plain text".');
+	expect(addCreditLine).not.toHaveBeenCalled();
+	await act(() =>
+		rows()[1]
+			?.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
+			?.click(),
+	);
+	await act(() =>
+		vi.mocked(watchArtistResultClicks).mock.calls.at(-1)?.[0]("12"),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenLastCalledWith({
+			id: "12",
+			name: "Other",
+			role: "mixing",
+			tracks: "",
+		}),
+	);
+	expect(rows()[1]?.querySelector('[role="alert"]')).toBeNull();
 	await editDetail(1, "producer, mixing");
 	await editDetail(2, "2, 4");
-	expect(addCreditLine).not.toHaveBeenCalled();
+	expect(addCreditLine).toHaveBeenCalledOnce();
 	await act(() =>
 		rows()[0]
 			?.querySelector<HTMLInputElement>(
@@ -647,7 +677,7 @@ test("reuses release-artist links on matching suggestions without adding credits
 			?.click(),
 	);
 	await vi.waitFor(() =>
-		expect(addCreditLine).toHaveBeenCalledExactlyOnceWith({
+		expect(addCreditLine).toHaveBeenLastCalledWith({
 			id: "1639184",
 			name: "1000 eyes",
 			role: "producer, mixing",
@@ -774,7 +804,7 @@ test("accepts new track/release associations and clears them for the next import
 		rows()[0]?.querySelector<HTMLInputElement>(
 			'input[value="Credit with artist link"]',
 		)?.disabled,
-	).toBe(true);
+	).toBe(false);
 });
 
 test("reuses a guest's link for suggested roles without treating the roles as already credited", async () => {
@@ -1129,6 +1159,10 @@ async function editDetail(column: number, value: string) {
 		input.value = value;
 		input.dispatchEvent(new Event("input", { bubbles: true }));
 		input.dispatchEvent(new Event("change", { bubbles: true }));
+		if (column === 0) {
+			input.focus();
+			input.blur();
+		}
 	});
 }
 
@@ -1193,7 +1227,9 @@ test("searches using the corrected name and keeps it as the linked credited name
 			tracks: "",
 		}),
 	);
-	expect(rows()[0]?.cells[3]?.textContent).toBe("[Artist12,Matt Redenbo]");
+	await vi.waitFor(() =>
+		expect(rows()[0]?.cells[3]?.textContent).toBe("[Artist12,Matt Redenbo]"),
+	);
 });
 
 test("keeps an inherited artist link when correcting one suggested row without renaming other roles", async () => {
@@ -1296,6 +1332,52 @@ test.each([
 		expect(removeCreditLine).toHaveBeenCalledExactlyOnceWith("1"),
 	);
 	expect(rows()[0]?.cells[3]?.textContent).toBe("not credited");
+});
+
+test("updates a linked artist preview on Enter, not while typing, and not again on blur", async () => {
+	await setup({
+		tracks: [{ credits: [{ name: "Matt", role: "recording engineer" }] }],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(1));
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
+			?.click(),
+	);
+	await act(() =>
+		vi.mocked(watchArtistResultClicks).mock.calls.at(-1)?.[0]("12"),
+	);
+	await vi.waitFor(() => expect(addCreditLine).toHaveBeenCalledOnce());
+	const nameInput =
+		rows()[0]?.cells[0]?.querySelector<HTMLInputElement>("input");
+	if (!nameInput) throw new Error("Missing artist name input");
+
+	await act(() => {
+		nameInput.focus();
+		nameInput.value = "Matt R";
+		nameInput.dispatchEvent(new Event("input", { bubbles: true }));
+		nameInput.value = "Matt Redenbo";
+		nameInput.dispatchEvent(new Event("input", { bubbles: true }));
+	});
+	expect(updateCreditDetails).not.toHaveBeenCalled();
+
+	await act(() => {
+		nameInput.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+		);
+	});
+	await vi.waitFor(() =>
+		expect(updateCreditDetails).toHaveBeenCalledExactlyOnceWith(
+			"1",
+			"recording engineer",
+			"",
+			"[Artist12,Matt Redenbo]",
+		),
+	);
+	await act(() => {
+		nameInput.blur();
+	});
+	expect(updateCreditDetails).toHaveBeenCalledOnce();
 });
 
 test("rejects blank names and cancels an active search when its name is edited", async () => {

@@ -18,6 +18,7 @@ import {
 } from "../utils/page-functions";
 import {
 	normalizeArtistName,
+	parseArtistToken,
 	parseArtistTokenId,
 } from "../utils/release-artist-links";
 import { reportSubmissionError } from "../utils/report-error";
@@ -67,6 +68,16 @@ const hasUnresolvedDetails = (
 	(credit.unverified === true &&
 		(details.role.trim() === "???" || details.tracks.trim() === "???"));
 
+const getCreditedChoiceName = (
+	choice: CreditChoice | undefined,
+	credit: CreditSuggestion,
+): string | undefined =>
+	choice?.kind === "linked"
+		? (parseArtistToken(choice.token)?.name ?? credit.name)
+		: choice?.kind === "text"
+			? choice.name
+			: undefined;
+
 export function CreditPicker({
 	id,
 	title,
@@ -77,8 +88,12 @@ export function CreditPicker({
 	loading = false,
 }: Readonly<CreditPickerProps>) {
 	const [activeKey, setActiveKey] = useState<string | undefined>();
+	const [unlinkedAttemptKey, setUnlinkedAttemptKey] = useState<
+		string | undefined
+	>();
 	const associations = useArtistAssociations();
 	const drafts = useLatestState(() => new Map<string, CreditDetails>());
+	const pendingNameUpdates = useRef(new Map<string, string>());
 	const {
 		state: choices,
 		latest,
@@ -101,6 +116,7 @@ export function CreditPicker({
 		artistId: string | undefined,
 		skip = false,
 		updateOnly?: "details" | "name",
+		onSettled?: () => void,
 	) => {
 		void enqueueCreditEdit(async () => {
 			if (!isActive.current) return;
@@ -121,6 +137,7 @@ export function CreditPicker({
 							: undefined;
 					if (previous.kind === "linked" && artistId === undefined)
 						throw new Error("Could not identify the linked credit artist");
+					if (name === getCreditedChoiceName(previous, credit)) return;
 					const artist =
 						artistId === undefined ? name : buildArtistToken(artistId, name);
 					await updateCreditDetails(
@@ -129,6 +146,15 @@ export function CreditPicker({
 						details.tracks.trim(),
 						artist,
 					);
+					if (isActive.current && previous.kind === "text") {
+						commit(
+							new Map(latest.current).set(credit.key, {
+								kind: "text",
+								name,
+								line: previous.line,
+							}),
+						);
+					}
 					if (isActive.current && artistId !== undefined) {
 						commit(
 							new Map(latest.current).set(credit.key, {
@@ -170,7 +196,7 @@ export function CreditPicker({
 				});
 				choice =
 					artistId === undefined
-						? { kind: "text", line }
+						? { kind: "text", name, line }
 						: {
 								kind: "linked",
 								token: buildArtistToken(artistId, creditedName),
@@ -182,7 +208,27 @@ export function CreditPicker({
 				if (artistId !== undefined && !skip)
 					rememberArtistAssociation(name, artistId);
 			}
-		}).catch(reportSubmissionError);
+		})
+			.catch(reportSubmissionError)
+			.finally(() => onSettled?.());
+	};
+
+	const commitArtistName = (credit: CreditSuggestion) => {
+		const details =
+			drafts.latest.current.get(credit.key) ?? getInitialCreditDetails(credit);
+		const name = details.name.trim();
+		const pendingName = pendingNameUpdates.current.get(credit.key);
+		if (pendingName === name) return;
+		const previous = latest.current.get(credit.key);
+		if (previous?.kind !== "linked" && previous?.kind !== "text") return;
+		const creditedName = getCreditedChoiceName(previous, credit);
+		if (name === creditedName) return;
+
+		pendingNameUpdates.current.set(credit.key, name);
+		choose(credit, undefined, false, "name", () => {
+			if (pendingNameUpdates.current.get(credit.key) === name)
+				pendingNameUpdates.current.delete(credit.key);
+		});
 	};
 
 	useEffect(() => {
@@ -190,6 +236,7 @@ export function CreditPicker({
 		if (!credit) return undefined;
 		return watchArtistResultClicks(
 			(artistId) => {
+				setUnlinkedAttemptKey(undefined);
 				setActiveKey(undefined);
 				void closeShortcutPopup().catch(reportSubmissionError);
 				choose(credit, artistId);
@@ -253,6 +300,7 @@ export function CreditPicker({
 								: choice.token;
 				const invalidDetails = hasUnresolvedDetails(credit, details);
 				const editField = (field: keyof CreditDetails, value: string) => {
+					setUnlinkedAttemptKey(undefined);
 					if (field === "name") stopSearchingFor(credit.key);
 					drafts.commit(
 						new Map(drafts.latest.current).set(credit.key, {
@@ -276,7 +324,13 @@ export function CreditPicker({
 									onInput={(event) =>
 										editField("name", event.currentTarget.value)
 									}
-									onChange={() => choose(credit, undefined, false, "name")}
+									onBlur={() => commitArtistName(credit)}
+									onKeyDown={(event) => {
+										if (event.key === "Enter") {
+											event.preventDefault();
+											commitArtistName(credit);
+										}
+									}}
 								/>
 							) : (
 								credit.name
@@ -296,7 +350,9 @@ export function CreditPicker({
 									: credit.unverified
 										? "Resolve the suggested role and track scope before crediting."
 										: "Enter a credit role."
-								: undefined
+								: unlinkedAttemptKey === credit.key && knownId === undefined
+									? `Link ${name} to a RYM artist first, or use "Credit in plain text".`
+									: undefined
 						}
 						cells={
 							showDetails &&
@@ -343,6 +399,7 @@ export function CreditPicker({
 							hasLink={knownId !== undefined}
 							title="Search RYM for this artist, then click a result to credit them"
 							onSearch={() => {
+								setUnlinkedAttemptKey(undefined);
 								setActiveKey(credit.key);
 								void startArtistSearch(id, name).catch(reportSubmissionError);
 							}}
@@ -350,14 +407,19 @@ export function CreditPicker({
 						/>
 						<PickerButton
 							value="Credit with artist link"
-							disabled={loading || invalidDetails || knownId === undefined}
+							disabled={loading || invalidDetails}
 							title={
 								knownId === undefined
-									? "Choose a RYM artist link first"
+									? "Find this artist on RYM first, then try this again"
 									: `Add this credit using ${knownToken}`
 							}
 							onClick={() => {
 								stopSearchingFor(credit.key);
+								if (knownId === undefined) {
+									setUnlinkedAttemptKey(credit.key);
+									return;
+								}
+								setUnlinkedAttemptKey(undefined);
 								choose(credit, knownId);
 							}}
 						/>
@@ -367,6 +429,7 @@ export function CreditPicker({
 							title="Credit the artist as plain text, without a link"
 							onClick={() => {
 								stopSearchingFor(credit.key);
+								setUnlinkedAttemptKey(undefined);
 								choose(credit, undefined);
 							}}
 						/>
@@ -376,6 +439,7 @@ export function CreditPicker({
 							title="Remove this suggested credit"
 							onClick={() => {
 								stopSearchingFor(credit.key);
+								setUnlinkedAttemptKey(undefined);
 								choose(credit, undefined, true);
 							}}
 						/>

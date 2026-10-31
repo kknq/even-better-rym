@@ -6,6 +6,21 @@ const CREATE_SHORTCUT_PATCH_ATTEMPTS = 20;
 const CREATE_SHORTCUT_PATCH_INTERVAL_MS = 200;
 const UNLINKED_CREDIT_ID = "XXX";
 
+const ensureFormattedCreditPreview = (line: string): string => `
+	(function (line) {
+		var preview = document.getElementById("credits_artist_" + line + "_preview");
+		if (!preview) throw new Error("Could not find the credit artist preview");
+		var formattedId = "credits_artist_" + line + "_preview_formatted";
+		if (!document.getElementById(formattedId)) {
+			var formatted = document.createElement("div");
+			formatted.id = formattedId;
+			formatted.className = "credits_artist_preview_formatted";
+			formatted.style.display = "none";
+			preview.insertAdjacentElement("afterend", formatted);
+		}
+	})(${line});
+`;
+
 // A credit for an artist, linked by RYM id or written as plain text when it
 // has none, with its role and tracks fields.
 export type ArtistCredit = {
@@ -84,6 +99,7 @@ export const updateCreditDetails = (
 				var artist = document.getElementById(${JSON.stringify(`credits_artist_${line}`)});
 				if (!artist) throw new Error("Could not find the credit artist field");
 				artist.value = ${JSON.stringify(artist)};
+				${ensureFormattedCreditPreview(JSON.stringify(line))}
 				updateArtistPreview(${JSON.stringify(line)}, 'credits');
 				artist.dispatchEvent(new Event("change", { bubbles: true }));
 			`
@@ -102,6 +118,7 @@ export const addArtistCredit = (credit: ArtistCredit): Promise<void> => {
 		credit.id === undefined
 			? `
 				document.getElementById('credits_artist_' + credits_num).value = ${JSON.stringify(credit.name)};
+				${ensureFormattedCreditPreview("credits_num")}
 				updateArtistPreview(credits_num, 'credits');
 			`
 			: "";
@@ -109,6 +126,7 @@ export const addArtistCredit = (credit: ArtistCredit): Promise<void> => {
 		credit.id !== undefined && credit.creditedName !== undefined
 			? `
 				document.getElementById('credits_artist_' + credits_num).value = ${JSON.stringify(buildArtistToken(credit.id, credit.creditedName))};
+				${ensureFormattedCreditPreview("credits_num")}
 				updateArtistPreview(credits_num, 'credits');
 			`
 			: "";
