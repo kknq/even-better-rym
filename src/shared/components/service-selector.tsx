@@ -17,7 +17,7 @@ export function ServiceSelector<S extends Service>({
 			style={{
 				display: "flex",
 				flexWrap: "wrap",
-				width: "100%",
+				maxWidth: "100%",
 				gap: 4,
 				justifyContent: "center",
 			}}
