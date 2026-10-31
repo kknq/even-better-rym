@@ -218,9 +218,13 @@ describe("describeGuestChoice", () => {
 		expect(describeGuestChoice(guest, { kind: "skipped" })).toBe(
 			"not credited (tracks 2, 12)",
 		);
-		expect(describeGuestChoice(guest, { kind: "text", line: "3" })).toBe(
-			"credited by name (tracks 2, 12)",
-		);
+		expect(
+			describeGuestChoice(guest, {
+				kind: "text",
+				name: guest.name,
+				line: "3",
+			}),
+		).toBe("credited by name (tracks 2, 12)");
 		expect(
 			describeGuestChoice(guest, {
 				kind: "linked",

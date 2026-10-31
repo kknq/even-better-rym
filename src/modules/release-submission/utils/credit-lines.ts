@@ -6,7 +6,7 @@ export const enqueueCreditEdit = createSerialQueue();
 
 export type CreditChoice =
 	| { kind: "linked"; token: string; line: string | undefined }
-	| { kind: "text"; line: string | undefined }
+	| { kind: "text"; name: string; line: string | undefined }
 	| { kind: "skipped" };
 
 const CREDIT_LINE_SELECTOR = "#creditsx li.sortable_credit";
