@@ -1,3 +1,5 @@
+import ast
+import json
 import sys
 import subprocess
 import importlib
@@ -89,12 +91,10 @@ def read_existing(ts_file):
     if not ts_file.exists():
         return {}
     text = ts_file.read_text(encoding="utf-8")
-    # Match either single or double quotes
-    matches = re.findall(r"\[(\d+), (['\"])(.*?)\2\]", text)
+    matches = re.findall(r'\[(\d+),\s*("(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\')\]', text)
     entities = {}
-    for i, quote, name in matches:
-        # Unescape single quotes if needed
-        name = name.replace("\\'", "'").replace('\\"', '"')
+    for i, value in matches:
+        name = json.loads(value) if value.startswith('"') else ast.literal_eval(value)
         entities[int(i)] = name
     return entities
 
