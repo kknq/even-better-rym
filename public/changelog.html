@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>What's new in EvenBetterRYM 3.0.1</title>
+    <title>What's new in EvenBetterRYM 3.0.2</title>
     <link rel="stylesheet" href="changelog.css" />
   </head>
   <body>
@@ -17,6 +17,78 @@
 
     <main>
       <!-- Replace this release section with the notes for each new extension version. -->
+      <section class="release" aria-labelledby="version-3-0-2">
+        <header class="release-header">
+          <h2 class="version" id="version-3-0-2">3.0.2</h2>
+          <p class="date">3 November 2026</p>
+          <p class="release-subtitle">Search, import, and compatibility fixes</p>
+        </header>
+        <ul class="changes">
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Apple Music search accuracy</h3>
+              <p class="change-description">
+                Apple Music searches now check both the artist and release title
+                instead of accepting the first result.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Spotify search reliability</h3>
+              <p class="change-description">
+                Improved handling of searches containing percent signs and
+                results that are still loading. Searches now wait for matching
+                releases instead of stopping at unrelated results, and give
+                temporary Spotify error screens time to recover. It means that
+                the loading icon can be spinning for a while for the releases
+                that are not even on Spotify because it will do the full 12 seconds
+                await, but it should be better for releases that actually do have matching
+                data.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Tidal label imports</h3>
+              <p class="change-description">
+                Tidal imports now suggest a label from the release's copyright
+                information.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Artist aliases in suggested credits</h3>
+              <p class="change-description">
+                Fixed alias handling when linking imported artists and suggested
+                credits. Names that differ from the selected RYM artist's name
+                are preserved as credited aliases, while matching names no longer
+                receive unnecessary aliases. These choices are shared between
+                release artists, track artists, and suggested credits.
+                <a href="https://rateyourmusic.com/~dyslexicon">dyslexicon</a>
+                will probably tell me if that patch worked or not.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Timeline and maps on translated pages</h3>
+              <p class="change-description">
+                Improved recognition of translated Members headings for the
+                artist timeline. Concert map links and timeline release markers
+                no longer depend on English Shows or discography headings.
+              </p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
       <section class="release" aria-labelledby="version-3-0-1">
         <header class="release-header">
           <h2 class="version" id="version-3-0-1">3.0.1</h2>
