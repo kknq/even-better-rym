@@ -24,6 +24,25 @@ export const search: SearchFunction = async ({
 				: {}),
 		},
 	});
+	if (
+		response.data.error ||
+		response.data.diagnostics?.some(
+			(entry) =>
+				entry.stage === "page-reader-failed" ||
+				entry.stage === "page-runtime-errors",
+		)
+	) {
+		const log = response.data.error ? console.warn : console.info;
+		log("[EvenBetterRYM Spotify] search diagnostics", {
+			requestId: response.id,
+			status: response.data.error
+				? "error"
+				: response.data.url
+					? "found"
+					: "not-found",
+			...response.data,
+		});
+	}
 	if (response.data.error) throw new Error(response.data.error);
 	return response.data.url;
 };

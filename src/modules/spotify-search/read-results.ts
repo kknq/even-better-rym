@@ -26,12 +26,10 @@ export const readSpotifySearchPage = async (
 			throw new Error("Spotify search page was redirected");
 		}
 		const main = document.querySelector("main");
-		if (
+		const renderError =
 			!main &&
-			document.body?.textContent?.includes("Something went wrong") &&
-			document.body.textContent.includes("Reload page")
-		)
-			throw new Error("Spotify search page failed to render");
+			(document.body?.textContent?.includes("Something went wrong") ?? false) &&
+			(document.body?.textContent?.includes("Reload page") ?? false);
 		const links =
 			main?.querySelectorAll<HTMLAnchorElement>(resultSelector) ?? [];
 		let editionUrl: string | undefined;
@@ -82,6 +80,7 @@ export const readSpotifySearchPage = async (
 			exactUrl: undefined,
 			editionUrl,
 			hasPage: main !== null,
+			renderError,
 			noResults: main?.textContent?.includes("No results found") ?? false,
 		};
 	};
@@ -101,9 +100,11 @@ export const readSpotifySearchPage = async (
 				if (result.exactUrl || result.noResults) finish(result.exactUrl);
 				else if (result.editionUrl && !settleTimeout)
 					settleTimeout = setTimeout(() => {
+						settleTimeout = undefined;
 						try {
 							const settled = find();
-							finish(settled.exactUrl ?? settled.editionUrl);
+							if (settled.exactUrl || settled.editionUrl || settled.noResults)
+								finish(settled.exactUrl ?? settled.editionUrl);
 						} catch (error) {
 							finish(
 								undefined,
@@ -122,7 +123,9 @@ export const readSpotifySearchPage = async (
 		const timeout = setTimeout(() => {
 			try {
 				const result = find();
-				if (result.hasPage) finish(result.exactUrl ?? result.editionUrl);
+				if (result.renderError)
+					finish(undefined, new Error("Spotify search page failed to render"));
+				else if (result.hasPage) finish(result.exactUrl ?? result.editionUrl);
 				else
 					finish(undefined, new Error("Spotify search results did not load"));
 			} catch (error) {

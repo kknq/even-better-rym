@@ -1,12 +1,16 @@
 import browser from "webextension-polyfill";
 
-import { spotifyPageDiagnostics } from "./diagnostics";
+import {
+	captureSpotifyPageErrors,
+	spotifyPageDiagnostics,
+} from "./diagnostics";
 import { isFrameRequest, type SearchResult } from "./messages";
 import { readSpotifySearchPage } from "./read-results";
 
 // Only the extension's hidden frame host can request a lookup. Ordinary Spotify
 // tabs do not participate, and no runtime messages are sent from this frame.
 if (window.parent !== window) {
+	const pageErrors = captureSpotifyPageErrors();
 	const extensionOrigin = browser.runtime.getURL("").replace(/\/$/, "");
 	const onRequest = async (event: MessageEvent<unknown>) => {
 		if (
@@ -26,6 +30,8 @@ if (window.parent !== window) {
 				data.releaseType ?? null,
 			);
 			result = url ? { status: "found", url } : { status: "not-found" };
+			if (pageErrors.hasErrors())
+				result.diagnostics = [pageErrors.diagnostic([data.artist, data.title])];
 		} catch (error) {
 			result = {
 				status: "error",
@@ -35,9 +41,12 @@ if (window.parent !== window) {
 						stage: "page-reader-failed",
 						details: spotifyPageDiagnostics(),
 					},
+					pageErrors.diagnostic([data.artist, data.title]),
 				],
 			};
 			console.warn("[EvenBetterRYM Spotify]", { id, category, ...result });
+		} finally {
+			pageErrors.dispose();
 		}
 		window.parent.postMessage(
 			{ type: "ebr-spotify-result", id, result },

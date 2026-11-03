@@ -18,7 +18,12 @@ const searchFrame = (
 		// Keep a normal layout viewport without allowing popups or top navigation.
 		frame.setAttribute("sandbox", "allow-scripts allow-same-origin");
 		frame.style.cssText = "width:1280px;height:900px;border:0";
-		frame.src = `https://open.spotify.com/search/${encodeURIComponent(`${data.artist} ${data.title}`)}/${category}`;
+		// Escape "%" twice for initial navigation, before Spotify rewrites the URL.
+		const query = encodeURIComponent(`${data.artist} ${data.title}`).replaceAll(
+			"%25",
+			"%2525",
+		);
+		frame.src = `https://open.spotify.com/search/${query}/${category}`;
 		const finish = (result: SearchResult) => {
 			clearTimeout(timeout);
 			window.removeEventListener("message", onMessage);

@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import browser from "webextension-polyfill";
+import type { SearchDiagnostic } from "~/modules/spotify-search/messages";
 import type {
 	TidalCreditsInput,
 	TidalCreditsResult,
@@ -72,7 +73,7 @@ export type SpotifySearchRequest = {
 export type SpotifySearchResponse = {
 	id: string;
 	type: "spotifySearch";
-	data: { url?: string; error?: string };
+	data: { url?: string; error?: string; diagnostics?: SearchDiagnostic[] };
 };
 
 export type WikipediaSearchRequest = {
