@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import {
 	combineYearRanges,
 	decadeRange,
@@ -398,7 +399,9 @@ export async function mainFilmGenre(): Promise<void> {
 
 	const controls = document.createElement("span");
 	controls.className = "ebr-film-genre-chart-controls";
-	controls.insertAdjacentHTML("beforeend", controlsHtml());
+	controls.append(
+		DOMPurify.sanitize(controlsHtml(), { RETURN_DOM_FRAGMENT: true }),
+	);
 
 	const button = document.createElement("a");
 	button.textContent = "See Film chart";

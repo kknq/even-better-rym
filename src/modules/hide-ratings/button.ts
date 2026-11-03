@@ -30,7 +30,9 @@ export const wireButton = (
 	const update = (hidden: boolean) => {
 		button.dataset.hiding = String(hidden);
 		const label = getButtonLabel(global, hidden);
-		button.innerHTML = `${eyeIcon(hidden)}<span>${label}</span>`;
+		const text = document.createElement("span");
+		text.textContent = label;
+		button.replaceChildren(eyeIcon(hidden), text);
 		button.setAttribute("aria-label", label);
 		button.setAttribute("title", label);
 	};

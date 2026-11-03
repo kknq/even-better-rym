@@ -1,5 +1,6 @@
 import { waitForDocumentReady } from "~/shared/utils/dom";
 import { isDarkPage } from "~/shared/utils/theme";
+import { findMembersHeader } from "./dom-helpers";
 import { addMapLink } from "./map-link";
 import { togglePanel } from "./panel";
 
@@ -12,13 +13,11 @@ export const main = async (): Promise<void> => {
 		".section_artist_shows .artist_page_header h2",
 	);
 
-	if (showsHeaderEl?.textContent?.trim() === "Shows") {
+	if (showsHeaderEl) {
 		addMapLink(showsHeaderEl);
 	}
 
-	const membersHeaderEl = [
-		...document.querySelectorAll<HTMLElement>(".info_hdr"),
-	].find((header) => header.textContent?.trim() === "Members");
+	const membersHeaderEl = findMembersHeader();
 
 	// Only add Timeline link if Members section exists
 	if (membersHeaderEl) {

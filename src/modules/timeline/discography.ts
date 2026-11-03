@@ -30,24 +30,13 @@ function extractDecimalYearFromSpan(span: Element | null): number | null {
 	return Number.isFinite(year) ? year + 0.5 : null;
 }
 
-function normalizeDiscoLabel(
-	label: string | null | undefined,
-): DiscoType | null {
-	const type = String(label ?? "")
-		.trim()
-		.toLowerCase();
-	if (type === "album" || type === "albums") return "album";
-	if (type === "live album" || type === "live albums") return "live";
-	if (type === "single" || type === "singles") return "single";
-	if (type === "ep" || type === "eps") return "ep";
-	if (
-		type === "additional release" ||
-		type === "additional releases" ||
-		type === "additional"
-	)
-		return "additional";
-	return null;
-}
+const DISCO_TYPES: Record<string, DiscoType> = {
+	disco_type_s: "album",
+	disco_type_l: "live",
+	disco_type_i: "single",
+	disco_type_e: "ep",
+	disco_type_x: "additional",
+};
 
 // Collect release markers (decimal year + title) from within a disco_type_* container
 function collectReleases(
@@ -92,24 +81,9 @@ export function extractDiscographyMarkersFromDOM(
 	const discographyRoot = document.getElementById("discography");
 	if (!discographyRoot) return markers;
 
-	const sectionHeaders = Array.from(
-		discographyRoot.querySelectorAll<HTMLElement>(".disco_header_top"),
-	);
-
-	for (const header of sectionHeaders) {
-		const labelEl = header.querySelector<HTMLElement>("h3.disco_header_label");
-		const kind = normalizeDiscoLabel(labelEl?.textContent ?? "");
-		if (!kind) continue;
-
-		// Releases live inside the disco_type_* container that follows the header
-		let node: Element | null = header.nextElementSibling;
-		while (node && !node.classList.contains("disco_header_top")) {
-			if (node.id.startsWith("disco_type_")) {
-				markers[kind].push(...collectReleases(node, kind, disbandedYear));
-				break;
-			}
-			node = node.nextElementSibling;
-		}
+	for (const [id, kind] of Object.entries(DISCO_TYPES)) {
+		const container = discographyRoot.querySelector(`#${id}`);
+		markers[kind].push(...collectReleases(container, kind, disbandedYear));
 	}
 
 	// Deduplicate by (integer year, title) within each type, preserving order

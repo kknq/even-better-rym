@@ -132,7 +132,9 @@ const insertSuggestionButton = (): void => {
 		const label = visible
 			? "Hide Suggestions Ratings"
 			: "Show Suggestions Ratings";
-		button.innerHTML = `${eyeIcon(!visible)}<span>${label}</span>`;
+		const text = document.createElement("span");
+		text.textContent = label;
+		button.replaceChildren(eyeIcon(!visible), text);
 		button.setAttribute("aria-label", label);
 	};
 

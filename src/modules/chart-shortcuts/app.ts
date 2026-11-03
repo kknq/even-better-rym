@@ -273,7 +273,7 @@ function findShortcutLabel(input: HTMLInputElement): HTMLElement | null {
 	return section?.querySelector<HTMLElement>(SHORTCUT_LABEL_SELECTOR) ?? null;
 }
 
-function renderHintLines(bindings: ChartShortcutBindings): string {
+function renderHintLines(bindings: ChartShortcutBindings): DocumentFragment {
 	const groups = new Map<ChartShortcutGroup, string[]>();
 
 	for (const action of CHART_SHORTCUT_ACTIONS) {
@@ -286,9 +286,17 @@ function renderHintLines(bindings: ChartShortcutBindings): string {
 		groups.set(action.group, lines);
 	}
 
-	return [...groups.values()]
-		.map((lines) => lines.join("<br>"))
-		.join("<br><br>");
+	const fragment = document.createDocumentFragment();
+	for (const line of [...groups.values()]
+		.map((lines) => lines.join("\n"))
+		.join("\n\n")
+		.split("\n")) {
+		fragment.append(
+			document.createElement("br"),
+			document.createTextNode(line),
+		);
+	}
+	return fragment;
 }
 
 function insertShortcutHint(
@@ -306,7 +314,7 @@ function insertShortcutHint(
 
 	const hintLines = document.createElement("span");
 	hintLines.style.display = "none";
-	hintLines.innerHTML = `<br>${renderHintLines(bindings)}`;
+	hintLines.append(renderHintLines(bindings));
 
 	const toggle = document.createElement("span");
 	toggle.className = "ebr-hint-toggle";
@@ -410,7 +418,7 @@ function mount(
 	// popup, without requiring a page refresh.
 	subscribeToChartShortcutBindings((bindings) => {
 		comboToAction = buildComboToAction(bindings);
-		if (hintLines) hintLines.innerHTML = `<br>${renderHintLines(bindings)}`;
+		if (hintLines) hintLines.replaceChildren(renderHintLines(bindings));
 	});
 
 	document.addEventListener(

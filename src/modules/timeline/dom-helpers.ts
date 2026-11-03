@@ -1,15 +1,36 @@
-// Find the "Members" info_content block via its header's next sibling
-export function findMembersInfoContent(): Element | null {
-	const headers = Array.from(document.querySelectorAll(".info_hdr"));
-	const membersHdr = headers.find((h) =>
-		/^\s*Members\b/i.test(h.textContent || ""),
+const MEMBER_HEADINGS = new Set([
+	"members",
+	"miembros",
+	"membres",
+	"jäsenet",
+	"üyeler",
+	"mitglieder",
+	// Provisional translations, not yet verified against RYM.
+	"członkowie",
+	"membri",
+	"membros",
+	"участники",
+	"leden",
+]);
+
+export function findMembersHeader(): HTMLElement | null {
+	const headers = Array.from(
+		document.querySelectorAll<HTMLElement>(".artist_info_main .info_hdr"),
 	);
-	if (!membersHdr) return null;
+	return (
+		headers.find((header) => {
+			const label = header.cloneNode(true) as HTMLElement;
+			for (const link of label.querySelectorAll(".rymmt-link")) {
+				link.remove();
+			}
+			return MEMBER_HEADINGS.has(label.textContent?.trim().toLowerCase() ?? "");
+		}) ?? null
+	);
+}
 
-	const content = membersHdr.nextElementSibling;
-	if (content?.classList.contains("info_content")) return content;
-
-	return membersHdr.parentElement?.querySelector(".info_content") ?? null;
+export function findMembersInfoContent(): Element | null {
+	const header = findMembersHeader();
+	return header ? findAdjacentInfoContent(header) : null;
 }
 
 // Given an info header, find its next adjacent info_content block
