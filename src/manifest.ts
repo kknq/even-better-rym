@@ -39,13 +39,22 @@ const hostsArray = [
 	"https://en.wikipedia.org/*",
 ];
 
+const spotifyPageErrors = {
+	js: ["src/modules/spotify-search/page-errors.ts"],
+	matches: ["https://open.spotify.com/search/*"],
+	all_frames: true,
+	run_at: "document_start",
+	world: "MAIN",
+} satisfies NonNullable<chrome.runtime.ManifestV3["content_scripts"]>[number];
+
 const sharedManifest = {
 	content_scripts: [
+		spotifyPageErrors,
 		{
 			js: ["src/modules/spotify-search/main.ts"],
 			matches: ["https://open.spotify.com/search/*"],
 			all_frames: true,
-			run_at: "document_idle",
+			run_at: "document_start",
 		},
 		{
 			js: ["src/modules/tidal-credits/main.ts"],
