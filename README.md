@@ -221,6 +221,11 @@ The extension supports both Manifest V2 and V3. Set the `MANIFEST_VERSION` envir
 MANIFEST_VERSION=2
 ```
 
+For Firefox submissions, build with `MANIFEST_VERSION=2 npm run build`, then run
+`npx web-ext lint --source-dir dist` (or `npx addons-linter dist` to run the
+underlying validator directly). The build removes Chromium-only offscreen
+APIs from the Firefox bundle; Firefox uses its background document instead.
+
 ### Commands
 
 ### Git Hooks

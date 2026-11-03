@@ -109,7 +109,9 @@ async function readBackgroundPage<T>(job: HiddenPageJob<T>): Promise<T> {
 let queue = Promise.resolve();
 export function readHiddenPage<T>(job: HiddenPageJob<T>): Promise<T> {
 	const pending = queue.then(() =>
-		browser.runtime.getManifest().manifest_version === 2
+		import.meta.env.VITE_MANIFEST_VERSION === "2" ||
+		(import.meta.env.VITE_MANIFEST_VERSION === undefined &&
+			browser.runtime.getManifest().manifest_version === 2)
 			? readBackgroundPage(job)
 			: readOffscreen(job),
 	);

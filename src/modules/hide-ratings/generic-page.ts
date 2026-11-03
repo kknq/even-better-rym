@@ -46,7 +46,9 @@ export const insertGlobalRatingButton = (): void => {
 	const update = async () => {
 		const enabled = await getModuleEnabled("hideRatings");
 		const label = enabled ? "Disable Hide Ratings" : "Enable Hide Ratings";
-		button.innerHTML = `<span>${label}</span>`;
+		const text = document.createElement("span");
+		text.textContent = label;
+		button.replaceChildren(text);
 		button.setAttribute("aria-label", label);
 		button.setAttribute("title", label);
 	};

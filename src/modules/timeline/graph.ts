@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { currentDecimalYear } from "./date-utils";
 import { buildChartRoleColorMap, capitalizeWords } from "./roles";
 import type { GraphOpts, MarkersByType, Member, Stint } from "./types";
@@ -410,7 +411,9 @@ export function buildGraph(
 		)
 		.join("\n");
 
-	container.innerHTML = `
+	container.replaceChildren(
+		DOMPurify.sanitize(
+			`
     <div class="rymmt-graph">
       <div class="rymmt-graph-titlebar">
         <span class="rymmt-graph-title">Timeline</span>
@@ -435,7 +438,10 @@ export function buildGraph(
       </div>
       ${releasesLegendHtml ? `<div class="rymmt-legend-section"><div class="rymmt-legend-title">Releases <span class="rymmt-legend-hint">(click to toggle)</span></div><div class="rymmt-role-legend">${releasesLegendHtml}</div></div>` : ""}
     </div>
-  `;
+  `,
+			{ RETURN_DOM_FRAGMENT: true },
+		),
+	);
 }
 
 export function attachGraphInteractivity(panel: HTMLElement): void {

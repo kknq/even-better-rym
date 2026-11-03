@@ -80,22 +80,28 @@ function populateYearChooser(): void {
 	const currentYear = new Date().getFullYear();
 	const newestDecade = Math.floor(currentYear / 10) * 10;
 	const oldestDecade = Math.floor(FIRST_CHART_YEAR / 10) * 10;
-	const rows: string[] = [];
+	const rows = document.createDocumentFragment();
 
 	for (let decade = newestDecade; decade >= oldestDecade; decade -= 10) {
-		const years = Array.from({ length: 10 }, (_, offset) => decade + offset)
-			.filter((year) => year >= FIRST_CHART_YEAR && year <= currentYear)
-			.map(
-				(year) =>
-					`<div id="date_year_chooser_year_${year}" class="date_year_chooser_year_btn">${year % 100}</div>`,
-			)
-			.join("");
-		rows.push(
-			`<div class="date_year_chooser_row"><div id="date_year_chooser_decade_${decade}" class="date_year_chooser_decade_btn">${decade}s</div>${years}</div>`,
-		);
+		const row = document.createElement("div");
+		row.className = "date_year_chooser_row";
+		const decadeButton = document.createElement("div");
+		decadeButton.id = `date_year_chooser_decade_${decade}`;
+		decadeButton.className = "date_year_chooser_decade_btn";
+		decadeButton.textContent = `${decade}s`;
+		row.append(decadeButton);
+		for (let year = decade; year < decade + 10 && year <= currentYear; year++) {
+			if (year < FIRST_CHART_YEAR) continue;
+			const yearButton = document.createElement("div");
+			yearButton.id = `date_year_chooser_year_${year}`;
+			yearButton.className = "date_year_chooser_year_btn";
+			yearButton.textContent = String(year % 100);
+			row.append(yearButton);
+		}
+		rows.append(row);
 	}
 
-	chooser.innerHTML = rows.join("");
+	chooser.replaceChildren(rows);
 }
 
 function ensureOverlay(): void {
@@ -882,7 +888,11 @@ export async function mainMusicGenre(): Promise<void> {
 		header.appendChild(controlsRow);
 	}
 
-	controlsRow.insertAdjacentHTML("beforeend", CHART_CONTROLS_HTML);
+	// This is an extension-owned literal, including RYM's native event handlers.
+	controlsRow.append(
+		...new DOMParser().parseFromString(CHART_CONTROLS_HTML, "text/html").body
+			.childNodes,
+	);
 	populateYearChooser();
 
 	seeChartButton.classList.add("ebr-genre-chart-see-button");

@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { getVoteVisibilitySettings } from "~/shared/hide-votes/settings";
 import { waitForDocumentReady } from "~/shared/utils/dom";
 
@@ -66,12 +67,16 @@ function addHideButton(
 		hideStats,
 	);
 
-	spanElement.innerHTML =
-		updatedBefore +
-		`<span class="ebr-hide-votes-button">${
-			hiddenByDefault ? "Show" : "Hide"
-		}</span>` +
-		`<span class="ebr-user-list">${userListHtml}</span>`;
+	spanElement.replaceChildren(
+		DOMPurify.sanitize(
+			updatedBefore +
+				`<span class="ebr-hide-votes-button">${
+					hiddenByDefault ? "Show" : "Hide"
+				}</span>` +
+				`<span class="ebr-user-list">${userListHtml}</span>`,
+			{ RETURN_DOM_FRAGMENT: true },
+		),
+	);
 	spanElement.classList.toggle("ebr-votes-hidden", hiddenByDefault);
 
 	const button = spanElement.querySelector<HTMLElement>(

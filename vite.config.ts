@@ -18,6 +18,14 @@ export default defineConfig(({ mode, command }) => {
 	}
 
 	return {
+		define:
+			mode === "test"
+				? {}
+				: {
+						"import.meta.env.VITE_MANIFEST_VERSION": JSON.stringify(
+							String(manifest.manifest_version),
+						),
+					},
 		build: {
 			target: ["chrome89", "firefox89"],
 		},
@@ -26,12 +34,15 @@ export default defineConfig(({ mode, command }) => {
 			webExtension({
 				manifest,
 				additionalInputs: {
-					html: [
-						{
-							fileName: "src/modules/hidden-page/offscreen.html",
-							webAccessible: false,
-						},
-					],
+					html:
+						manifest.manifest_version === 3
+							? [
+									{
+										fileName: "src/modules/hidden-page/offscreen.html",
+										webAccessible: false,
+									},
+								]
+							: [],
 				},
 			}),
 		],

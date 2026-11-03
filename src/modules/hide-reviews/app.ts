@@ -164,7 +164,9 @@ const wireGlobalReviewButton = (button: HTMLElement): void => {
 	const update = async () => {
 		const enabled = await getModuleEnabled("hideReviews");
 		const label = enabled ? "Disable Hide Reviews" : "Enable Hide Reviews";
-		button.innerHTML = `<span>${label}</span>`;
+		const text = document.createElement("span");
+		text.textContent = label;
+		button.replaceChildren(text);
 		button.setAttribute("aria-label", label);
 	};
 
@@ -194,7 +196,9 @@ const wireReviewButton = (
 		} else {
 			label = hidden ? "Show Reviews" : "Hide Reviews";
 		}
-		button.innerHTML = `${eyeIcon(hidden)}<span>${label}</span>`;
+		const text = document.createElement("span");
+		text.textContent = label;
+		button.replaceChildren(eyeIcon(hidden), text);
 		button.setAttribute("aria-label", label);
 	};
 
