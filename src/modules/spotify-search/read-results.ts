@@ -70,7 +70,6 @@ export const readSpotifySearchPage = async (
 						return {
 							exactUrl: url,
 							editionUrl,
-							hasResults: true,
 							hasPage: true,
 						};
 					editionUrl ??= url;
@@ -82,7 +81,6 @@ export const readSpotifySearchPage = async (
 		return {
 			exactUrl: undefined,
 			editionUrl,
-			hasResults: links.length > 0,
 			hasPage: main !== null,
 			noResults: main?.textContent?.includes("No results found") ?? false,
 		};
@@ -101,7 +99,7 @@ export const readSpotifySearchPage = async (
 			try {
 				const result = find();
 				if (result.exactUrl || result.noResults) finish(result.exactUrl);
-				else if (result.hasResults && !settleTimeout)
+				else if (result.editionUrl && !settleTimeout)
 					settleTimeout = setTimeout(() => {
 						try {
 							const settled = find();

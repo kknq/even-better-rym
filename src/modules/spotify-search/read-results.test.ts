@@ -5,6 +5,7 @@ import { readSpotifySearchPage } from "./read-results";
 const artist = "Молодёжьвыбираеткосмос";
 const title = "компиляция, Ч. 2";
 const albumUrl = "https://open.spotify.com/album/3SRxE9NuyRHYLcmCTaCEL3";
+let notifyMutation: () => void;
 
 const resultLink = (
 	linkTitle: string,
@@ -47,6 +48,9 @@ beforeEach(() => {
 	vi.stubGlobal(
 		"MutationObserver",
 		class {
+			constructor(callback: () => void) {
+				notifyMutation = callback;
+			}
 			observe = vi.fn();
 			disconnect = vi.fn();
 		},
@@ -63,6 +67,82 @@ describe("readSpotifySearchPage", () => {
 		setSearchPage([resultLink(title, albumUrl)]);
 
 		await expect(readSpotifySearchPage(artist, title)).resolves.toBe(albumUrl);
+	});
+
+	test("waits for Musora when unrelated results render first", async () => {
+		setSearchPage([resultLink("Another album", albumUrl)]);
+		const settled = vi.fn();
+		const result = readSpotifySearchPage("Глад Валакас", "Мусора").then(
+			(url) => {
+				settled(url);
+				return url;
+			},
+		);
+
+		await vi.advanceTimersByTimeAsync(2_000);
+		expect(settled).not.toHaveBeenCalled();
+
+		const musoraUrl = "https://open.spotify.com/album/4weQ0de3lNVjrAidDUFWcn";
+		setSearchPage([
+			resultLink("Мусора", musoraUrl, "Мусора2023 • Глад Валакас"),
+		]);
+		notifyMutation();
+
+		await expect(result).resolves.toBe(musoraUrl);
+	});
+
+	test("waits for artist metadata after the matching title renders", async () => {
+		setSearchPage([resultLink(title, albumUrl, title)]);
+		const settled = vi.fn();
+		const result = readSpotifySearchPage(artist, title).then((url) => {
+			settled(url);
+			return url;
+		});
+
+		await vi.advanceTimersByTimeAsync(2_000);
+		expect(settled).not.toHaveBeenCalled();
+
+		setSearchPage([resultLink(title, albumUrl)]);
+		notifyMutation();
+
+		await expect(result).resolves.toBe(albumUrl);
+	});
+
+	test("waits until the deadline when results never match", async () => {
+		setSearchPage([resultLink("Another album", albumUrl)]);
+		const settled = vi.fn();
+		const result = readSpotifySearchPage(artist, title).then((url) => {
+			settled(url);
+			return url;
+		});
+
+		await vi.advanceTimersByTimeAsync(11_999);
+		expect(settled).not.toHaveBeenCalled();
+		await vi.advanceTimersByTimeAsync(1);
+
+		await expect(result).resolves.toBeUndefined();
+	});
+
+	test("still accepts a matching edition after a short settling period", async () => {
+		setSearchPage([resultLink(`${title} (Deluxe Edition)`, albumUrl)]);
+		const result = readSpotifySearchPage(artist, title);
+
+		await vi.advanceTimersByTimeAsync(1_500);
+
+		await expect(result).resolves.toBe(albumUrl);
+	});
+
+	test("prefers an exact title arriving while a matching edition settles", async () => {
+		const edition = resultLink(`${title} (Deluxe Edition)`, albumUrl);
+		setSearchPage([edition]);
+		const result = readSpotifySearchPage(artist, title);
+		await vi.advanceTimersByTimeAsync(1_000);
+
+		const exactUrl = "https://open.spotify.com/album/4weQ0de3lNVjrAidDUFWcn";
+		setSearchPage([edition, resultLink(title, exactUrl)]);
+		notifyMutation();
+
+		await expect(result).resolves.toBe(exactUrl);
 	});
 
 	test("treats Spotify's explicit no-results page as a normal no-match", async () => {
