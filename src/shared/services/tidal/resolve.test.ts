@@ -25,6 +25,7 @@ const album = {
 			title: "Example Album",
 			albumType: "ALBUM",
 			releaseDate: "2025-08-01",
+			copyright: { text: "℗ 2025 Example Label" },
 			numberOfItems: 2,
 			numberOfVolumes: 1,
 			mediaTags: ["LOSSLESS"],
@@ -128,6 +129,7 @@ describe("Tidal imports", () => {
 			title: "Example Album",
 			artists: ["Main Artist"],
 			date: { year: 2025, month: 8, day: 1 },
+			label: { name: "Example Label" },
 			type: "album",
 			format: "lossless digital",
 			attributes: ["streaming"],
@@ -157,6 +159,40 @@ describe("Tidal imports", () => {
 			},
 			urlParameters: { countryCode: "US", include: "artists,coverArt" },
 		});
+	});
+
+	test.each([
+		["© 2025 Example Label", "Example Label"],
+		["  ℗ 2025 Example Label  ", "Example Label"],
+		["(P) 2025 Example Label", "Example Label"],
+		["(C) 2025 Example Label", "Example Label"],
+		["2025 Example Label", "Example Label"],
+		["Example Label", "Example Label"],
+		["℗ 2025 4AD", "4AD"],
+		["℗ 2025 Label 2020", "Label 2020"],
+		["", undefined],
+		["   ", undefined],
+		["℗ 2025", undefined],
+		[undefined, undefined],
+	])("imports a label from copyright %j", async (text, name) => {
+		vi.mocked(fetch)
+			.mockReset()
+			.mockResolvedValueOnce(
+				JSON.stringify({
+					...album,
+					data: {
+						...album.data,
+						attributes: {
+							...album.data.attributes,
+							copyright: text === undefined ? undefined : { text },
+						},
+					},
+				}),
+			)
+			.mockResolvedValueOnce(JSON.stringify(trackPage));
+		const result = await resolve(url);
+		expect(result.label).toEqual(name ? { name } : undefined);
+		expect(result.tracks).toHaveLength(2);
 	});
 
 	test("accepts a pasted credits-page link while keeping the canonical album URL", async () => {

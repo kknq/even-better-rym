@@ -22,6 +22,7 @@ type Resource = Identifier & {
 		version?: string;
 		duration?: string;
 		releaseDate?: string;
+		copyright?: { text: string };
 		albumType?: string;
 		type?: string;
 		numberOfItems?: number;
@@ -179,11 +180,17 @@ export const resolve: ResolveFunction = async (url) => {
 	if (dateText && Number.isNaN(Date.parse(dateText))) {
 		throw new Error("Could not parse Tidal release date");
 	}
+	const labelName = album.attributes.copyright?.text
+		.trim()
+		.replace(/^(?:(?:©|℗|\([CP]\))\s*)+/i, "")
+		.replace(/^\d{4}(?:\s+|$)/, "")
+		.trim();
 	return {
 		url: `https://tidal.com/browse/album/${id}`,
 		title: withVersion(album.attributes.title ?? "", album.attributes.version),
 		artists,
 		date: dateText ? stringToDate(dateText) : undefined,
+		label: labelName ? { name: labelName } : undefined,
 		type:
 			releaseTypes[album.attributes.albumType ?? album.attributes.type ?? ""] ??
 			getReleaseType(album.attributes.title, tracks.length),
