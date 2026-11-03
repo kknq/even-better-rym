@@ -7,8 +7,15 @@ import { defineConfig, loadEnv } from "vite";
 import { getManifest } from "./src/manifest";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
 	const env = loadEnv(mode, process.cwd(), "");
+	const manifest = getManifest(Number(env.MANIFEST_VERSION) || 3);
+	if (command === "serve") {
+		// The HMR loader uses extension APIs unavailable in the page world.
+		manifest.content_scripts = manifest.content_scripts?.filter(
+			(script) => !("world" in script && script.world === "MAIN"),
+		);
+	}
 
 	return {
 		build: {
@@ -17,7 +24,7 @@ export default defineConfig(({ mode }) => {
 		plugins: [
 			preact(),
 			webExtension({
-				manifest: getManifest(Number(env.MANIFEST_VERSION) || 3),
+				manifest,
 				additionalInputs: {
 					html: [
 						{

@@ -48,17 +48,32 @@ export const search: SearchFunction = async ({
 	};
 	const toUrl = (url: string) =>
 		appleMusicRegion ? toRegionalAppleMusicUrl(url, appleMusicRegion) : url;
+	const artistName = normalize(artist);
+	const albumTitle = normalize(title);
+	const isMatchingAlbum = (album: SearchObject["results"][number]) => {
+		if (
+			!album.collectionViewUrl ||
+			normalize(album.artistName ?? "") !== artistName
+		)
+			return false;
+		const collectionTitle = normalize(album.collectionName ?? "");
+		return (
+			collectionTitle === albumTitle ||
+			((releaseType === "single" || releaseType === "ep") &&
+				collectionTitle === `${albumTitle} - ${releaseType}`)
+		);
+	};
 
 	const response = await request("search", {
 		term: `${artist} ${title}`,
 		media: "music",
 		entity: "album",
+		limit: "200",
 	});
-	const collectionViewUrl = response.results[0]?.collectionViewUrl;
+	const collectionViewUrl =
+		response.results.find(isMatchingAlbum)?.collectionViewUrl;
 	if (collectionViewUrl) return toUrl(collectionViewUrl);
 
-	const artistName = normalize(artist);
-	const albumTitle = normalize(title);
 	const artists = await request("search", {
 		term: artist,
 		media: "music",
@@ -72,16 +87,10 @@ export const search: SearchFunction = async ({
 			entity: "album",
 			limit: "200",
 		});
-		const match = albums.results.find((album) => {
-			if (!album.collectionViewUrl || album.artistId !== candidate.artistId)
-				return false;
-			const collectionTitle = normalize(album.collectionName ?? "");
-			return (
-				collectionTitle === albumTitle ||
-				((releaseType === "single" || releaseType === "ep") &&
-					collectionTitle === `${albumTitle} - ${releaseType}`)
-			);
-		});
+		const match = albums.results.find(
+			(album) =>
+				album.artistId === candidate.artistId && isMatchingAlbum(album),
+		);
 		if (match?.collectionViewUrl) return toUrl(match.collectionViewUrl);
 	}
 	return undefined;
