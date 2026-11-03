@@ -352,12 +352,85 @@ test("uses the imported alias as the native artist name after a differently name
 			presentIds: new Set(["1479561"]),
 		});
 	});
+	await vi.waitFor(() =>
+		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
+			[{ id: "1479561", name: "Kai Angel" }],
+			new Set(["1479561"]),
+		),
+	);
 	expect(creditedName()).toEqual({
 		useDefault: false,
 		specified: true,
 		first: "",
 		last: "zavet",
 	});
+});
+
+test.each([
+	{ selected: "Molchat Doma", token: "[Artist1238361]" },
+	{ selected: "Молчат Дома", token: "[Artist1238361,Molchat Doma]" },
+])("handles native filed-under selection without the shortcut popup ($selected)", async ({
+	selected,
+	token,
+}) => {
+	const actual = await vi.importActual<typeof import("../utils/filed-under")>(
+		"../utils/filed-under",
+	);
+	vi.mocked(watchFiledUnderChanges).mockImplementationOnce(
+		actual.watchFiledUnderChanges,
+	);
+	window.history.replaceState(null, "", "/releases/ac");
+	document.body.innerHTML = `
+		<div id="section_filed_under">
+			<div class="gosearch"><input id="filed_under_searchterm">
+				<input type="button" value="Search"></div>
+			<ul id="filed_under_performerx"></ul>
+		</div>
+	`;
+	const published = vi.fn(
+		(event: CustomEvent<ReleaseArtistLabels>) => event.detail,
+	);
+	document.addEventListener("releaseArtistLabelsEvent", published);
+	try {
+		await act(async () => injectReleaseArtistPicker());
+		await act(() => {
+			document.dispatchEvent(
+				new CustomEvent("releaseArtistsEvent", {
+					detail: ["Molchat Doma"],
+				}),
+			);
+		});
+		await act(() => {
+			document
+				.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
+				?.click();
+		});
+		await act(() => {
+			document.querySelector("#filed_under_performerx")?.insertAdjacentHTML(
+				"beforeend",
+				`<li id="filed_under_performer_1" class="sortable_filed_under_performer">
+					<input id="filed_under_performer_artist_1" value="[Artist1238361]">
+					<span class="filed_under_artist_preview">${selected}</span>
+				</li>`,
+			);
+		});
+		await vi.waitFor(() =>
+			expect(published.mock.calls.at(-1)?.[0].detail.labels).toEqual(
+				new Map([["Molchat Doma", token]]),
+			),
+		);
+		expect(published.mock.calls.at(-1)?.[0].detail.artistNames).toEqual(
+			new Map([["Molchat Doma", selected]]),
+		);
+		expect(document.querySelector("#shortcutsearchframe")).toBeNull();
+		await vi.waitFor(() =>
+			expect(creditedName().last).toBe(
+				selected === "Molchat Doma" ? "" : "Molchat Doma",
+			),
+		);
+	} finally {
+		document.removeEventListener("releaseArtistLabelsEvent", published);
+	}
 });
 
 test("restores an untouched automatic alias when the next import uses the canonical name", async () => {

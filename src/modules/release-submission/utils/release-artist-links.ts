@@ -29,6 +29,7 @@ export type ReleaseArtistChoices = Map<string, ReleaseArtistChoice>;
 export type ReleaseArtistLabels = {
 	names: string[];
 	labels: ArtistLabels;
+	artistNames?: Map<string, string>;
 };
 
 // The release picker's choices and the row waiting for an artist to be

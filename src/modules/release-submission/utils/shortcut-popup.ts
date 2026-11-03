@@ -1,6 +1,7 @@
 import { forceQuerySelector } from "~/shared/utils/dom";
 
 import { openArtistLinkPopup } from "./page-functions";
+import { reportSubmissionError } from "./report-error";
 
 const SHORTCUT_FRAME_SELECTOR = "#shortcutsearchframe";
 const ARTIST_SEARCH_URL = "/go/search2?type=shortcutartist&func=";
@@ -49,6 +50,32 @@ const getShortcutFrame = (): HTMLIFrameElement =>
 export const parseArtistResultId = (onclickText: string): string | undefined =>
 	ARTIST_SHORTCUT_CALL_PATTERN.exec(onclickText)?.[1];
 
+const getArtistResultName = (
+	result: Element,
+	artistId: string,
+): string | undefined => {
+	const container = result.closest("tr, li") ?? result;
+	const name = container
+		.querySelector(`#artistname${artistId}`)
+		?.textContent?.trim()
+		.replace(/\s+/g, " ");
+	if (name) return name;
+	const links = [...container.querySelectorAll("a[href]")];
+	if (container.matches("a[href]")) links.unshift(container);
+	const names = new Set(
+		links
+			.filter((link) => {
+				return /^(?:(?:https?:)?\/\/(?:www\.)?rateyourmusic\.com)?\/artist\//.test(
+					link.getAttribute("href") ?? "",
+				);
+			})
+			.map((link) => link.textContent?.trim().replace(/\s+/g, " "))
+			.filter((name) => name !== undefined && name !== ""),
+	);
+	if (names.size === 1) return [...names][0];
+	return undefined;
+};
+
 // Loads a fresh artist search in the popup and submits it for name.
 export const prefillArtistSearch = async (
 	name: string,
@@ -96,7 +123,7 @@ export const startArtistSearch = async (
 // the returned function is called. RYM's own inline onclick handlers on the
 // results don't run in Safari, so clicks are read here instead.
 export const watchArtistResultClicks = (
-	onPick: (assocId: string) => void,
+	onPick: (artistId: string, artistName?: string) => void,
 	anchorId: string,
 	onCancel: () => void,
 ): (() => void) => {
@@ -114,13 +141,20 @@ export const watchArtistResultClicks = (
 			ARTIST_RESULT_SELECTOR,
 		);
 		const assocId = parseArtistResultId(row?.getAttribute("onclick") ?? "");
-		if (assocId === undefined) {
+		if (assocId === undefined || row == null) {
 			return;
 		}
 		event.preventDefault();
 		event.stopPropagation();
+		const name = getArtistResultName(row, assocId);
+		if (name === undefined) {
+			reportSubmissionError(
+				new Error("Could not identify the selected RYM artist name"),
+			);
+			return;
+		}
 		active = false;
-		onPick(assocId);
+		onPick(assocId, name);
 	};
 	const attachToDocument = () =>
 		frame.contentDocument?.addEventListener("click", handleClick, true);

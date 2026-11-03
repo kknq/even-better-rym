@@ -7,7 +7,11 @@ import {
 } from "../utils/release-artist-links";
 import { useLatestState } from "./use-latest-state";
 
-type ArtistAssociation = { artistId: string; creditedName?: string };
+type ArtistAssociation = {
+	artistId: string;
+	creditedName?: string;
+	canonicalName?: string;
+};
 
 const ArtistAssociations = createContext<
 	ReadonlyMap<string, ArtistAssociation> | undefined
@@ -17,16 +21,22 @@ export function getCreditedArtistName(
 	name: string,
 	association: ArtistAssociation | undefined,
 ): string | undefined {
-	return association?.creditedName === undefined ? undefined : name;
+	return association?.creditedName !== undefined ||
+		(association?.canonicalName !== undefined &&
+			normalizeArtistName(name) !==
+				normalizeArtistName(association.canonicalName))
+		? name
+		: undefined;
 }
 
 export function rememberArtistAssociation(
 	name: string,
 	artistId: string,
+	canonicalName?: string,
 ): void {
 	document.dispatchEvent(
 		new CustomEvent("artistAssociationEvent", {
-			detail: { name, artistId },
+			detail: { name, artistId, canonicalName },
 		}),
 	);
 }
@@ -50,7 +60,11 @@ export function ArtistAssociationsProvider({
 	useEffect(() => {
 		const reset = () => commit(new Map());
 		const remember = (
-			event: CustomEvent<{ name: string; artistId: string }>,
+			event: CustomEvent<{
+				name: string;
+				artistId: string;
+				canonicalName?: string;
+			}>,
 		) => {
 			const key = normalizeArtistName(event.detail.name);
 			const previous = latest.current.get(key);
@@ -58,8 +72,21 @@ export function ArtistAssociationsProvider({
 				new Map(latest.current).set(
 					key,
 					previous?.artistId === event.detail.artistId
-						? previous
-						: { artistId: event.detail.artistId },
+						? {
+								...previous,
+								creditedName:
+									event.detail.canonicalName === undefined
+										? previous.creditedName
+										: undefined,
+								canonicalName:
+									event.detail.canonicalName ?? previous.canonicalName,
+							}
+						: {
+								artistId: event.detail.artistId,
+								...(event.detail.canonicalName === undefined
+									? {}
+									: { canonicalName: event.detail.canonicalName }),
+							},
 				),
 			);
 		};
@@ -67,11 +94,19 @@ export function ArtistAssociationsProvider({
 			const next = new Map(latest.current);
 			for (const [name, token] of event.detail.labels) {
 				const artist = parseArtistToken(token);
-				if (artist !== undefined)
-					next.set(normalizeArtistName(name), {
+				if (artist !== undefined) {
+					const key = normalizeArtistName(name);
+					const previous = next.get(key);
+					next.set(key, {
 						artistId: artist.id,
 						creditedName: artist.name,
+						canonicalName:
+							event.detail.artistNames?.get(name) ??
+							(previous?.artistId === artist.id
+								? previous.canonicalName
+								: undefined),
 					});
+				}
 			}
 			commit(next);
 		};

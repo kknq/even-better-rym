@@ -2,7 +2,7 @@
 
 A browser extension that adds quality-of-life improvements to [RateYourMusic](https://rateyourmusic.com). Forked from the original [better-rym](https://github.com/jgchk/better-rym) to keep things maintained and moving forward. Contributions welcome.
 
-Most of the credit goes to [jgchk](https://github.com/jgchk) and all the beautiful people who maintained and improved it over the years.
+Kudos to [jgchk](https://github.com/jgchk) and all the beautiful people who maintained and improved it over the years.
 
 ## Features
 

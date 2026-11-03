@@ -117,6 +117,7 @@ export function CreditPicker({
 		skip = false,
 		updateOnly?: "details" | "name",
 		onSettled?: () => void,
+		canonicalArtistName?: string,
 	) => {
 		void enqueueCreditEdit(async () => {
 			if (!isActive.current) return;
@@ -182,11 +183,18 @@ export function CreditPicker({
 					associations.get(normalizeArtistName(name)) ??
 					associations.get(normalizeArtistName(credit.name));
 				const creditedName =
-					artistId !== undefined && name !== credit.name
-						? name
-						: association?.artistId === artistId
-							? getCreditedArtistName(name, association)
-							: undefined;
+					artistId === undefined
+						? undefined
+						: canonicalArtistName !== undefined
+							? normalizeArtistName(name) !==
+								normalizeArtistName(canonicalArtistName)
+								? name
+								: undefined
+							: name !== credit.name
+								? name
+								: association?.artistId === artistId
+									? getCreditedArtistName(name, association)
+									: undefined;
 				const line = await addCreditLine({
 					id: artistId,
 					name,
@@ -206,7 +214,7 @@ export function CreditPicker({
 			if (isActive.current) {
 				commit(new Map(latest.current).set(credit.key, choice));
 				if (artistId !== undefined && !skip)
-					rememberArtistAssociation(name, artistId);
+					rememberArtistAssociation(name, artistId, canonicalArtistName);
 			}
 		})
 			.catch(reportSubmissionError)
@@ -235,11 +243,11 @@ export function CreditPicker({
 		const credit = credits.find((item) => item.key === activeKey);
 		if (!credit) return undefined;
 		return watchArtistResultClicks(
-			(artistId) => {
+			(artistId, artistName) => {
 				setUnlinkedAttemptKey(undefined);
 				setActiveKey(undefined);
 				void closeShortcutPopup().catch(reportSubmissionError);
-				choose(credit, artistId);
+				choose(credit, artistId, false, undefined, undefined, artistName);
 			},
 			id,
 			() => setActiveKey(undefined),

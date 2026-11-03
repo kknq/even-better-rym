@@ -68,7 +68,17 @@ function publishReleaseArtistLabels(
 ): void {
 	document.dispatchEvent(
 		new CustomEvent<ReleaseArtistLabels>("releaseArtistLabelsEvent", {
-			detail: { names, labels: getReleaseArtistLabels(choices) },
+			detail: {
+				names,
+				labels: getReleaseArtistLabels(choices),
+				artistNames: new Map(
+					[...choices].flatMap(([name, choice]) =>
+						choice.kind === "skipped"
+							? []
+							: [[name, choice.entry.name] as const],
+					),
+				),
+			},
 		}),
 	);
 }
