@@ -8,7 +8,10 @@ import { waitForElement } from "~/shared/utils/dom";
 import { buildArtistToken } from "../utils/artist-shortcuts";
 import { closeShortcutPopup } from "../utils/page-functions";
 import type { ReleaseArtistLabels } from "../utils/release-artist-links";
-import { parseArtistTokenId } from "../utils/release-artist-links";
+import {
+	normalizeArtistName,
+	parseArtistTokenId,
+} from "../utils/release-artist-links";
 import { reportSubmissionError } from "../utils/report-error";
 import {
 	startArtistSearch,
@@ -200,16 +203,26 @@ function TrackPickerPanel({
 			return undefined;
 		}
 		return watchArtistResultClicks(
-			(assocId) => {
-				rememberArtistAssociation(activeName, assocId);
+			(artistId, artistName) => {
+				rememberArtistAssociation(activeName, artistId, artistName);
 				const releaseLabel = release.labels.get(activeName);
+				const releaseArtistMatches =
+					releaseLabel !== undefined &&
+					parseArtistTokenId(releaseLabel) === artistId;
 				const nextChoices = withChoice(choices, activeName, {
 					kind: "linked",
 					token:
-						releaseLabel !== undefined &&
-						parseArtistTokenId(releaseLabel) === assocId
-							? releaseLabel
-							: buildArtistToken(assocId),
+						artistName !== undefined
+							? buildArtistToken(
+									artistId,
+									normalizeArtistName(activeName) !==
+										normalizeArtistName(artistName)
+										? activeName
+										: undefined,
+								)
+							: releaseArtistMatches
+								? (releaseLabel ?? buildArtistToken(artistId))
+								: buildArtistToken(artistId),
 				});
 				editState((state) => ({ ...state, choices: nextChoices }));
 				setActiveName(undefined);

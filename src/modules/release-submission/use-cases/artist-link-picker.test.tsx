@@ -253,7 +253,10 @@ test("Bandcamp compilation artist buttons update individual tracks without dupli
 		await vi.waitFor(() => expect(readText()).toContain("1|GTA Santiago|"));
 		await click("Find on RYM", 1);
 		await act(() => {
-			vi.mocked(watchArtistResultClicks).mock.calls.at(-1)?.[0]("123");
+			vi.mocked(watchArtistResultClicks).mock.calls.at(-1)?.[0](
+				"123",
+				"Kidchen",
+			);
 		});
 		await vi.waitFor(() =>
 			expect(readText()).toBe(
@@ -400,13 +403,22 @@ test("selecting a track artist does not search for the next one", async () => {
 			"First artist",
 		);
 		await act(() => {
-			vi.mocked(watchArtistResultClicks).mock.calls.at(-1)?.[0]("123");
+			vi.mocked(watchArtistResultClicks).mock.calls.at(-1)?.[0](
+				"123",
+				"Canonical artist",
+			);
 		});
 		expect(startArtistSearch).toHaveBeenCalledTimes(1);
 		expect(associated.mock.calls[0]?.[0].detail).toEqual({
 			name: "First artist",
 			artistId: "123",
+			canonicalName: "Canonical artist",
 		});
+		await vi.waitFor(() =>
+			expect(document.querySelector("textarea")?.value).toContain(
+				"1|[Artist123,First artist] - First|",
+			),
+		);
 		expect(
 			document.querySelector('input[value="Cancel selection"]'),
 		).toBeNull();
@@ -459,7 +471,9 @@ test.each([
 		);
 		if (search)
 			await act(() =>
-				vi.mocked(watchArtistResultClicks).mock.calls.at(-1)?.[0]("1479561"),
+				vi
+					.mocked(watchArtistResultClicks)
+					.mock.calls.at(-1)?.[0]("1479561", "Kai Angel"),
 			);
 		await vi.waitFor(() =>
 			expect(document.querySelector("textarea")?.value).toBe(

@@ -545,6 +545,79 @@ test("linking a suggestion credits only that row when the person's roles have di
 });
 
 test.each([
+	{
+		imported: "Andrei Babrouka",
+		selected: "Андрей Бобровко [Andrey Bobrovko]",
+		artistId: "1109839",
+		token: "[Artist1109839,Andrei Babrouka]",
+	},
+	{
+		imported: "Molchat Doma",
+		selected: "Молчат Дома",
+		artistId: "1238361",
+		token: "[Artist1238361,Molchat Doma]",
+	},
+	{
+		imported: "Molchat Doma",
+		selected: "Molchat Doma",
+		artistId: "1238361",
+		token: "[Artist1238361]",
+	},
+])("preserves imported artist spelling only when it differs from the RYM name ($selected)", async ({
+	imported,
+	selected,
+	artistId,
+	token,
+}) => {
+	const actual = await vi.importActual<
+		typeof import("../utils/shortcut-popup")
+	>("../utils/shortcut-popup");
+	vi.mocked(watchArtistResultClicks).mockImplementationOnce(
+		actual.watchArtistResultClicks,
+	);
+	await setup({
+		artists: [imported],
+		tracks: [
+			{
+				artists: [imported],
+				credits: [{ name: imported, role: "vocals" }],
+			},
+		],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(1));
+	const frame = document.createElement("iframe");
+	frame.id = "shortcutsearchframe";
+	document.body.append(frame);
+	const doc = frame.contentDocument;
+	if (!doc) throw new Error("Missing artist search document");
+	doc.body.innerHTML = `<div onclick="window.parent.createShortcut('a', '${artistId}');return false;">
+		<table><tbody><tr id="infobox${artistId}" class="infobox">
+			<td></td><td><b><span id="artistname${artistId}">${selected}</span></b>
+				<span class="subinfo">a.k.a: ${imported}<br><div>Artist biography</div></span>
+			</td>
+		</tr></tbody></table>
+	</div>`;
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
+			?.click(),
+	);
+	await act(() =>
+		doc.querySelector<HTMLElement>(`#artistname${artistId}`)?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenCalledExactlyOnceWith({
+			id: artistId,
+			name: imported,
+			...(token.includes(",") ? { creditedName: imported } : {}),
+			role: "vocals",
+			tracks: "",
+		}),
+	);
+	await vi.waitFor(() => expect(rows()[0]?.cells[3]?.textContent).toBe(token));
+});
+
+test.each([
 	false,
 	true,
 ])("shows and accepts matching ordinary roles as one editable suggestion (subset=%s)", async (subset) => {
@@ -805,6 +878,65 @@ test("accepts new track/release associations and clears them for the next import
 			'input[value="Credit with artist link"]',
 		)?.disabled,
 	).toBe(false);
+});
+
+test("clears a remembered alias when a new search selects the same ID under a matching name", async () => {
+	await setup({
+		tracks: [
+			{
+				credits: [
+					{ name: "Molchat Doma", role: "producer" },
+					{ name: "Molchat Doma", role: "vocals" },
+				],
+			},
+			{ credits: [{ name: "Molchat Doma", role: "producer" }] },
+		],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(2));
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistLabelsEvent", {
+				detail: {
+					names: ["Molchat Doma"],
+					labels: new Map([["Molchat Doma", "[Artist1238361,Molchat Doma]"]]),
+					artistNames: new Map([["Molchat Doma", "Молчат Дома"]]),
+				},
+			}),
+		);
+	});
+	expect(rows()[1]?.cells[3]?.textContent).toBe(
+		"[Artist1238361,Molchat Doma] (not credited)",
+	);
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Replace artist link"]')
+			?.click(),
+	);
+	await act(() =>
+		vi
+			.mocked(watchArtistResultClicks)
+			.mock.calls.at(-1)?.[0]("1238361", "Molchat Doma"),
+	);
+	await vi.waitFor(() =>
+		expect(rows()[1]?.cells[3]?.textContent).toBe(
+			"[Artist1238361] (not credited)",
+		),
+	);
+	await act(() =>
+		rows()[1]
+			?.querySelector<HTMLInputElement>(
+				'input[value="Credit with artist link"]',
+			)
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenLastCalledWith({
+			id: "1238361",
+			name: "Molchat Doma",
+			role: "vocals",
+			tracks: "1",
+		}),
+	);
 });
 
 test("reuses a guest's link for suggested roles without treating the roles as already credited", async () => {
