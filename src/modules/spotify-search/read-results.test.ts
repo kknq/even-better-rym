@@ -145,7 +145,7 @@ describe("readSpotifySearchPage", () => {
 			return url;
 		});
 
-		await vi.advanceTimersByTimeAsync(11_999);
+		await vi.advanceTimersByTimeAsync(6_999);
 		expect(settled).not.toHaveBeenCalled();
 		await vi.advanceTimersByTimeAsync(1);
 
@@ -184,7 +184,7 @@ describe("readSpotifySearchPage", () => {
 		setSearchPage([]);
 
 		const result = readSpotifySearchPage(artist, title);
-		await vi.advanceTimersByTimeAsync(12_000);
+		await vi.advanceTimersByTimeAsync(7_000);
 
 		await expect(result).resolves.toBeUndefined();
 	});
@@ -195,7 +195,7 @@ describe("readSpotifySearchPage", () => {
 		]);
 
 		const result = readSpotifySearchPage(artist, title);
-		await vi.advanceTimersByTimeAsync(12_000);
+		await vi.advanceTimersByTimeAsync(7_000);
 
 		await expect(result).resolves.toBeUndefined();
 	});
@@ -222,7 +222,7 @@ describe("readSpotifySearchPage", () => {
 			settled(url);
 			return url;
 		});
-		await vi.advanceTimersByTimeAsync(11_999);
+		await vi.advanceTimersByTimeAsync(6_999);
 		expect(settled).not.toHaveBeenCalled();
 		setSearchPage([resultLink(title, albumUrl)]);
 		notifyMutation();
@@ -240,7 +240,7 @@ describe("readSpotifySearchPage", () => {
 		const rejection = expect(result).rejects.toThrow(
 			"Spotify search page failed to render",
 		);
-		await vi.advanceTimersByTimeAsync(12_000);
+		await vi.advanceTimersByTimeAsync(7_000);
 		await rejection;
 		expect(vi.getTimerCount()).toBe(0);
 	});
@@ -257,7 +257,7 @@ describe("readSpotifySearchPage", () => {
 			body: { textContent: "Something went wrong. Reload page" },
 		});
 		notifyMutation();
-		await vi.advanceTimersByTimeAsync(11_000);
+		await vi.advanceTimersByTimeAsync(6_000);
 		await rejection;
 	});
 
@@ -281,7 +281,7 @@ describe("readSpotifySearchPage", () => {
 		const rejection = expect(result).rejects.toThrow(
 			"Spotify search results did not load",
 		);
-		await vi.advanceTimersByTimeAsync(12_000);
+		await vi.advanceTimersByTimeAsync(7_000);
 
 		await rejection;
 	});
