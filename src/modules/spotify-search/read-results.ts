@@ -6,7 +6,7 @@ export const readSpotifySearchPage = async (
 	category: SearchCategory = "albums",
 	releaseType: "single" | "music video" | null = null,
 ): Promise<string | undefined> => {
-	const RESULTS_TIMEOUT = 12_000;
+	const RESULTS_TIMEOUT = 7_000;
 	const normalize = (value: string) =>
 		value.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 	const artistName = normalize(artist);
