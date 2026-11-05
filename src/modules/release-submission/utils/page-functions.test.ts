@@ -16,6 +16,72 @@ afterEach(() => {
 	document.body.replaceChildren();
 });
 
+test.each([
+	{ id: "1007182", creditedName: undefined, expectedToken: "[Artist1007182]" },
+	{
+		id: "1007182",
+		creditedName: "Different alias",
+		expectedToken: "[Artist1007182,Different alias]",
+	},
+	{
+		id: undefined,
+		creditedName: undefined,
+		expectedToken: "Илья Черепко \\-Самохвалов",
+	},
+])("uses the RYM name for linked previews without changing the credited token ($expectedToken)", async ({
+	id,
+	creditedName,
+	expectedToken,
+}) => {
+	const name = "Илья Черепко \\-Самохвалов";
+	const canonicalName = "Илья Черепко-Самохвалов";
+	const addCredit = vi.fn(
+		(_type: string, artistId: string, displayName: string) => {
+			document.body.innerHTML = `
+			<input id="credits_artist_1">
+			<div id="credits_artist_1_preview"><a></a></div>
+			<input id="credits_roles_1">
+			<input id="credits_tracks_1">
+		`;
+			const field =
+				document.querySelector<HTMLInputElement>("#credits_artist_1");
+			const preview = document.querySelector("#credits_artist_1_preview a");
+			if (!field || !preview) throw new Error("Missing credit DOM");
+			field.value = `[Artist${artistId}]`;
+			preview.textContent = displayName;
+		},
+	);
+	vi.mocked(runScript).mockImplementation((script) =>
+		Promise.resolve().then(() => {
+			runInNewContext(script, {
+				document,
+				credits_num: 1,
+				addCredit,
+				updateArtistPreview: vi.fn(),
+			});
+		}),
+	);
+	await addArtistCredit({
+		id,
+		name,
+		canonicalName,
+		creditedName,
+		role: "composer",
+		tracks: "8",
+	});
+	expect(addCredit).toHaveBeenCalledExactlyOnceWith(
+		"a",
+		id ?? "XXX",
+		id === undefined ? name : canonicalName,
+	);
+	expect(
+		document.querySelector("#credits_artist_1_preview a")?.textContent,
+	).toBe(id === undefined ? name : canonicalName);
+	expect(
+		document.querySelector<HTMLInputElement>("#credits_artist_1")?.value,
+	).toBe(expectedToken);
+});
+
 test("reuses native role suggestions and bridges selections into input/change events only for extension fields", async () => {
 	document.body.innerHTML = `
 		<input id="suggested" data-ebr-credit-role>
