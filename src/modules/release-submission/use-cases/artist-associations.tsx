@@ -7,7 +7,7 @@ import {
 } from "../utils/release-artist-links";
 import { useLatestState } from "./use-latest-state";
 
-type ArtistAssociation = {
+export type ArtistAssociation = {
 	artistId: string;
 	creditedName?: string;
 	canonicalName?: string;

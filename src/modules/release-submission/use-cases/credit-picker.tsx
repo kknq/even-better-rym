@@ -12,6 +12,7 @@ import {
 	formatCreditTracks,
 } from "../utils/guest-credits";
 import {
+	type ArtistCredit,
 	attachCreditRoleSuggestions,
 	closeShortcutPopup,
 	updateCreditDetails,
@@ -28,6 +29,7 @@ import {
 } from "../utils/shortcut-popup";
 import type { CreditSuggestion } from "../utils/suggested-credits";
 import {
+	type ArtistAssociation,
 	getCreditedArtistName,
 	rememberArtistAssociation,
 	useArtistAssociations,
@@ -39,7 +41,7 @@ import {
 	PickerRow,
 	SearchButton,
 } from "./picker-row";
-import { useLatestState } from "./use-latest-state";
+import { type LatestState, useLatestState } from "./use-latest-state";
 
 type CreditPickerProps = {
 	id: string;
@@ -52,6 +54,13 @@ type CreditPickerProps = {
 };
 
 type CreditDetails = { name: string; role: string; tracks: string };
+type ChosenCredit = Exclude<CreditChoice, { kind: "skipped" }>;
+type CreditEditContext = {
+	choices: LatestState<Map<string, CreditChoice>>;
+	drafts: LatestState<Map<string, CreditDetails>>;
+	associations: ReadonlyMap<string, ArtistAssociation>;
+	isActive: { current: boolean };
+};
 
 const getInitialCreditDetails = (credit: CreditSuggestion): CreditDetails => ({
 	name: credit.name,
@@ -71,12 +80,289 @@ const hasUnresolvedDetails = (
 const getCreditedChoiceName = (
 	choice: CreditChoice | undefined,
 	credit: CreditSuggestion,
-): string | undefined =>
-	choice?.kind === "linked"
-		? (parseArtistToken(choice.token)?.name ?? credit.name)
-		: choice?.kind === "text"
-			? choice.name
-			: undefined;
+): string | undefined => {
+	if (choice?.kind === "linked")
+		return parseArtistToken(choice.token)?.name ?? credit.name;
+	if (choice?.kind === "text") return choice.name;
+	return undefined;
+};
+
+const getLinkedCreditedName = (
+	name: string,
+	importedName: string,
+	artistId: string | undefined,
+	canonicalName: string | undefined,
+	association: ArtistAssociation | undefined,
+): string | undefined => {
+	if (artistId === undefined) return undefined;
+	if (canonicalName !== undefined) {
+		if (normalizeArtistName(name) !== normalizeArtistName(canonicalName))
+			return name;
+		return undefined;
+	}
+	if (name !== importedName) return name;
+	if (association?.artistId === artistId)
+		return getCreditedArtistName(name, association);
+	return undefined;
+};
+
+const getCreditInput = (
+	credit: CreditSuggestion,
+	details: CreditDetails,
+	artistId: string | undefined,
+	association: ArtistAssociation | undefined,
+	canonicalArtistName?: string,
+): ArtistCredit => {
+	const name = details.name.trim();
+	const creditedName = getLinkedCreditedName(
+		name,
+		credit.name,
+		artistId,
+		canonicalArtistName,
+		association,
+	);
+	let canonicalName: string | undefined;
+	if (artistId !== undefined) {
+		canonicalName = canonicalArtistName;
+		if (canonicalName === undefined && association?.artistId === artistId)
+			canonicalName = association.canonicalName;
+	}
+	return {
+		id: artistId,
+		name,
+		...(canonicalName === undefined ? {} : { canonicalName }),
+		...(creditedName === undefined ? {} : { creditedName }),
+		role: details.role.trim(),
+		tracks: details.tracks.trim(),
+	};
+};
+
+const getAddedCreditChoice = (
+	input: ArtistCredit,
+	line: string,
+): ChosenCredit => {
+	if (input.id === undefined) return { kind: "text", name: input.name, line };
+	return {
+		kind: "linked",
+		token: buildArtistToken(input.id, input.creditedName),
+		line,
+	};
+};
+
+const getKnownArtistToken = (
+	choice: CreditChoice | undefined,
+	knownId: string | undefined,
+	name: string,
+	credit: CreditSuggestion,
+	association: ArtistAssociation | undefined,
+): string | undefined => {
+	if (choice?.kind === "linked") return choice.token;
+	if (knownId === undefined) return undefined;
+	const creditedName =
+		name !== credit.name ? name : getCreditedArtistName(name, association);
+	return buildArtistToken(knownId, creditedName);
+};
+
+const getCreditStatus = (
+	choice: CreditChoice | undefined,
+	knownToken: string | undefined,
+): string => {
+	if (choice === undefined) {
+		if (knownToken === undefined) return "not chosen yet";
+		return `${knownToken} (not credited)`;
+	}
+	if (choice.kind === "skipped") return "not credited";
+	if (choice.kind === "text") return "credited in plain text";
+	return choice.token;
+};
+
+const getDisplayedCreditStatus = (
+	credit: CreditSuggestion,
+	choice: CreditChoice | undefined,
+	knownToken: string | undefined,
+	showDetails: boolean,
+): string => {
+	if (showDetails || (choice === undefined && knownToken !== undefined))
+		return getCreditStatus(choice, knownToken);
+	return describeGuestChoice(credit, choice);
+};
+
+const getCreditError = (
+	credit: CreditSuggestion,
+	name: string,
+	showDetails: boolean,
+	invalidDetails: boolean,
+	unlinkedAttemptKey: string | undefined,
+	knownId: string | undefined,
+): string | undefined => {
+	if (showDetails && invalidDetails) {
+		if (!name) return "Enter an artist name.";
+		if (credit.unverified)
+			return "Resolve the suggested role and track scope before crediting.";
+		return "Enter a credit role.";
+	}
+	if (unlinkedAttemptKey === credit.key && knownId === undefined)
+		return `Link ${name} to a RYM artist first, or use "Credit in plain text".`;
+	return undefined;
+};
+
+const updateExistingCredit = async (
+	context: CreditEditContext,
+	credit: CreditSuggestion,
+	previous: ChosenCredit,
+	details: CreditDetails,
+	updateOnly: "details" | "name",
+) => {
+	if (previous.line === undefined)
+		throw new Error("Could not identify the credit to update");
+	if (updateOnly === "details") {
+		await updateCreditDetails(
+			previous.line,
+			details.role.trim(),
+			details.tracks.trim(),
+		);
+		return;
+	}
+	const artistId =
+		previous.kind === "linked" ? parseArtistTokenId(previous.token) : undefined;
+	if (previous.kind === "linked" && artistId === undefined)
+		throw new Error("Could not identify the linked credit artist");
+	const name = details.name.trim();
+	if (name === getCreditedChoiceName(previous, credit)) return;
+	const artist =
+		artistId === undefined ? name : buildArtistToken(artistId, name);
+	await updateCreditDetails(
+		previous.line,
+		details.role.trim(),
+		details.tracks.trim(),
+		artist,
+	);
+	if (!context.isActive.current) return;
+	let choice: ChosenCredit = { kind: "text", name, line: previous.line };
+	if (artistId !== undefined)
+		choice = { kind: "linked", token: artist, line: previous.line };
+	context.choices.commit(
+		new Map(context.choices.latest.current).set(credit.key, choice),
+	);
+	if (artistId !== undefined) rememberArtistAssociation(name, artistId);
+};
+
+const replaceCreditChoice = async (
+	context: CreditEditContext,
+	credit: CreditSuggestion,
+	details: CreditDetails,
+	previous: CreditChoice | undefined,
+	artistId: string | undefined,
+	skip: boolean,
+	canonicalArtistName?: string,
+) => {
+	if (previous && previous.kind !== "skipped")
+		await removeCreditLine(previous.line);
+	let choice: CreditChoice = { kind: "skipped" };
+	const name = details.name.trim();
+	if (!skip) {
+		const association =
+			context.associations.get(normalizeArtistName(name)) ??
+			context.associations.get(normalizeArtistName(credit.name));
+		const input = getCreditInput(
+			credit,
+			details,
+			artistId,
+			association,
+			canonicalArtistName,
+		);
+		const line = await addCreditLine(input);
+		choice = getAddedCreditChoice(input, line);
+	}
+	if (!context.isActive.current) return;
+	context.choices.commit(
+		new Map(context.choices.latest.current).set(credit.key, choice),
+	);
+	if (artistId !== undefined && !skip)
+		rememberArtistAssociation(name, artistId, canonicalArtistName);
+};
+
+const applyCreditEdit = async (
+	context: CreditEditContext,
+	credit: CreditSuggestion,
+	artistId: string | undefined,
+	skip: boolean,
+	updateOnly?: "details" | "name",
+	canonicalArtistName?: string,
+) => {
+	if (!context.isActive.current) return;
+	const previous = context.choices.latest.current.get(credit.key);
+	if (updateOnly && (!previous || previous.kind === "skipped")) return;
+	const details =
+		context.drafts.latest.current.get(credit.key) ??
+		getInitialCreditDetails(credit);
+	if (!skip && hasUnresolvedDetails(credit, details)) return;
+	if (updateOnly && previous && previous.kind !== "skipped") {
+		await updateExistingCredit(context, credit, previous, details, updateOnly);
+		return;
+	}
+	await replaceCreditChoice(
+		context,
+		credit,
+		details,
+		previous,
+		artistId,
+		skip,
+		canonicalArtistName,
+	);
+};
+
+type CreditDetailFieldProps = {
+	field: "role" | "tracks";
+	id: string;
+	credit: CreditSuggestion;
+	details: CreditDetails;
+	loading: boolean;
+	onInput: (field: keyof CreditDetails, value: string) => void;
+	onChange: () => void;
+};
+
+function CreditDetailField({
+	field,
+	id,
+	credit,
+	details,
+	loading,
+	onInput,
+	onChange,
+}: Readonly<CreditDetailFieldProps>) {
+	const isRole = field === "role";
+	const label = isRole ? "Suggested role" : "Tracks";
+	return (
+		<td style={{ padding: "3px 6px" }}>
+			<input
+				type="text"
+				id={isRole ? `${id}-role-${encodeURIComponent(credit.key)}` : undefined}
+				data-ebr-credit-role={isRole ? "" : undefined}
+				aria-label={`${label} for ${credit.name} (${credit.role})`}
+				title={
+					isRole
+						? "Edit the credit role"
+						: "Edit track positions; leave blank for the whole release"
+				}
+				value={details[field]}
+				disabled={loading}
+				style={{ width: isRole ? "12em" : "8em" }}
+				onInput={(event) => onInput(field, event.currentTarget.value)}
+				onFocus={
+					isRole
+						? (event) => {
+								void attachCreditRoleSuggestions(event.currentTarget.id).catch(
+									reportSubmissionError,
+								);
+							}
+						: undefined
+				}
+				onChange={onChange}
+			/>
+		</td>
+	);
+}
 
 export function CreditPicker({
 	id,
@@ -94,11 +380,8 @@ export function CreditPicker({
 	const associations = useArtistAssociations();
 	const drafts = useLatestState(() => new Map<string, CreditDetails>());
 	const pendingNameUpdates = useRef(new Map<string, string>());
-	const {
-		state: choices,
-		latest,
-		commit,
-	} = useLatestState(() => new Map<string, CreditChoice>());
+	const choiceState = useLatestState(() => new Map<string, CreditChoice>());
+	const { state: choices, latest } = choiceState;
 	const isActive = useRef(true);
 	useEffect(() => {
 		const cancel = () => {
@@ -119,104 +402,16 @@ export function CreditPicker({
 		onSettled?: () => void,
 		canonicalArtistName?: string,
 	) => {
-		void enqueueCreditEdit(async () => {
-			if (!isActive.current) return;
-			const previous = latest.current.get(credit.key);
-			if (updateOnly && (!previous || previous.kind === "skipped")) return;
-			const details =
-				drafts.latest.current.get(credit.key) ??
-				getInitialCreditDetails(credit);
-			if (!skip && hasUnresolvedDetails(credit, details)) return;
-			const name = details.name.trim();
-			if (updateOnly && previous && previous.kind !== "skipped") {
-				if (previous.line === undefined)
-					throw new Error("Could not identify the credit to update");
-				if (updateOnly === "name") {
-					const artistId =
-						previous.kind === "linked"
-							? parseArtistTokenId(previous.token)
-							: undefined;
-					if (previous.kind === "linked" && artistId === undefined)
-						throw new Error("Could not identify the linked credit artist");
-					if (name === getCreditedChoiceName(previous, credit)) return;
-					const artist =
-						artistId === undefined ? name : buildArtistToken(artistId, name);
-					await updateCreditDetails(
-						previous.line,
-						details.role.trim(),
-						details.tracks.trim(),
-						artist,
-					);
-					if (isActive.current && previous.kind === "text") {
-						commit(
-							new Map(latest.current).set(credit.key, {
-								kind: "text",
-								name,
-								line: previous.line,
-							}),
-						);
-					}
-					if (isActive.current && artistId !== undefined) {
-						commit(
-							new Map(latest.current).set(credit.key, {
-								kind: "linked",
-								token: artist,
-								line: previous.line,
-							}),
-						);
-						rememberArtistAssociation(name, artistId);
-					}
-					return;
-				}
-				await updateCreditDetails(
-					previous.line,
-					details.role.trim(),
-					details.tracks.trim(),
-				);
-				return;
-			}
-			if (previous && previous.kind !== "skipped")
-				await removeCreditLine(previous.line);
-			let choice: CreditChoice = { kind: "skipped" };
-			if (!skip) {
-				const association =
-					associations.get(normalizeArtistName(name)) ??
-					associations.get(normalizeArtistName(credit.name));
-				const creditedName =
-					artistId === undefined
-						? undefined
-						: canonicalArtistName !== undefined
-							? normalizeArtistName(name) !==
-								normalizeArtistName(canonicalArtistName)
-								? name
-								: undefined
-							: name !== credit.name
-								? name
-								: association?.artistId === artistId
-									? getCreditedArtistName(name, association)
-									: undefined;
-				const line = await addCreditLine({
-					id: artistId,
-					name,
-					...(creditedName === undefined ? {} : { creditedName }),
-					role: details.role.trim(),
-					tracks: details.tracks.trim(),
-				});
-				choice =
-					artistId === undefined
-						? { kind: "text", name, line }
-						: {
-								kind: "linked",
-								token: buildArtistToken(artistId, creditedName),
-								line,
-							};
-			}
-			if (isActive.current) {
-				commit(new Map(latest.current).set(credit.key, choice));
-				if (artistId !== undefined && !skip)
-					rememberArtistAssociation(name, artistId, canonicalArtistName);
-			}
-		})
+		void enqueueCreditEdit(() =>
+			applyCreditEdit(
+				{ choices: choiceState, drafts, associations, isActive },
+				credit,
+				artistId,
+				skip,
+				updateOnly,
+				canonicalArtistName,
+			),
+		)
 			.catch(reportSubmissionError)
 			.finally(() => onSettled?.());
 	};
@@ -285,28 +480,28 @@ export function CreditPicker({
 					choice?.kind === "linked"
 						? parseArtistTokenId(choice.token)
 						: association?.artistId;
-				const knownToken =
-					choice?.kind === "linked"
-						? choice.token
-						: knownId === undefined
-							? undefined
-							: buildArtistToken(
-									knownId,
-									name !== credit.name
-										? name
-										: getCreditedArtistName(name, association),
-								);
-				const status =
-					choice === undefined
-						? knownId === undefined
-							? "not chosen yet"
-							: `${knownToken} (not credited)`
-						: choice.kind === "skipped"
-							? "not credited"
-							: choice.kind === "text"
-								? "credited in plain text"
-								: choice.token;
+				const knownToken = getKnownArtistToken(
+					choice,
+					knownId,
+					name,
+					credit,
+					association,
+				);
+				const status = getDisplayedCreditStatus(
+					credit,
+					choice,
+					knownToken,
+					showDetails,
+				);
 				const invalidDetails = hasUnresolvedDetails(credit, details);
+				const error = getCreditError(
+					credit,
+					name,
+					showDetails,
+					invalidDetails,
+					unlinkedAttemptKey,
+					knownId,
+				);
 				const editField = (field: keyof CreditDetails, value: string) => {
 					setUnlinkedAttemptKey(undefined);
 					if (field === "name") stopSearchingFor(credit.key);
@@ -344,60 +539,23 @@ export function CreditPicker({
 								credit.name
 							)
 						}
-						status={
-							showDetails || (choice === undefined && knownId !== undefined)
-								? status
-								: describeGuestChoice(credit, choice)
-						}
+						status={status}
 						tone={getChoiceTone(choice)}
 						active={credit.key === activeKey}
-						error={
-							showDetails && invalidDetails
-								? !name
-									? "Enter an artist name."
-									: credit.unverified
-										? "Resolve the suggested role and track scope before crediting."
-										: "Enter a credit role."
-								: unlinkedAttemptKey === credit.key && knownId === undefined
-									? `Link ${name} to a RYM artist first, or use "Credit in plain text".`
-									: undefined
-						}
+						error={error}
 						cells={
 							showDetails &&
 							(["role", "tracks"] as const).map((field) => (
-								<td key={field} style={{ padding: "3px 6px" }}>
-									<input
-										type="text"
-										id={
-											field === "role"
-												? `${id}-role-${encodeURIComponent(credit.key)}`
-												: undefined
-										}
-										data-ebr-credit-role={field === "role" ? "" : undefined}
-										aria-label={`${field === "role" ? "Suggested role" : "Tracks"} for ${credit.name} (${credit.role})`}
-										title={
-											field === "role"
-												? "Edit the credit role"
-												: "Edit track positions; leave blank for the whole release"
-										}
-										value={details[field]}
-										disabled={loading}
-										style={{ width: field === "role" ? "12em" : "8em" }}
-										onInput={(event) =>
-											editField(field, event.currentTarget.value)
-										}
-										onFocus={
-											field === "role"
-												? (event) => {
-														void attachCreditRoleSuggestions(
-															event.currentTarget.id,
-														).catch(reportSubmissionError);
-													}
-												: undefined
-										}
-										onChange={() => choose(credit, undefined, false, "details")}
-									/>
-								</td>
+								<CreditDetailField
+									key={field}
+									field={field}
+									id={id}
+									credit={credit}
+									details={details}
+									loading={loading}
+									onInput={editField}
+									onChange={() => choose(credit, undefined, false, "details")}
+								/>
 							))
 						}
 					>

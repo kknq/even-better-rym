@@ -79,6 +79,63 @@ function rows() {
 	];
 }
 
+test("uses the selected RYM name for previews when selecting and reusing a credit artist", async () => {
+	const name = "Илья Черепко \\-Самохвалов";
+	await setup({
+		tracks: [
+			{
+				credits: [
+					{ name, role: "composer" },
+					{ name, role: "vocals" },
+				],
+			},
+			{ credits: [{ name, role: "composer" }] },
+		],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(2));
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
+			?.click(),
+	);
+	await act(() =>
+		vi
+			.mocked(watchArtistResultClicks)
+			.mock.calls.at(-1)?.[0]("1007182", "Илья Черепко-Самохвалов"),
+	);
+	await vi.waitFor(() => expect(addCreditLine).toHaveBeenCalledOnce());
+	expect(addCreditLine).toHaveBeenLastCalledWith({
+		id: "1007182",
+		name,
+		canonicalName: "Илья Черепко-Самохвалов",
+		role: "composer",
+		tracks: "",
+	});
+	await vi.waitFor(() =>
+		expect(rows()[0]?.cells[3]?.textContent).toBe("[Artist1007182]"),
+	);
+	await vi.waitFor(() =>
+		expect(rows()[1]?.cells[3]?.textContent).toBe(
+			"[Artist1007182] (not credited)",
+		),
+	);
+	await act(() =>
+		rows()[1]
+			?.querySelector<HTMLInputElement>(
+				'input[value="Credit with artist link"]',
+			)
+			?.click(),
+	);
+	await vi.waitFor(() => expect(addCreditLine).toHaveBeenCalledTimes(2));
+	expect(addCreditLine).toHaveBeenLastCalledWith({
+		id: "1007182",
+		name,
+		canonicalName: "Илья Черепко-Самохвалов",
+		role: "vocals",
+		tracks: "1",
+	});
+});
+
 test("uses same-side vinyl ranges when accepting suggested and guest credits", async () => {
 	const positions = ["A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4"];
 	const credited = new Set(["A1", "A2", "A3", "A4", "B1", "B3", "B4"]);
@@ -609,6 +666,7 @@ test.each([
 		expect(addCreditLine).toHaveBeenCalledExactlyOnceWith({
 			id: artistId,
 			name: imported,
+			canonicalName: selected,
 			...(token.includes(",") ? { creditedName: imported } : {}),
 			role: "vocals",
 			tracks: "",
@@ -933,6 +991,7 @@ test("clears a remembered alias when a new search selects the same ID under a ma
 		expect(addCreditLine).toHaveBeenLastCalledWith({
 			id: "1238361",
 			name: "Molchat Doma",
+			canonicalName: "Molchat Doma",
 			role: "vocals",
 			tracks: "1",
 		}),

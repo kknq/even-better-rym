@@ -26,6 +26,7 @@ const ensureFormattedCreditPreview = (line: string): string => `
 export type ArtistCredit = {
 	id: string | undefined;
 	name: string;
+	canonicalName?: string;
 	creditedName?: string;
 	role: string;
 	tracks: string;
@@ -131,7 +132,7 @@ export const addArtistCredit = (credit: ArtistCredit): Promise<void> => {
 			`
 			: "";
 	return runScript(`
-		addCredit('a', ${JSON.stringify(credit.id ?? UNLINKED_CREDIT_ID)}, ${JSON.stringify(credit.name)});
+		addCredit('a', ${JSON.stringify(credit.id ?? UNLINKED_CREDIT_ID)}, ${JSON.stringify(credit.id === undefined ? credit.name : (credit.canonicalName ?? credit.name))});
 		${typeUnlinkedName}
 		${typeCreditedName}
 		document.getElementById('credits_roles_' + credits_num).value = ${JSON.stringify(credit.role)};
