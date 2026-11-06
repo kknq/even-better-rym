@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>What's new in EvenBetterRYM 3.0.2</title>
+    <title>What's new in EvenBetterRYM 3.1.0</title>
     <link rel="stylesheet" href="changelog.css" />
   </head>
   <body>
@@ -17,6 +17,97 @@
 
     <main>
       <!-- Replace this release section with the notes for each new extension version. -->
+      <section class="release" aria-labelledby="version-3-1-0">
+        <header class="release-header">
+          <h2 class="version" id="version-3-1-0">3.1.0</h2>
+          <p class="date">6 November 2026</p>
+          <p class="release-subtitle">Profile, comment, and submission improvements</p>
+        </header>
+        <ul class="changes">
+          <li class="change">
+            <span class="badge">New</span>
+            <div>
+              <h3 class="change-title">Follow status on user profiles</h3>
+              <p class="change-description">
+                See whether another user follows you directly in their profile
+                details, with a green "follows you" or muted red "does not follow
+                you" indicator.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">New</span>
+            <div>
+              <h3 class="change-title">Load all release comments</h3>
+              <p class="change-description">
+                Added a Load all comments button beside the Comments heading on
+                release pages. Comments load in batches with a short pause between
+                requests, and you can stop loading at any time. It is very jank and
+                I got timeouted by Cloudflare during testing but with current delay
+                it should work fine. No, I can't load all of them in one request, I tried.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">New</span>
+            <div>
+              <h3 class="change-title">List comment redesign</h3>
+              <p class="change-description">
+                List comments are now larger and easier to read, with resizable
+                panels, a bigger editor, and Top and Bottom buttons to jump
+                through the comments.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">New</span>
+            <div>
+              <h3 class="change-title">Tracklist capitalization controls</h3>
+              <p class="change-description">
+                Added buttons to convert track titles to sentence case or title
+                case when submitting a release. Tracklist controls are also
+                grouped in a redesigned toolbar.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Unknown dates in artist timelines</h3>
+              <p class="change-description">
+                Improved handling of unknown member joining and leaving dates.
+                Estimated or uncertain membership periods now use faded, dashed
+                bars with explanatory tooltips, rather than treating an unknown
+                leaving date as confirmed membership through the present.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">Imported artist aliases and credits</h3>
+              <p class="change-description">
+                Further improved alias handling in suggested credits, including
+                artist names with localized display names. An explicit warning
+                now appears when an import automatically sets a credited artist
+                name, so you can check it before submitting.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Improved</span>
+            <div>
+              <h3 class="change-title">Shorter Spotify search waits</h3>
+              <p class="change-description">
+                Reduced the maximum wait for Spotify search results from
+                12 seconds to 7 seconds, so searches without a matching release
+                finish sooner.
+              </p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
       <section class="release" aria-labelledby="version-3-0-2">
         <header class="release-header">
           <h2 class="version" id="version-3-0-2">3.0.2</h2>
