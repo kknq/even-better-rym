@@ -36,11 +36,15 @@ const enqueueEdit = createSerialQueue();
 let pendingEditCount = 0;
 
 // Runs edit once the earlier tracklist edits have finished.
-const enqueueTracklistEdit = (edit: () => Promise<void>): Promise<void> => {
+const enqueueTracklistEdit = async (
+	edit: () => Promise<void>,
+): Promise<void> => {
 	pendingEditCount += 1;
-	return enqueueEdit(edit).finally(() => {
+	try {
+		await enqueueEdit(edit);
+	} finally {
 		pendingEditCount -= 1;
-	});
+	}
 };
 
 // Checks whether a tracklist edit is queued or running, in which case the
@@ -131,8 +135,14 @@ export const editAdvancedTracklist = (
 // When only titles change in the simple editor, they are written into their
 // inputs, so RYM doesn't rebuild the rows.
 export const writeTracklistText = (text: string): Promise<void> =>
+	editTracklistText(() => text);
+
+export const editTracklistText = (
+	edit: (text: string) => string,
+): Promise<void> =>
 	enqueueTracklistEdit(async () => {
 		const currentText = readTracklistText();
+		const text = edit(currentText);
 		if (currentText === text) {
 			return;
 		}
