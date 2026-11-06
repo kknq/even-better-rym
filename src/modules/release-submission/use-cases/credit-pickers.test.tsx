@@ -603,6 +603,12 @@ test("linking a suggestion credits only that row when the person's roles have di
 
 test.each([
 	{
+		imported: "劣",
+		selected: "劣 [Lie]",
+		artistId: "2068672",
+		token: "[Artist2068672]",
+	},
+	{
 		imported: "Andrei Babrouka",
 		selected: "Андрей Бобровко [Andrey Bobrovko]",
 		artistId: "1109839",

@@ -25,6 +25,17 @@ import {
 const ENTRY_A = { id: "1", name: "Beyoncé" };
 const ENTRY_B = { id: "2", name: "AC/DC" };
 const ENTRY_C = { id: "3", name: "Tom Schley" };
+const LOCALIZED_ARTIST_NAMES = [
+	["劣", "Lie"],
+	["坂本龍一", "Ryuichi Sakamoto"],
+	["きのこ帝国", "Kinoko Teikoku"],
+	["소녀시대", "Girls' Generation"],
+	["鄧麗君", "Teresa Teng"],
+	["أم كلثوم", "Umm Kulthum"],
+	["עפרה חזה", "Ofra Haza"],
+	["Μίκης Θεοδωράκης", "Mikis Theodorakis"],
+	["लता मंगेशकर", "Lata Mangeshkar"],
+] as const;
 
 describe("parseArtistTokenId", () => {
 	test("reads the id from an artist token", () => {
@@ -39,6 +50,31 @@ describe("parseArtistTokenId", () => {
 });
 
 describe("normalizeArtistName", () => {
+	test.each(
+		LOCALIZED_ARTIST_NAMES,
+	)("ignores romanized display suffixes for %s", (native, romanized) => {
+		expect(normalizeArtistName(`${native} [${romanized}]`)).toBe(
+			normalizeArtistName(native),
+		);
+		expect(normalizeArtistName(`${romanized} [${native}]`)).toBe(
+			normalizeArtistName(romanized),
+		);
+		expect(normalizeArtistName(`${native} [${romanized}]`)).not.toBe(
+			normalizeArtistName(romanized),
+		);
+	});
+
+	test("preserves same-script bracketed names and qualifiers", () => {
+		for (const [name, suffix] of [
+			["The Artist", "Live"],
+			["劣", "別名"],
+		]) {
+			expect(normalizeArtistName(`${name} [${suffix}]`)).not.toBe(
+				normalizeArtistName(name),
+			);
+		}
+	});
+
 	test("ignores case, accents, punctuation and spacing", () => {
 		expect(normalizeArtistName("Beyoncé")).toBe(normalizeArtistName("beyonce"));
 		expect(normalizeArtistName("AC/DC")).toBe(normalizeArtistName("ac dc"));
@@ -66,6 +102,15 @@ describe("normalizeArtistName", () => {
 });
 
 describe("pairInheritedArtists", () => {
+	test.each(
+		LOCALIZED_ARTIST_NAMES,
+	)("pairs %s with its romanized RYM display name", (name, romanized) => {
+		const entry = { id: "2068672", name: `${name} [${romanized}]` };
+		expect(pairInheritedArtists([name], [entry])).toEqual(
+			new Map([[name, { kind: "inherited", entry }]]),
+		);
+	});
+
 	test("pairs loosely matching names with parent entries", () => {
 		expect(
 			pairInheritedArtists(["beyonce", "Someone"], [ENTRY_A, ENTRY_B]),
@@ -156,6 +201,23 @@ describe("orderFiledUnderIds", () => {
 });
 
 describe("getReleaseArtistLabels", () => {
+	test.each(
+		LOCALIZED_ARTIST_NAMES,
+	)("keeps default crediting for %s with a romanized RYM display name", (name, romanized) => {
+		for (const kind of ["linked", "inherited"] as const) {
+			const choices: ReleaseArtistChoices = new Map([
+				[
+					name,
+					{ kind, entry: { id: "2068672", name: `${name} [${romanized}]` } },
+				],
+			]);
+			expect(getReleaseArtistCreditName([name], choices)).toBeUndefined();
+			expect(getReleaseArtistLabels(choices)).toEqual(
+				new Map([[name, "[Artist2068672]"]]),
+			);
+		}
+	});
+
 	test("keeps differing credited names while leaving matching artist names canonical", () => {
 		expect(
 			getReleaseArtistLabels(
