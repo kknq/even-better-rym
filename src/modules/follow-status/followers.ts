@@ -1,12 +1,19 @@
 import * as cache from "~/shared/utils/cache";
+import { fetchInPage } from "~/shared/utils/fetch";
 import { getCurrentUsername, normalizeUsername } from "~/shared/utils/user";
 
 export const FOLLOWERS_CACHE_TTL = 60_000;
 
 const pending = new Map<string, Promise<string[]>>();
 
-export const parseFollowers = (html: string, username: string): string[] => {
-	const page = new DOMParser().parseFromString(html, "text/html");
+export const parseFollowers = (
+	html: string | Document,
+	username: string,
+): string[] => {
+	const page =
+		typeof html === "string"
+			? new DOMParser().parseFromString(html, "text/html")
+			: html;
 	const signedInUsername = getCurrentUsername(page);
 	if (
 		!signedInUsername ||
@@ -45,6 +52,16 @@ export const parseFollowers = (html: string, username: string): string[] => {
 	return [...followers];
 };
 
+export const cacheFollowers = (
+	username: string,
+	followers: string[],
+): Promise<void> =>
+	cache.set(
+		`user-page.followers.${normalizeUsername(username)}`,
+		followers,
+		FOLLOWERS_CACHE_TTL,
+	);
+
 export const getFollowers = async (username: string): Promise<string[]> => {
 	const key = `user-page.followers.${normalizeUsername(username)}`;
 	const inFlight = pending.get(key);
@@ -54,26 +71,19 @@ export const getFollowers = async (username: string): Promise<string[]> => {
 		const cached = await cache.get<string[]>(key);
 		if (cached !== undefined) return cached;
 
-		const controller = new AbortController();
-		const timeout = setTimeout(() => controller.abort(), 15_000);
-		try {
-			const response = await fetch(
-				`/friends/${encodeURIComponent(decodeURIComponent(username))}/`,
-				{
-					credentials: "same-origin",
-					cache: "no-store",
-					signal: controller.signal,
-				},
-			);
-			if (!response.ok) {
-				throw new Error(`Could not load followers (HTTP ${response.status})`);
-			}
-			const followers = parseFollowers(await response.text(), username);
-			await cache.set(key, followers, FOLLOWERS_CACHE_TTL);
-			return followers;
-		} finally {
-			clearTimeout(timeout);
-		}
+		const html = await fetchInPage(
+			{
+				url: new URL(
+					`/friends/${encodeURIComponent(decodeURIComponent(username))}/`,
+					"https://rateyourmusic.com",
+				).href,
+				credentials: "same-origin",
+			},
+			{ cache: "no-store", timeoutMs: 15_000 },
+		);
+		const followers = parseFollowers(html, username);
+		await cacheFollowers(username, followers);
+		return followers;
 	})();
 	pending.set(key, request);
 	try {

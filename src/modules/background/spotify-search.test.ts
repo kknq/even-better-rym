@@ -6,6 +6,15 @@ import { readHiddenPage } from "./hidden-page";
 import { spotifySearch } from "./spotify-search";
 
 vi.mock("./hidden-page", () => ({ readHiddenPage: vi.fn() }));
+vi.mock("./spotify-network", () => ({
+	spotifyNetworkDiagnostics: () => ({
+		start: vi.fn(),
+		diagnostic: () => ({
+			stage: "network-requests",
+			details: '{"started":true,"stopped":true,"outcomes":[],"pending":[]}',
+		}),
+	}),
+}));
 vi.mock("webextension-polyfill", () => ({
 	default: {
 		runtime: { getManifest: () => ({ manifest_version: 3 }) },
@@ -18,16 +27,21 @@ const request: SpotifySearchRequest = {
 	type: "spotifySearch",
 	data: { artist: "Private artist", title: "Private search title" },
 };
-const diagnostics = [
+const pageDiagnostics = [
 	{ stage: "page-reader-failed", details: '{"hasSpotifyError":true}' },
 	{ stage: "frame-finished", details: '{"status":"error"}' },
 	{ stage: "page-reader-failed", details: '{"hasReloadButton":true}' },
 	{ stage: "frame-finished", details: '{"status":"error"}' },
 ];
+const networkDiagnostic = {
+	stage: "network-requests",
+	details: '{"started":true,"stopped":true,"outcomes":[],"pending":[]}',
+};
+const diagnostics = [...pageDiagnostics, networkDiagnostic];
 const failure: SearchResult = {
 	status: "error",
 	message: "Spotify search page failed to render",
-	diagnostics,
+	diagnostics: pageDiagnostics,
 };
 
 beforeEach(() => {
@@ -153,7 +167,7 @@ test("persists background failures and still returns the original error", async 
 		spotifySearchFailures: [
 			expect.objectContaining({
 				error: "Offscreen unavailable",
-				diagnostics: [],
+				diagnostics: [networkDiagnostic],
 			}),
 		],
 	});

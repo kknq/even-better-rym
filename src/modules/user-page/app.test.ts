@@ -2,30 +2,19 @@
 
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import {
-	defaultUserPageSettings,
-	getUserPageSettings,
-} from "~/shared/user-page/settings";
 import { fetchInPage } from "~/shared/utils/fetch";
 import { parseMarkup } from "~/shared/utils/markup";
 import { isOwnProfile } from "~/shared/utils/user";
 
 import { main } from "./app";
-import { addFollowStatus } from "./follow-status";
 
-vi.mock("~/shared/user-page/settings", async (importOriginal) => ({
-	...(await importOriginal<typeof import("~/shared/user-page/settings")>()),
-	getUserPageSettings: vi.fn(),
-}));
 vi.mock("~/shared/utils/fetch", () => ({ fetchInPage: vi.fn() }));
 vi.mock("~/shared/utils/markup", () => ({ parseMarkup: vi.fn() }));
 vi.mock("~/shared/utils/user", () => ({ isOwnProfile: vi.fn() }));
-vi.mock("./follow-status", () => ({ addFollowStatus: vi.fn() }));
 vi.mock("webextension-polyfill", () => ({ default: {} }));
 
 beforeEach(() => {
 	vi.resetAllMocks();
-	vi.mocked(getUserPageSettings).mockResolvedValue(defaultUserPageSettings());
 	document.body.innerHTML = `
 		<div class="bubble_header">other comments</div>
 		<div class="bubble_content">
@@ -111,29 +100,18 @@ describe("profile edit preview", () => {
 	});
 });
 
-describe("independent profile features", () => {
+describe("profile edit boxes", () => {
 	test.each([
-		[true, true, true],
-		[true, false, true],
-		[false, true, true],
-		[false, false, true],
-		[true, true, false],
-		[true, false, false],
-		[false, true, false],
-		[false, false, false],
-	])("honors followStatus=%s, editBoxes=%s, ownProfile=%s", async (followStatus, editBoxes, ownProfile) => {
-		vi.mocked(getUserPageSettings).mockResolvedValue({
-			followStatus,
-			editBoxes,
-		});
+		true,
+		false,
+	])("only fetches edit forms on your own profile (ownProfile=%s)", async (ownProfile) => {
 		vi.mocked(isOwnProfile).mockReturnValue(ownProfile);
 
 		await main();
 
-		expect(addFollowStatus).toHaveBeenCalledTimes(followStatus ? 1 : 0);
-		expect(fetchInPage).toHaveBeenCalledTimes(editBoxes && ownProfile ? 2 : 0);
+		expect(fetchInPage).toHaveBeenCalledTimes(ownProfile ? 2 : 0);
 		expect(document.querySelector(".bubble_header button") !== null).toBe(
-			editBoxes && ownProfile,
+			ownProfile,
 		);
 	});
 });

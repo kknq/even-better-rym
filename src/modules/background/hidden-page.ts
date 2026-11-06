@@ -9,6 +9,7 @@ type HiddenPageJob<T> = {
 	message: { type: string; data: unknown };
 	readBackground: () => Promise<T>;
 	isResult: (value: unknown) => value is T;
+	observe?: () => () => void;
 };
 
 async function readOffscreen<T>(job: HiddenPageJob<T>): Promise<T> {
@@ -50,10 +51,15 @@ async function readOffscreen<T>(job: HiddenPageJob<T>): Promise<T> {
 				reasons: [chrome.offscreen.Reason.DOM_SCRAPING],
 				justification: `Read ${job.name} without opening a tab or window`,
 			});
-		const result: unknown = await browser.runtime.sendMessage(job.message);
-		if (!job.isResult(result))
-			throw new Error(`${job.name} returned an invalid background response`);
-		return result;
+		const stop = job.observe?.();
+		try {
+			const result: unknown = await browser.runtime.sendMessage(job.message);
+			if (!job.isResult(result))
+				throw new Error(`${job.name} returned an invalid background response`);
+			return result;
+		} finally {
+			stop?.();
+		}
 	} finally {
 		try {
 			if (await chrome.offscreen.hasDocument())
@@ -99,7 +105,12 @@ async function readBackgroundPage<T>(job: HiddenPageJob<T>): Promise<T> {
 		["blocking", "responseHeaders"],
 	);
 	try {
-		return await job.readBackground();
+		const stop = job.observe?.();
+		try {
+			return await job.readBackground();
+		} finally {
+			stop?.();
+		}
 	} finally {
 		browser.webRequest.onHeadersReceived.removeListener(onHeaders);
 	}

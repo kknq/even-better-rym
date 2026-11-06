@@ -14,6 +14,7 @@ export const pages = {
 	userCollection: "/collection",
 	filmCollection: "/film_collection",
 	userPage: "/~",
+	followStatus: ["/~", "/friends/"],
 	listComments: "/list/",
 	voteHistoryGenres: "/rgenre/vote_history",
 	voteHistoryDescriptors: "/rdescriptor/vote_history",
@@ -50,7 +51,8 @@ export const pageLabels: Record<PageKey, string> = {
 	streamLinkSubmission: "Media Links Submission Helper",
 	userCollection: "Music Collection Enhancements",
 	filmCollection: "Film Collection Enhancements",
-	userPage: "User Page Enhancements",
+	userPage: "Profile Edit Boxes",
+	followStatus: "Follow Status",
 	listComments: "List Comment Enhancements",
 	voteHistoryGenres: "Enhancements for Music and Film Genre Vote History",
 	voteHistoryDescriptors: "Enhancements for Descriptor Vote History",
@@ -103,6 +105,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 				"userCollection",
 				"filmCollection",
 				"userPage",
+				"followStatus",
 				"listComments",
 				"streamLinkMissing",
 				"voteHistoryGenres",
@@ -146,7 +149,9 @@ export const pageHints: Record<PageKey, string> = {
 	filmCollection:
 		"Adds configurable filters, columns, and page-size controls to film collections.",
 	userPage:
-		"Adds profile edit buttons and shows whether other users follow you, with a one-minute cache.",
+		"Adds edit buttons for favorite artists and other comments on your profile.",
+	followStatus:
+		"Shows whether users follow you on their profiles and under names in your friends list, with a one-minute cache.",
 	listComments:
 		"Makes list comments wider and taller, improves readability, enlarges the editor, and adds top/bottom scroll controls.",
 	voteHistoryGenres:
