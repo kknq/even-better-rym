@@ -10,6 +10,12 @@
 	text-decoration: underline;
 }
 
+#rymmt-panel .rymmt-bar-estimated {
+	opacity: 0.6;
+	outline: 1px dashed currentColor;
+	outline-offset: -1px;
+}
+
 #rymmt-panel {
 	/* Theme variables (set at runtime from computed styles) */
 	--rymmt-panel-bg: transparent;
