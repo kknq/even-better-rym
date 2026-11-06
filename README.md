@@ -91,6 +91,12 @@ Lets you edit your favorite artists and other comments directly from your profil
 
 ---
 
+### List Comment Enhancements
+
+Makes list comments larger and easier to read, with resizable panels, a bigger editor, and **Top/Bottom** scroll buttons.
+
+---
+
 ### Enhancements for Genre Vote History
 
 Adds an easy genre picker and keeps your view settings when moving between pages.

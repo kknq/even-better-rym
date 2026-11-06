@@ -182,6 +182,12 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/list-comments/main.ts"],
+			css: ["src/modules/list-comments/list-comments.css"],
+			matches: ["*://*.rateyourmusic.com/list/*"],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/vote-history/genres.ts"],
 			matches: [
 				"*://*.rateyourmusic.com/rgenre/vote_history*",

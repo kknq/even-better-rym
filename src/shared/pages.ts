@@ -13,6 +13,7 @@ export const pages = {
 	userCollection: "/collection",
 	filmCollection: "/film_collection",
 	userPage: "/~",
+	listComments: "/list/",
 	voteHistoryGenres: "/rgenre/vote_history",
 	voteHistoryDescriptors: "/rdescriptor/vote_history",
 	streamLinkMissing: "/misc/media_link_you_know",
@@ -48,6 +49,7 @@ export const pageLabels: Record<PageKey, string> = {
 	userCollection: "Music Collection Enhancements",
 	filmCollection: "Film Collection Enhancements",
 	userPage: "User Page Enhancements",
+	listComments: "List Comment Enhancements",
 	voteHistoryGenres: "Enhancements for Music and Film Genre Vote History",
 	voteHistoryDescriptors: "Enhancements for Descriptor Vote History",
 	streamLinkMissing: 'Filtering in "Media Link You Know" List',
@@ -98,6 +100,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 				"userCollection",
 				"filmCollection",
 				"userPage",
+				"listComments",
 				"streamLinkMissing",
 				"voteHistoryGenres",
 				"voteHistoryDescriptors",
@@ -138,6 +141,8 @@ export const pageHints: Record<PageKey, string> = {
 	filmCollection:
 		"Adds configurable filters, columns, and page-size controls to film collections.",
 	userPage: "Adds edit buttons for favorite artists and other comments.",
+	listComments:
+		"Makes list comments wider and taller, improves readability, enlarges the editor, and adds top/bottom scroll controls.",
 	voteHistoryGenres:
 		"Adds history navigation and a searchable genre selector dropdown to music and film genre vote history pages.",
 	voteHistoryDescriptors:
