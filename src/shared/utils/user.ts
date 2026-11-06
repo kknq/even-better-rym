@@ -1,7 +1,7 @@
 const CURRENT_USER_SELECTOR =
-	".header_profile_logged_in .header_profile_main[href^='/~']";
+	".header_profile_logged_in .header_profile_main[href]";
 
-const normalizeUsername = (username: string): string =>
+export const normalizeUsername = (username: string): string =>
 	decodeURIComponent(username).toLowerCase();
 
 const getUsernameFromPathname = (pathname: string): string | null => {
@@ -15,8 +15,10 @@ const getUsernameFromPathname = (pathname: string): string | null => {
 	return null;
 };
 
-export const getCurrentUsername = (): string | null => {
-	const href = document
+export const getCurrentUsername = (
+	page: Document = document,
+): string | null => {
+	const href = page
 		.querySelector<HTMLAnchorElement>(CURRENT_USER_SELECTOR)
 		?.getAttribute("href");
 

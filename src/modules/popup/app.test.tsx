@@ -79,6 +79,13 @@ vi.mock("./vote-visibility-view", () => ({
 		</button>
 	),
 }));
+vi.mock("./user-page-view", () => ({
+	UserPageView: ({ onSettingsChange }: { onSettingsChange: () => void }) => (
+		<button type="button" onClick={onSettingsChange}>
+			User page settings
+		</button>
+	),
+}));
 
 let container: HTMLDivElement;
 let features: Record<PageKey, boolean>;
@@ -246,6 +253,12 @@ describe("App", () => {
 			"filmCollection",
 			"Film Collection",
 			"Collection film settings",
+		],
+		[
+			"Library and user profiles",
+			"userPage",
+			"User Page Enhancements",
+			"User page settings",
 		],
 	] as const)("opens %s / %s configuration and returns to the expanded feature list", async (group, key, title, child) => {
 		await showApp();

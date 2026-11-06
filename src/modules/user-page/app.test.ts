@@ -2,19 +2,30 @@
 
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+import {
+	defaultUserPageSettings,
+	getUserPageSettings,
+} from "~/shared/user-page/settings";
 import { fetchInPage } from "~/shared/utils/fetch";
 import { parseMarkup } from "~/shared/utils/markup";
 import { isOwnProfile } from "~/shared/utils/user";
 
 import { main } from "./app";
+import { addFollowStatus } from "./follow-status";
 
+vi.mock("~/shared/user-page/settings", async (importOriginal) => ({
+	...(await importOriginal<typeof import("~/shared/user-page/settings")>()),
+	getUserPageSettings: vi.fn(),
+}));
 vi.mock("~/shared/utils/fetch", () => ({ fetchInPage: vi.fn() }));
 vi.mock("~/shared/utils/markup", () => ({ parseMarkup: vi.fn() }));
 vi.mock("~/shared/utils/user", () => ({ isOwnProfile: vi.fn() }));
+vi.mock("./follow-status", () => ({ addFollowStatus: vi.fn() }));
 vi.mock("webextension-polyfill", () => ({ default: {} }));
 
-beforeEach(async () => {
+beforeEach(() => {
 	vi.resetAllMocks();
+	vi.mocked(getUserPageSettings).mockResolvedValue(defaultUserPageSettings());
 	document.body.innerHTML = `
 		<div class="bubble_header">other comments</div>
 		<div class="bubble_content">
@@ -30,8 +41,6 @@ beforeEach(async () => {
 			'<form id="mediumForm"><input name="fav_music" value=""><textarea name="comments">Saved comments</textarea></form>',
 		);
 	});
-	await main();
-	document.querySelector<HTMLButtonElement>(".bubble_header button")?.click();
 });
 
 function previewButton(): HTMLButtonElement {
@@ -43,6 +52,11 @@ function previewButton(): HTMLButtonElement {
 }
 
 describe("profile edit preview", () => {
+	beforeEach(async () => {
+		await main();
+		document.querySelector<HTMLButtonElement>(".bubble_header button")?.click();
+	});
+
 	test("inserts formatted content and replaces an earlier preview", async () => {
 		const rendered = document.createElement("span");
 		rendered.className = "rendered_text";
@@ -54,6 +68,7 @@ describe("profile edit preview", () => {
 		await vi.waitFor(() => {
 			expect(document.querySelector(".rendered_text")).toBe(rendered);
 		});
+
 		expect(rendered.querySelectorAll("br")).toHaveLength(2);
 		expect(rendered.querySelector("img")).not.toBeNull();
 		expect(rendered.querySelector("hr")).not.toBeNull();
@@ -93,5 +108,32 @@ describe("profile edit preview", () => {
 		} finally {
 			log.mockRestore();
 		}
+	});
+});
+
+describe("independent profile features", () => {
+	test.each([
+		[true, true, true],
+		[true, false, true],
+		[false, true, true],
+		[false, false, true],
+		[true, true, false],
+		[true, false, false],
+		[false, true, false],
+		[false, false, false],
+	])("honors followStatus=%s, editBoxes=%s, ownProfile=%s", async (followStatus, editBoxes, ownProfile) => {
+		vi.mocked(getUserPageSettings).mockResolvedValue({
+			followStatus,
+			editBoxes,
+		});
+		vi.mocked(isOwnProfile).mockReturnValue(ownProfile);
+
+		await main();
+
+		expect(addFollowStatus).toHaveBeenCalledTimes(followStatus ? 1 : 0);
+		expect(fetchInPage).toHaveBeenCalledTimes(editBoxes && ownProfile ? 2 : 0);
+		expect(document.querySelector(".bubble_header button") !== null).toBe(
+			editBoxes && ownProfile,
+		);
 	});
 });

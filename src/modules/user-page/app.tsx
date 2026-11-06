@@ -1,10 +1,13 @@
 import { render } from "preact";
 
 import { Loader } from "~/shared/components/loader";
+import { getUserPageSettings } from "~/shared/user-page/settings";
 import { forceQuerySelector, waitForDocumentReady } from "~/shared/utils/dom";
 import { fetchInPage } from "~/shared/utils/fetch";
 import { parseMarkup } from "~/shared/utils/markup";
 import { isOwnProfile } from "~/shared/utils/user";
+
+import { addFollowStatus } from "./follow-status";
 
 let headerArray: Element[];
 let currentPreferences: FormData;
@@ -223,7 +226,10 @@ const updateProfile = async () => {
 export const main = async () => {
 	await waitForDocumentReady();
 
-	if (isOwnProfile()) {
+	const settings = await getUserPageSettings();
+	if (settings.followStatus) await addFollowStatus();
+
+	if (settings.editBoxes && isOwnProfile()) {
 		const [, response, response2] = await Promise.all([
 			Promise.resolve().then(() => {
 				headerArray = [...document.querySelectorAll(".bubble_header")];
