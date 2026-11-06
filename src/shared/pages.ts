@@ -2,6 +2,7 @@ export const pages = {
 	streamLinks: "/release/",
 	descriptorLinks: "/release/",
 	trackTime: "/release/",
+	releaseComments: "/release/",
 	releaseSubmission: "/releases/ac",
 	artistSubmission: "/artist/profile_ac",
 	coverArt: "/images/upload",
@@ -38,6 +39,7 @@ export const pageLabels: Record<PageKey, string> = {
 	streamLinks: "Attempt to Add Streaming Links",
 	descriptorLinks: "Descriptor Links",
 	trackTime: "Release Length to Hours Conversion",
+	releaseComments: "Load All Release Comments",
 	releaseSubmission: "Release Submission Helper",
 	artistSubmission: "Artist Location Clear Buttons",
 	coverArt: "Cover Art Submission Helper",
@@ -85,6 +87,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 			[
 				"streamLinks",
 				"trackTime",
+				"releaseComments",
 				"releaseSubmission",
 				"imageCropper",
 				"coverArt",
@@ -123,6 +126,8 @@ export const pageHints: Record<PageKey, string> = {
 		"Turns each descriptor tag into a clickable link to the RYM top charts filtered by that descriptor.",
 	trackTime:
 		"Reformats the tracklist total length from MM:SS to H:MM:SS when the total exceeds one hour.",
+	releaseComments:
+		"Loads all release comments in batches with a random 750-850 ms pause between requests. Click Stop loading to stop the loop.",
 	releaseSubmission:
 		"Pre-fills the release submission form with data found on the provided page.",
 	artistSubmission:
