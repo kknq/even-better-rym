@@ -10,7 +10,7 @@ function parseYearToken(token: string): Stint | null {
 		return { start: year, end: year };
 	}
 
-	const matches = /^(\d{4})\s*-\s*(present|\d{2}|\d{4}|\?)$/i.exec(
+	const matches = /^(\d{4}|\?)\s*-\s*(present|\d{2}|\d{4}|\?)$/i.exec(
 		normalizedToken,
 	);
 	if (matches) {
@@ -19,9 +19,10 @@ function parseYearToken(token: string): Stint | null {
 		const stintEnd = matches[2].toLowerCase();
 		if (stintEnd === "present") end = Number.POSITIVE_INFINITY;
 		else if (stintEnd === "?")
-			end = Number.NaN; // unknown - resolved after all members are parsed
-		else if (stintEnd.length === 2)
+			end = Number.NaN; // unknown - estimated against the graph bounds
+		else if (stintEnd.length === 2 && Number.isFinite(start))
 			end = Math.floor(start / 100) * 100 + Number.parseInt(stintEnd, 10);
+		else if (stintEnd.length === 2) return null;
 		else end = Number.parseInt(stintEnd, 10);
 		return { start, end };
 	}
@@ -83,8 +84,8 @@ function mergeIntoMemberMap(
 		if (
 			!member.stints.some(
 				(existingStint) =>
-					existingStint.start === stint.start &&
-					existingStint.end === stint.end,
+					Object.is(existingStint.start, stint.start) &&
+					Object.is(existingStint.end, stint.end),
 			)
 		) {
 			member.stints.push(stint);
@@ -94,43 +95,92 @@ function mergeIntoMemberMap(
 	memberMap.set(name, member);
 }
 
-/** Returns the earliest start year among `others` that share a role and started after `startYear`. */
-function earliestCompatibleSuccessor(
-	startYear: number,
-	myCanons: Set<string>,
-	others: EnrichedMember[],
-): number {
-	let min = Number.POSITIVE_INFINITY;
-	for (const { canons, member } of others) {
-		if (![...myCanons].some((r) => canons.has(r))) continue;
-		for (const s of member.stints) {
-			if (s.start > startYear) min = Math.min(min, s.start);
-		}
-	}
-	return min;
-}
-
-/**
- * For each stint with an unknown end (NaN), find the earliest start year
- * among other members who share at least one canonical role and joined
- * *after* this member's own start year.  Falls back to Infinity (present)
- * if no such successor exists.
- */
-function resolveUnknownEnds(members: Member[]): void {
+/** Resolve against original dates only, so estimates cannot cascade between members. */
+export function estimateMemberStints(
+	members: Member[],
+	axisMin: number,
+	axisMax: number,
+): Member[] {
 	const enrichedMembers: EnrichedMember[] = members.map((member) => ({
-		member: member,
+		member,
 		canons: new Set(member.roles.map(canonicalRole)),
 	}));
 
-	for (const { member, canons } of enrichedMembers) {
+	return enrichedMembers.map(({ member, canons }) => {
 		const others = enrichedMembers.filter(
-			(enrichedMember) => enrichedMember.member !== member,
+			(other) =>
+				other.member !== member &&
+				[...canons].some(
+					(role) =>
+						role !== "vocals" &&
+						role !== "backing vocals" &&
+						other.canons.has(role),
+				),
 		);
-		for (const stint of member.stints) {
-			if (!Number.isNaN(stint.end)) continue;
-			stint.end = earliestCompatibleSuccessor(stint.start, canons, others);
-		}
-	}
+		const stints = member.stints.length
+			? member.stints
+			: [{ start: Number.NaN, end: Number.POSITIVE_INFINITY }];
+		return {
+			...member,
+			stints: stints.map((stint, index): Stint => {
+				const result = { ...stint };
+				const previousEnds = stints
+					.slice(0, index)
+					.map((previous) => previous.end)
+					.filter(Number.isFinite);
+				const lowerBound = Math.max(axisMin, ...previousEnds);
+				const upperBound = Number.isFinite(stint.end)
+					? Math.min(axisMax, stint.end)
+					: axisMax;
+				if (Number.isNaN(stint.start)) {
+					const candidates = others.flatMap(({ member: other }) =>
+						other.stints
+							.map((otherStint) => otherStint.end)
+							.filter(
+								(end) =>
+									Number.isFinite(end) &&
+									end >= lowerBound &&
+									end <= upperBound,
+							),
+					);
+					const unique = [...new Set(candidates)];
+					result.start = unique.length === 1 ? unique[0] : lowerBound;
+					// Preserve the existing full-span behavior for wholly undated members
+					// unless a dated role handoff provides evidence for a later start.
+					if (member.stints.length || unique.length === 1) {
+						result.startEstimate =
+							unique.length === 1
+								? `Start estimated at ${result.start} from a same-role departure; overlap is possible.`
+								: `Start unknown; possible from ${lowerBound} to ${upperBound}.`;
+					}
+				}
+				if (Number.isNaN(stint.end)) {
+					const nextStart = stints[index + 1]?.start;
+					const upperEnd =
+						nextStart != null && Number.isFinite(nextStart)
+							? Math.min(axisMax, nextStart)
+							: axisMax;
+					const candidates = others.flatMap(({ member: other }) =>
+						other.stints
+							.map((otherStint) => otherStint.start)
+							.filter(
+								(start) =>
+									Number.isFinite(start) &&
+									start > result.start &&
+									start <= upperEnd,
+							),
+					);
+					const unique = [...new Set(candidates)];
+					result.end = unique.length === 1 ? unique[0] : upperEnd;
+					result.endEstimate =
+						unique.length === 1
+							? `End estimated at ${result.end} from a same-role arrival; overlap is possible.`
+							: `End unknown; possible from ${result.start} to ${upperEnd}. Not confirmed present.`;
+				}
+				return result;
+			}),
+		};
+	});
 }
 
 export function parseMembersFromText(
@@ -194,6 +244,5 @@ export function parseMembersFromText(
 		members = Array.from(memberMap.values());
 	}
 
-	resolveUnknownEnds(members);
 	return { members, maxYearMentioned };
 }

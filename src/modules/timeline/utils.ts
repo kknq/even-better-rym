@@ -3,13 +3,14 @@ export function normalizeDashes(s: string): string {
 	return String(s || "").replaceAll(/[–—−]/g, "-");
 }
 
-// Returns true for year tokens like "1970", "1966-67", "1965-1969", "1969-?"
+// Includes unknown endpoints, which must never appear as instrument roles.
 export function isYearLikeToken(token: string): boolean {
 	const t = normalizeDashes(token).trim();
 	return (
 		/^\d{4}$/.test(t) ||
 		/^\d{4}\s*-\s*(\d{2}|\d{4}|\?)$/.test(t) ||
-		/^\d{4}\s*-\s*present$/i.test(t)
+		/^\d{4}\s*-\s*present$/i.test(t) ||
+		/^\?\s*-\s*(\d{4}|\?|present)$/i.test(t)
 	);
 }
 

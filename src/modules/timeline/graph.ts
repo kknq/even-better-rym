@@ -1,5 +1,6 @@
 import DOMPurify from "dompurify";
 import { currentDecimalYear } from "./date-utils";
+import { estimateMemberStints } from "./members";
 import { buildChartRoleColorMap, capitalizeWords } from "./roles";
 import type { GraphOpts, MarkersByType, Member, Stint } from "./types";
 import { escapeHtml } from "./utils";
@@ -113,6 +114,7 @@ function clampStints(
 ): Stint[] {
 	return stints
 		.map((stint) => ({
+			...stint,
 			start: Math.max(
 				axisMin,
 				Number.isFinite(stint.start) ? stint.start : axisMin,
@@ -180,7 +182,11 @@ function buildBarHtml(
 	if (left > 100) left = 100;
 	if (width > 100) width = 100;
 
-	return `<div class="rymmt-bar" style="left:${left}%; width:${width}%;" title="${escapeHtml(rawTitle)}">${stripes}</div>`;
+	const estimates = [stint.startEstimate, stint.endEstimate].filter(Boolean);
+	const className = estimates.length
+		? "rymmt-bar rymmt-bar-estimated"
+		: "rymmt-bar";
+	return `<div class="${className}" style="left:${left}%; width:${width}%;" title="${escapeHtml(rawTitle)}">${stripes}</div>`;
 }
 
 // Build the complete HTML row for a single member
@@ -363,8 +369,8 @@ export function buildGraph(
 		nowYear,
 	);
 
-	const normalizedMembers = members.map((member) =>
-		normalizeMember(member, axisMin, axisMax),
+	const normalizedMembers = estimateMemberStints(members, axisMin, axisMax).map(
+		(member) => normalizeMember(member, axisMin, axisMax),
 	);
 
 	const roleList = Array.from(
@@ -379,6 +385,9 @@ export function buildGraph(
 		isDarkTheme,
 	);
 	const legendHtml = buildRoleLegendHtml(roleList, chartColorMap);
+	const hasEstimatedStints = normalizedMembers.some((member) =>
+		member.stints.some((stint) => stint.startEstimate || stint.endEstimate),
+	);
 
 	const releasesLegendHtml = buildReleasesLegendHtml(opts.markers);
 
@@ -435,6 +444,7 @@ export function buildGraph(
       <div class="rymmt-legend-section">
         <div class="rymmt-legend-title">Roles</div>
         <div class="rymmt-role-legend">${legendHtml}</div>
+        ${hasEstimatedStints ? `<div class="rymmt-note rymmt-estimate-note">Faded, dashed bars indicate estimated or unknown membership dates.</div>` : ""}
       </div>
       ${releasesLegendHtml ? `<div class="rymmt-legend-section"><div class="rymmt-legend-title">Releases <span class="rymmt-legend-hint">(click to toggle)</span></div><div class="rymmt-role-legend">${releasesLegendHtml}</div></div>` : ""}
     </div>

@@ -21,7 +21,12 @@ export type MarkersByType = {
 	show: DiscoMarker[];
 };
 
-export type Stint = { start: number; end: number };
+export type Stint = {
+	start: number;
+	end: number;
+	startEstimate?: string;
+	endEstimate?: string;
+};
 
 export type Member = {
 	name: string;
