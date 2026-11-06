@@ -13,6 +13,7 @@ import type {
 import { createSerialQueue } from "~/shared/utils/serial-queue";
 import * as storage from "~/shared/utils/storage";
 import { readHiddenPage } from "./hidden-page";
+import { spotifyNetworkDiagnostics } from "./spotify-network";
 
 type SearchFailure = {
 	requestId: string;
@@ -71,14 +72,21 @@ export const spotifySearch = (
 			requestId: request.id,
 			manifestVersion: browser.runtime.getManifest().manifest_version,
 		});
+		const network = spotifyNetworkDiagnostics();
 		try {
-			const result = await readHiddenPage({
+			let result = await readHiddenPage({
 				name: "Spotify search",
 				frameUrlPrefix: "https://open.spotify.com/search/",
 				message: { type: "ebr-spotify-offscreen", data: request.data },
 				readBackground: () => searchHiddenSpotify(request.data),
 				isResult: isSearchResult,
+				observe: network.start,
 			});
+			if (result.status === "error")
+				result = {
+					...result,
+					diagnostics: [...(result.diagnostics ?? []), network.diagnostic()],
+				};
 			const log = result.status === "error" ? console.warn : console.info;
 			log("[EvenBetterRYM Spotify] completed", {
 				requestId: request.id,
@@ -103,11 +111,12 @@ export const spotifySearch = (
 				error,
 			});
 			const message = error instanceof Error ? error.message : String(error);
-			await saveFailure(request.id, { status: "error", message });
+			const diagnostics = [network.diagnostic()];
+			await saveFailure(request.id, { status: "error", message, diagnostics });
 			return {
 				id: request.id,
 				type: "spotifySearch",
-				data: { error: message },
+				data: { error: message, diagnostics },
 			};
 		}
 	})();

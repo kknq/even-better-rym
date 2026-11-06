@@ -91,11 +91,15 @@ The three-dot menu lets you choose which filters to show and, for music, select 
 
 ---
 
-### User Page Enhancements
+### Profile Edit Boxes
 
 Lets you edit your favorite artists and other comments directly from your profile page.
 
-On other users' profiles, shows **follows you** in green or **does not follow you** in muted red as the bottom row of their profile details. Your followers list is cached for one minute.
+---
+
+### Follow Status
+
+Shows **follows you** in green or **does not follow you** in muted red at the bottom of other users' profile details and beneath names in your friends list. Your followers list is cached for one minute.
 
 ---
 

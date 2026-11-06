@@ -2,10 +2,11 @@
 
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { addFollowStatus } from "./follow-status";
+import { addFollowStatus } from "./app";
 import { getFollowers } from "./followers";
 
 vi.mock("./followers", () => ({ getFollowers: vi.fn() }));
+vi.mock("webextension-polyfill", () => ({ default: {} }));
 
 beforeEach(() => {
 	vi.resetAllMocks();

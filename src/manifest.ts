@@ -188,6 +188,14 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/follow-status/main.ts"],
+			matches: [
+				"*://*.rateyourmusic.com/~*",
+				"*://*.rateyourmusic.com/friends/*",
+			],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/list-comments/main.ts"],
 			css: ["src/modules/list-comments/list-comments.css"],
 			matches: ["*://*.rateyourmusic.com/list/*"],
@@ -289,6 +297,7 @@ const ManifestV3 = {
 	permissions: [
 		...sharedManifest.permissions,
 		"offscreen",
+		"webRequest",
 		"declarativeNetRequestWithHostAccess",
 	] satisfies chrome.runtime.ManifestPermissions[],
 	minimum_chrome_version: "116",

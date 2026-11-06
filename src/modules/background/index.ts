@@ -99,12 +99,16 @@ browser.tabs.onUpdated.addListener((id, _changeInfo, tab) => {
 	const url = new URL(tab.url);
 	if (!url.hostname.endsWith("rateyourmusic.com")) return;
 
-	const pageEntries = (Object.entries(pages) as [PageKey, string][]).filter(
-		([key]) => !globalPageKeys.has(key),
-	);
+	const pageEntries = (
+		Object.entries(pages) as [PageKey, string | readonly string[]][]
+	).filter(([key]) => !globalPageKeys.has(key));
 
 	const matchingKeys = pageEntries
-		.filter(([, pageUrl]) => url.pathname.startsWith(pageUrl))
+		.filter(([, pageUrl]) =>
+			typeof pageUrl === "string"
+				? url.pathname.startsWith(pageUrl)
+				: pageUrl.some((prefix) => url.pathname.startsWith(prefix)),
+		)
 		.map(([key]) => key);
 
 	if (matchingKeys.length === 0) return;

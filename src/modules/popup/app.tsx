@@ -9,7 +9,6 @@ import { CollectionView } from "./collection-view";
 import { ReferenceLinksView } from "./reference-links-view";
 import { ShortcutView } from "./shortcut-view";
 import { styles } from "./styles";
-import { UserPageView } from "./user-page-view";
 import { RatingVisibilityView, ReviewVisibilityView } from "./visibility-view";
 import { VoteVisibilityView } from "./vote-visibility-view";
 
@@ -22,7 +21,6 @@ type View =
 	| "hideVotes"
 	| "referenceLinks"
 	| "userCollection"
-	| "userPage"
 	| "filmCollection";
 
 const viewTitles: Record<View, string> = {
@@ -33,7 +31,6 @@ const viewTitles: Record<View, string> = {
 	hideVotes: "Hide Votes",
 	referenceLinks: "External Reference Links",
 	userCollection: "Music Collection",
-	userPage: "User Page Enhancements",
 	filmCollection: "Film Collection",
 };
 
@@ -45,7 +42,6 @@ const viewSubtitles: Record<View, string> = {
 	hideVotes: "Configure visibility",
 	referenceLinks: "Customize button colors",
 	userCollection: "Customize filters and columns",
-	userPage: "Configure profile features",
 	filmCollection: "Customize filters and columns",
 };
 
@@ -198,8 +194,6 @@ function SettingsContent({
 	onChangeView: (view: View) => void;
 }>) {
 	switch (view) {
-		case "userPage":
-			return <UserPageView onSettingsChange={onSettingsChange} />;
 		case "userCollection":
 		case "filmCollection":
 			return (
@@ -295,7 +289,6 @@ function FeatureList({
 										key === "whoSampled" ||
 										key === "wikipedia" ||
 										key === "userCollection" ||
-										key === "userPage" ||
 										key === "filmCollection") && (
 										<button
 											type="button"
