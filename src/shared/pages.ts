@@ -145,7 +145,8 @@ export const pageHints: Record<PageKey, string> = {
 		"Adds configurable filters, columns, and page-size controls to music collections.",
 	filmCollection:
 		"Adds configurable filters, columns, and page-size controls to film collections.",
-	userPage: "Adds edit buttons for favorite artists and other comments.",
+	userPage:
+		"Adds profile edit buttons and shows whether other users follow you, with a one-minute cache.",
 	listComments:
 		"Makes list comments wider and taller, improves readability, enlarges the editor, and adds top/bottom scroll controls.",
 	voteHistoryGenres:
