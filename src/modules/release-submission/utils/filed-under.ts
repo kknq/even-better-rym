@@ -164,11 +164,48 @@ type CreditedName = {
 	last: string;
 };
 
+const showAliasWarning = (
+	field: HTMLInputElement,
+	alias: string,
+	fields: HTMLInputElement[],
+): (() => void) => {
+	const warning = document.createElement("div");
+	warning.className = "ebr-automatic-alias-warning";
+	warning.setAttribute("role", "alert");
+	Object.assign(warning.style, {
+		margin: "8px 0",
+		padding: "8px 10px",
+		background: "#fff0f0",
+		color: "#8a1c1c",
+		border: "1px solid #e5a0a0",
+		borderRadius: "3px",
+		overflowWrap: "anywhere",
+	});
+	warning.textContent = `EvenBetterRYM automatically set the credited artist name to "${alias}". Please check that this alias is correct before submitting.`;
+	const controls = field.closest("table");
+	if (controls) controls.before(warning);
+	else field.insertAdjacentElement("afterend", warning);
+	const removeWarning = () => {
+		warning.remove();
+		for (const input of fields) {
+			input.removeEventListener("input", removeWarning);
+			input.removeEventListener("change", removeWarning);
+		}
+	};
+	for (const input of fields) {
+		input.addEventListener("input", removeWarning);
+		input.addEventListener("change", removeWarning);
+	}
+	return removeWarning;
+};
+
 export function createCreditedNameSync(): (alias: string | undefined) => void {
 	let original: CreditedName | undefined;
 	let written: CreditedName | undefined;
 	let manuallyEdited = false;
+	let removeWarning: (() => void) | undefined;
 	return (alias) => {
+		if (alias === undefined) removeWarning?.();
 		if (manuallyEdited || (alias === undefined && written === undefined))
 			return;
 		const query = forceQuerySelector<HTMLInputElement>(document);
@@ -188,6 +225,7 @@ export function createCreditedNameSync(): (alias: string | undefined) => void {
 				current.last !== written.last)
 		) {
 			manuallyEdited = true;
+			removeWarning?.();
 			return;
 		}
 		if (written === undefined && !current.useDefault) return;
@@ -215,6 +253,13 @@ export function createCreditedNameSync(): (alias: string | undefined) => void {
 			written = undefined;
 		} else {
 			written = next;
+			removeWarning?.();
+			removeWarning = showAliasWarning(last, alias, [
+				defaultRadio,
+				specifiedRadio,
+				first,
+				last,
+			]);
 		}
 	};
 }

@@ -65,6 +65,67 @@ afterEach(() => {
 test.each([
 	false,
 	true,
+])("keeps section 1.4 at its default for 劣 [Lie] (issue=%s)", async (issue) => {
+	window.history.replaceState(
+		null,
+		"",
+		issue ? "/releases/edit" : "/releases/ac?artist_id=2068672",
+	);
+	document.body.innerHTML = `
+		${issue ? '<input id="filed_under_same_as_parent_no">' : ""}
+		<div id="section_filed_under">
+			<ul id="filed_under_performerx">
+				<li class="sortable_filed_under_performer" id="filed_under_performer_1">
+					<input id="filed_under_performer_artist_1" value="[Artist2068672]">
+					<div class="filed_under_artist_preview">
+						<span class="rendered_text"><a class="artist">劣 <span class="subtext">[Lie]</span></a></span>
+					</div>
+				</li>
+			</ul>
+		</div>`;
+	const actual = await vi.importActual<typeof import("../utils/filed-under")>(
+		"../utils/filed-under",
+	);
+	vi.mocked(readFiledUnderEntries).mockImplementationOnce(
+		actual.readFiledUnderEntries,
+	);
+	const published = vi.fn(
+		(event: CustomEvent<ReleaseArtistLabels>) => event.detail,
+	);
+	document.addEventListener("releaseArtistLabelsEvent", published);
+	try {
+		await act(async () => {
+			await injectReleaseArtistPicker();
+		});
+		await act(() => {
+			document.dispatchEvent(
+				new CustomEvent("releaseArtistsEvent", { detail: ["劣"] }),
+			);
+		});
+		await vi.waitFor(() =>
+			expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
+				[{ id: "2068672", name: "劣 [Lie]" }],
+				new Set(["2068672"]),
+			),
+		);
+		expect(creditedName()).toEqual({
+			useDefault: true,
+			specified: false,
+			first: "",
+			last: "",
+		});
+		expect(published.mock.calls.at(-1)?.[0].detail.labels).toEqual(
+			new Map([["劣", "[Artist2068672]"]]),
+		);
+		expect(document.querySelector(".ebr-automatic-alias-warning")).toBeNull();
+	} finally {
+		document.removeEventListener("releaseArtistLabelsEvent", published);
+	}
+});
+
+test.each([
+	false,
+	true,
 ])("links a single imported alias to the artist prefilled by the page (issue=%s)", async (issue) => {
 	window.history.replaceState(null, "", "/releases/ac?artist_id=1479561");
 	const entry = { id: "1479561", name: "Kai Angel" };
@@ -97,6 +158,9 @@ test.each([
 			first: "",
 			last: "zavet",
 		});
+		expect(
+			document.querySelector(".ebr-automatic-alias-warning")?.textContent,
+		).toContain('"zavet"');
 		expect(document.body.textContent).toContain("filed under Kai Angel");
 		expect(document.body.textContent).not.toContain("(from parent)");
 		expect(
@@ -118,6 +182,7 @@ test.each([
 		);
 		expect(creditedName().useDefault).toBe(true);
 		expect(creditedName().last).toBe("");
+		expect(document.querySelector(".ebr-automatic-alias-warning")).toBeNull();
 		expect(restore?.disabled).toBe(false);
 		await act(() => restore?.click());
 		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
@@ -125,6 +190,9 @@ test.each([
 			new Set(["1479561"]),
 		);
 		expect(creditedName().last).toBe("zavet");
+		expect(
+			document.querySelector(".ebr-automatic-alias-warning")?.textContent,
+		).toContain("before submitting");
 	} finally {
 		document.removeEventListener("releaseArtistLabelsEvent", published);
 	}

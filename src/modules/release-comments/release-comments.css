@@ -1,0 +1,26 @@
+.section_comments .release_page_header.ebr-comments-header {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5em 0.75em;
+	height: auto;
+	min-height: 1.2em;
+}
+
+.section_comments .ebr-comments-header h2 {
+	float: none;
+	height: auto;
+	margin: 0;
+}
+
+.section_comments .ebr-comments-header .ebr-load-all-comments {
+	margin: 0;
+	font-size: 0.8em;
+	line-height: 1.4;
+	padding: 0.2em 0.6em;
+}
+
+.section_comments .ebr-comments-status {
+	font-size: 0.8em;
+	line-height: 1.4;
+}

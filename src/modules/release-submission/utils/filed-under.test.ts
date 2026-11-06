@@ -29,10 +29,17 @@ function row(number: string, id: string, name = "Artist") {
 
 function creditedNameFields() {
 	document.body.innerHTML = `
-		<input type="radio" id="credited_name_default" name="credited_name" checked>
-		<input type="radio" id="credited_name_specified" name="credited_name">
-		<input id="credited_firstname" disabled>
-		<input id="credited_lastname" disabled>
+		<div class="submit_field_content">
+			<div class="submit_field_description">1.4 Artist name</div>
+			<table><tbody>
+				<tr><td><input type="radio" id="credited_name_default" name="credited_name" checked></td></tr>
+				<tr><td>
+					<input type="radio" id="credited_name_specified" name="credited_name">
+					<input id="credited_firstname" disabled>
+					<input id="credited_lastname" disabled>
+				</td></tr>
+			</tbody></table>
+		</div>
 	`;
 	const input = (id: string) => {
 		const field = document.querySelector<HTMLInputElement>(`#${id}`);
@@ -46,6 +53,55 @@ function creditedNameFields() {
 		last: input("credited_lastname"),
 	};
 }
+
+test("shows a light red automatic-alias warning in section 1.4 above the radio buttons", () => {
+	creditedNameFields();
+	const sync = createCreditedNameSync();
+	sync("zavet");
+	const warning = document.querySelector<HTMLElement>(
+		".ebr-automatic-alias-warning",
+	);
+	expect(warning?.getAttribute("role")).toBe("alert");
+	expect(warning?.textContent).toContain('"zavet"');
+	expect(warning?.textContent).toContain("before submitting");
+	expect(warning?.style.background).toBe("rgb(255, 240, 240)");
+	expect(warning?.parentElement?.className).toBe("submit_field_content");
+	expect(warning?.previousElementSibling?.className).toBe(
+		"submit_field_description",
+	);
+	expect(warning?.nextElementSibling?.tagName).toBe("TABLE");
+	sync("Another Alias");
+	expect(
+		document.querySelectorAll(".ebr-automatic-alias-warning"),
+	).toHaveLength(1);
+	expect(
+		document.querySelector(".ebr-automatic-alias-warning")?.textContent,
+	).toContain('"Another Alias"');
+	sync(undefined);
+	expect(document.querySelector(".ebr-automatic-alias-warning")).toBeNull();
+});
+
+test.each([
+	"first",
+	"last",
+	"defaultRadio",
+	"specifiedRadio",
+] as const)("removes the alias warning when the user changes %s", (field) => {
+	const fields = creditedNameFields();
+	createCreditedNameSync()("zavet");
+	expect(document.querySelector(".ebr-automatic-alias-warning")).not.toBeNull();
+	fields[field].dispatchEvent(new Event("input", { bubbles: true }));
+	expect(document.querySelector(".ebr-automatic-alias-warning")).toBeNull();
+});
+
+test("renders alias text without interpreting HTML", () => {
+	creditedNameFields();
+	const alias = '<img src=x onerror="alert(1)">';
+	createCreditedNameSync()(alias);
+	const warning = document.querySelector(".ebr-automatic-alias-warning");
+	expect(warning?.textContent).toContain(alias);
+	expect(warning?.querySelector("img")).toBeNull();
+});
 
 test("selects the custom artist name and puts the whole alias in Last name", () => {
 	const fields = creditedNameFields();
@@ -95,6 +151,7 @@ test("preserves an existing manually specified artist name", () => {
 	expect(fields.specifiedRadio.checked).toBe(true);
 	expect(fields.first.value).toBe("Manual first");
 	expect(fields.last.value).toBe("Manual last");
+	expect(document.querySelector(".ebr-automatic-alias-warning")).toBeNull();
 });
 
 test.each([

@@ -6,7 +6,7 @@ const ARTIST_TOKEN_PATTERN = /^\[Artist(\d+)(?:,([^\]\r\n]+))?]$/;
 const DIACRITIC_PATTERN = /\p{M}/gu;
 const NON_ALPHANUMERIC_PATTERN = /[^\p{L}\p{N}]/gu;
 const LATIN_LETTER = /\p{Script=Latin}/u;
-const CYRILLIC_LETTER = /\p{Script=Cyrillic}/u;
+const NON_LATIN_LETTER = /(?!\p{Script=Latin})\p{L}/u;
 const LOCALIZED_NAME_SUFFIX = /^(.+?)\s+\[([^\]]+)\]\s*$/u;
 
 // One artist in RYM's "filed under performer" list.
@@ -70,7 +70,7 @@ export const parseArtistTokenId = (token: string): string | undefined =>
 	parseArtistToken(token)?.id;
 
 // RYM may add a localized name in brackets after an artist's primary name.
-// Ignore that suffix only when it uses a different Latin/Cyrillic script.
+// Ignore Latin/non-Latin display suffixes without discarding same-script names.
 const getComparableArtistName = (name: string): string => {
 	const match = LOCALIZED_NAME_SUFFIX.exec(name);
 	const primary = match?.[1];
@@ -78,8 +78,8 @@ const getComparableArtistName = (name: string): string => {
 	if (
 		primary !== undefined &&
 		localized !== undefined &&
-		((CYRILLIC_LETTER.test(primary) && LATIN_LETTER.test(localized)) ||
-			(LATIN_LETTER.test(primary) && CYRILLIC_LETTER.test(localized)))
+		((NON_LATIN_LETTER.test(primary) && LATIN_LETTER.test(localized)) ||
+			(LATIN_LETTER.test(primary) && NON_LATIN_LETTER.test(localized)))
 	) {
 		return primary;
 	}

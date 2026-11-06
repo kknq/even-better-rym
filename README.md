@@ -71,6 +71,12 @@ Displays album lengths over an hour in a clearer hours-and-minutes format.
 
 ---
 
+### Load All Release Comments
+
+Adds a **Load all comments** button beside the Comments heading on release pages. Loads batches one at a time with a random 750-850 ms pause between requests and stops if loading stalls. Click **Stop loading** to prevent further requests; any in-flight request can finish. This does not guarantee avoiding site rate limits.
+
+---
+
 ### Media Links Submission Helper
 
 Helps turn supported music-service links into the embed codes needed for media-link submissions.
