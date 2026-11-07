@@ -236,6 +236,7 @@ export type ResolveData = {
 	classifiers?: string[];
 	filedUnderCreditRole?: string;
 	tracks?: Track[];
+	releaseCredits?: TrackCredit[];
 	unverifiedCredits?: UnverifiedCredit[];
 	countries?: string[];
 };

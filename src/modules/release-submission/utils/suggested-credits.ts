@@ -95,35 +95,39 @@ export function getNonFeaturedTrackArtists(track: Track): string[] {
 	);
 }
 
-export function getSuggestedCredits(tracks: Track[]): CreditSuggestion[] {
-	const suggestions = new Map<
-		string,
-		CreditSuggestion & { trackIndexes: Set<number> }
-	>();
-	const trackCount = tracks.filter((track) => !track.header).length;
-	for (const [index, track] of tracks.entries()) {
-		if (track.header) continue;
-		for (const credit of getTrackCredits(track)) {
-			const name = credit.name.trim();
-			const role = credit.role.trim();
-			if (!name || !role) continue;
-			const key = creditKey(name, role);
-			const suggestion = suggestions.get(key) ?? {
-				key,
-				name,
-				role,
-				positions: [],
-				trackIndexes: new Set<number>(),
-			};
-			const position = getTrackPosition(track, index);
-			if (!suggestion.positions.includes(position))
-				suggestion.positions.push(position);
-			suggestion.trackIndexes.add(index);
-			suggestions.set(key, suggestion);
-		}
+type IndexedCreditSuggestion = CreditSuggestion & { trackIndexes: Set<number> };
+
+const addTrackSuggestions = (
+	suggestions: Map<string, IndexedCreditSuggestion>,
+	track: Track,
+	index: number,
+): void => {
+	for (const credit of getTrackCredits(track)) {
+		const name = credit.name.trim();
+		const role = credit.role.trim();
+		if (!name || !role) continue;
+		const key = creditKey(name, role);
+		const suggestion = suggestions.get(key) ?? {
+			key,
+			name,
+			role,
+			positions: [],
+			trackIndexes: new Set<number>(),
+		};
+		const position = getTrackPosition(track, index);
+		if (!suggestion.positions.includes(position))
+			suggestion.positions.push(position);
+		suggestion.trackIndexes.add(index);
+		suggestions.set(key, suggestion);
 	}
+};
+
+const groupCreditSuggestions = (
+	suggestions: Iterable<IndexedCreditSuggestion>,
+	trackCount: number,
+): CreditSuggestion[] => {
 	const grouped = new Map<string, CreditSuggestion>();
-	for (const { trackIndexes, ...suggestion } of suggestions.values()) {
+	for (const { trackIndexes, ...suggestion } of suggestions) {
 		const groupKey = JSON.stringify([
 			suggestion.name,
 			[...trackIndexes],
@@ -141,6 +145,33 @@ export function getSuggestedCredits(tracks: Track[]): CreditSuggestion[] {
 		});
 	}
 	return [...grouped.values()];
+};
+
+export function getSuggestedCredits(
+	tracks: Track[],
+	releaseCredits: TrackCredit[] = [],
+): CreditSuggestion[] {
+	const suggestions = new Map<string, IndexedCreditSuggestion>();
+	const releaseIndexes = tracks.flatMap((track, index) =>
+		track.header ? [] : [index],
+	);
+	for (const credit of releaseCredits) {
+		const name = credit.name.trim();
+		const role = credit.role.trim();
+		if (!name || !role) continue;
+		const key = creditKey(name, role);
+		suggestions.set(key, {
+			key,
+			name,
+			role,
+			positions: [],
+			trackIndexes: new Set(releaseIndexes),
+		});
+	}
+	for (const [index, track] of tracks.entries()) {
+		if (!track.header) addTrackSuggestions(suggestions, track, index);
+	}
+	return groupCreditSuggestions(suggestions.values(), releaseIndexes.length);
 }
 
 export function getUnverifiedCreditSuggestions(

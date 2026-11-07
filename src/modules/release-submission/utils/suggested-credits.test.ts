@@ -10,6 +10,52 @@ import {
 	stripFeaturedArtistTags,
 } from "./suggested-credits";
 
+test("merges release-wide roles with identical full-track coverage without losing restricted roles", () => {
+	const tracks: Track[] = [
+		{ header: true },
+		{
+			position: "1",
+			credits: [
+				{ name: "Person", role: "vocals" },
+				{ name: "Person", role: "lyrics" },
+			],
+		},
+		{ position: "2", credits: [{ name: "Person", role: "lyrics" }] },
+	];
+	const releaseCredits = [
+		{ name: "Person", role: "vocals" },
+		{ name: "Person", role: "guitars" },
+	];
+	expect(getSuggestedCredits(tracks, releaseCredits)).toEqual([
+		{
+			key: creditKey("Person", "vocals, guitars, lyrics"),
+			name: "Person",
+			role: "vocals, guitars, lyrics",
+			positions: [],
+		},
+	]);
+	expect(getSuggestedCredits([], releaseCredits)).toEqual([
+		{
+			key: creditKey("Person", "vocals, guitars"),
+			name: "Person",
+			role: "vocals, guitars",
+			positions: [],
+		},
+	]);
+	expect(
+		getSuggestedCredits(
+			[
+				{ position: "1", credits: [{ name: "Person", role: "lyrics" }] },
+				{ position: "2" },
+			],
+			releaseCredits,
+		).map(({ role, positions }) => ({ role, positions })),
+	).toEqual([
+		{ role: "vocals, guitars", positions: [] },
+		{ role: "lyrics", positions: ["1"] },
+	]);
+});
+
 test("ranks name blocks by distinct songs across roles, including whole-release and repeated positions", () => {
 	const tracks: Track[] = [
 		{ header: true, credits: [{ name: "Header only", role: "producer" }] },
