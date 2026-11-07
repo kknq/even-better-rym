@@ -1,3 +1,4 @@
+import { DiscographyRateLimitError } from "~/shared/artist-discography";
 import { currentDecimalYear, decimalYearOf } from "./date-utils";
 import {
 	extractDiscographyMarkersFromDOM,
@@ -46,7 +47,7 @@ async function renderIntoPanel(
 		? formatFullDate(bounds.disbandedDate)
 		: (bounds.disbandedLabel ?? "Now");
 
-	const disco = extractDiscographyMarkersFromDOM(disbandedYear);
+	const disco = await extractDiscographyMarkersFromDOM(disbandedYear);
 	const showMarkers = await extractShowMarkersFromDOM(disbandedYear);
 	const markers = { ...disco, show: showMarkers };
 
@@ -90,6 +91,43 @@ async function renderIntoPanel(
 	attachGraphInteractivity(panelEl);
 }
 
+async function loadPanel(
+	panel: HTMLElement,
+	header: HTMLElement | null,
+): Promise<void> {
+	if (panel.getAttribute("aria-busy") === "true") return;
+	panel.setAttribute("aria-busy", "true");
+	panel.textContent = "Loading timeline...";
+	try {
+		await openPastShows(3000);
+		await renderIntoPanel(panel, header);
+	} catch (error) {
+		console.error("[timeline] Could not load complete timeline:", error);
+		panel.textContent =
+			error instanceof DiscographyRateLimitError
+				? `${error.message} `
+				: "Could not load the complete timeline. ";
+		const retry = document.createElement("button");
+		retry.type = "button";
+		retry.textContent = "Retry";
+		if (error instanceof DiscographyRateLimitError) {
+			retry.disabled = Date.now() < error.retryAt;
+			setTimeout(
+				() => {
+					retry.disabled = false;
+				},
+				Math.max(0, error.retryAt - Date.now()),
+			);
+		}
+		retry.addEventListener("click", () => {
+			void loadPanel(panel, header);
+		});
+		panel.append(retry);
+	} finally {
+		panel.setAttribute("aria-busy", "false");
+	}
+}
+
 export function togglePanel(headerEl: HTMLElement | null): void {
 	try {
 		let panel = document.getElementById(PANEL_ID);
@@ -113,11 +151,7 @@ export function togglePanel(headerEl: HTMLElement | null): void {
 		if (isHidden) {
 			panel.classList.remove("rymmt-hidden");
 			applyRymThemeVars(panel, headerEl);
-			// Ensure past shows are opened and loaded before extracting
-			void (async () => {
-				await openPastShows(3000);
-				void renderIntoPanel(panel, headerEl);
-			})();
+			void loadPanel(panel, headerEl);
 		} else {
 			panel.classList.add("rymmt-hidden");
 		}

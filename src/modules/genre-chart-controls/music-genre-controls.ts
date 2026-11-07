@@ -4,36 +4,18 @@ import {
 	type YearRange,
 	yearRange,
 } from "~/shared/chart-date-range";
+import {
+	chartReleaseTypeLabels,
+	chartReleaseTypeSingularLabels,
+	chartReleaseTypes,
+} from "~/shared/release-types";
 import { waitForDocumentReady } from "~/shared/utils/dom";
 
 import { CHART_CONTROLS_HTML } from "./music-genre-markup";
 
-const RELEASE_TYPE_LABELS: Record<string, string> = {
-	album: "Album",
-	ep: "EP",
-	mixtape: "Mixtape",
-	djmix: "DJ Mix",
-	single: "Single",
-	comp: "Compilation",
-	video: "Video",
-	unauth: "Unauthorized",
-	song: "Song",
-	musicvideo: "Music Video",
-	additional: "Additional Release",
-};
-
-const ALL_RELEASE_TYPES = [
-	"album",
-	"ep",
-	"mixtape",
-	"djmix",
-	"single",
-	"comp",
-	"video",
-	"unauth",
-	"musicvideo",
-	"additional",
-];
+const ALL_RELEASE_TYPES: readonly string[] = chartReleaseTypes.map(
+	(type) => type.id,
+);
 
 type RYMChartState = {
 	chart_type?: string;
@@ -187,19 +169,7 @@ function updateReleaseTypeValue(state: RYMChartState): void {
 	const selected = getSelectedReleaseTypes();
 	state.release_types = selected;
 
-	const labels: Record<string, string> = {
-		album: "Albums",
-		ep: "EPs",
-		comp: "Compilations",
-		single: "Singles",
-		video: "Videos",
-		unauth: "Unauth/Bootlegs",
-		song: "Songs",
-		mixtape: "Mixtapes",
-		musicvideo: "Music videos",
-		djmix: "DJ mixes",
-		additional: "Additional releases",
-	};
+	const labels = chartReleaseTypeLabels;
 
 	let title = "Releases";
 	if (selected.length === 1) {
@@ -583,13 +553,13 @@ function getReleaseTypeTarget(selectedReleaseTypes: string[]): {
 		const mediaType = releaseTypes[0] ?? "album";
 		return {
 			mediaType,
-			buttonLabel: RELEASE_TYPE_LABELS[mediaType] ?? "Release",
+			buttonLabel: chartReleaseTypeSingularLabels[mediaType] ?? "Release",
 		};
 	}
 
 	if (releaseTypes.length > 1) {
 		const labels = releaseTypes.map(
-			(type) => RELEASE_TYPE_LABELS[type] ?? type,
+			(type) => chartReleaseTypeSingularLabels[type] ?? type,
 		);
 		const buttonLabel =
 			labels.length === 2 ? `${labels[0]} and ${labels[1]}` : labels.join(", ");

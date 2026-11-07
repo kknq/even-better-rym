@@ -23,6 +23,7 @@ export const pages = {
 	searchFocus: "/",
 	genreChartControls: "/genre/",
 	artistSearchHint: "/artist/",
+	discographyProgress: "/artist/",
 	timeline: "/artist/",
 	map: "/artist/",
 	hideVotes: "/r",
@@ -61,6 +62,7 @@ export const pageLabels: Record<PageKey, string> = {
 	searchFocus: "Focus Search",
 	genreChartControls: "Genre Chart Controls",
 	artistSearchHint: "Artist Search Hint",
+	discographyProgress: "Discography Progress",
 	timeline: "Artist Timeline",
 	map: "Artist Location Map",
 	hideVotes: "Hide Votes on Genre/Descriptor Pages",
@@ -114,7 +116,13 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 		],
 		[
 			"Artist profiles",
-			["artistSearchHint", "timeline", "map", "artistSubmission"],
+			[
+				"artistSearchHint",
+				"discographyProgress",
+				"timeline",
+				"map",
+				"artistSubmission",
+			],
 		],
 		[
 			"Content visibility",
@@ -166,6 +174,8 @@ export const pageHints: Record<PageKey, string> = {
 	genreChartControls:
 		"Adds chart controls to music genre pages and film genre pages, and links film chart genres to their film genre pages.",
 	artistSearchHint: "Shows the artist's search hint below their name",
+	discographyProgress:
+		"Shows listening progress by release type and overall on artist pages. Configure which release types count toward overall coverage.",
 	timeline:
 		"On artist pages, adds an inline timeline visualizing member activity and discography.",
 	map: "On artist pages, adds an interactive map showing concert locations.",

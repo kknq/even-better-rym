@@ -1,0 +1,107 @@
+.ebr-discography-overall {
+	margin: 1em 0;
+	padding: 1em;
+	border: 1px solid var(--mono-d, #ccc);
+	border-radius: 4px;
+	background: var(--mono-f, #fff);
+	color: var(--mono-2, #222);
+	font-size: 1.4rem;
+}
+
+.ebr-discography-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.4em 0.8em;
+	font-size: 1.4rem;
+	line-height: 1.4;
+}
+
+.disco_header_top.ebr-discography-heading {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.4rem 1.2rem;
+	height: auto;
+	line-height: 1.4;
+}
+
+.ebr-discography-heading > .disco_header_label {
+	margin: 0;
+	line-height: inherit;
+}
+
+.ebr-discography-heading > .disco_showing {
+	margin-left: 0;
+	line-height: inherit;
+}
+
+.ebr-discography-bar progress {
+	align-self: center;
+	width: 10em;
+	max-width: 100%;
+	height: 0.7em;
+	accent-color: #399565;
+}
+
+.ebr-discography-overall .ebr-discography-bar {
+	margin: 0.5em 0;
+}
+
+.ebr-discography-category {
+	margin-left: auto;
+	padding: 0;
+}
+
+.ebr-discography-category progress {
+	width: 8em;
+}
+
+.ebr-discography-status {
+	font-size: 1.4rem;
+}
+
+.ebr-discography-status .ebr-discography-load {
+	display: inline-flex;
+	align-items: center;
+	margin-left: 0.4em;
+	padding: 0.25em 0.75em;
+	border: 1px solid var(--mono-d, #ccc);
+	border-radius: 999px;
+	background: var(--mono-f, #fff);
+	color: var(--mono-2, #222);
+	font: inherit;
+	line-height: 1.4;
+	vertical-align: baseline;
+	cursor: pointer;
+	transition:
+		border-color 120ms ease,
+		background-color 120ms ease;
+}
+
+.ebr-discography-status .ebr-discography-load:hover:not(:disabled) {
+	border-color: #459bea;
+	background: var(--mono-e, #eee);
+}
+
+.ebr-discography-status .ebr-discography-load:focus-visible {
+	outline: 2px solid #459bea;
+	outline-offset: 2px;
+}
+
+.ebr-discography-status .ebr-discography-load:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.ebr-discography-percentage {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+}
+
+.ebr-discography-complete {
+	width: 1em;
+	height: 1em;
+	fill: #459bea;
+}

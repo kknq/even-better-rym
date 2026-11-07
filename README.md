@@ -135,7 +135,13 @@ Shows RYM's short artist search hint as a subtitle directly below the artist nam
 
 ### Artist Timeline
 
-Adds a timeline to group pages so you can see when members were active and what they played. Artist pages with shows also include a map of concert locations, including solo artists.
+Adds a timeline showing group members' activity and releases. Artist pages with shows also include a map of concert locations.
+
+---
+
+### Discography Progress
+
+Tracks rated and listened releases by category and overall. Choose which categories count in the extension popup; albums, EPs and mixtapes are included by default. Release data is cached for an hour.
 
 ---
 
