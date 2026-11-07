@@ -7,6 +7,7 @@ import {
 } from "~/shared/collection/options";
 import type { CollectionSettings } from "~/shared/collection/settings";
 import { Checkbox } from "~/shared/components/checkbox";
+import { collectionReleaseTypes } from "~/shared/release-types";
 
 import { FilterButton } from "./filter-button";
 import { RatingFilter } from "./rating-filter";
@@ -57,10 +58,10 @@ export function FilterButtons({
 				<>
 					<div>Type:</div>
 					<div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-						{RELEASE_TYPES.map(([name, modifier]) => (
+						{collectionReleaseTypes.map(({ id, label, modifier }) => (
 							<FilterButton
-								key={name}
-								name={name}
+								key={id}
+								name={label}
 								base="typ"
 								modifier={modifier}
 							/>
@@ -84,6 +85,9 @@ export function FilterButtons({
 
 function ViewButtons({ settings }: Readonly<{ settings: CollectionSettings }>) {
 	const current = parseCollectionUrl(location.href);
+	const defaultColumns = settings.columnManagement
+		? (settings.columns ?? [])
+		: [];
 	return (
 		<div
 			class="ebr-collection-views"
@@ -100,12 +104,7 @@ function ViewButtons({ settings }: Readonly<{ settings: CollectionSettings }>) {
 					}}
 					href={collectionUrl(location.href, {
 						view,
-						columns:
-							view === "default"
-								? settings.columnManagement
-									? (settings.columns ?? [])
-									: []
-								: undefined,
+						columns: view === "default" ? defaultColumns : undefined,
 					})}
 				>
 					{collectionViews[view]}
@@ -114,19 +113,6 @@ function ViewButtons({ settings }: Readonly<{ settings: CollectionSettings }>) {
 		</div>
 	);
 }
-
-const RELEASE_TYPES = [
-	["Albums", "typs"],
-	["EPs", "type"],
-	["Singles", "typi"],
-	["Music Videos", "typo"],
-	["Mixtapes", "typm"],
-	["DJ Mixes", "typj"],
-	["Compilations", "typc"],
-	["Videos", "typd"],
-	["Bootlegs", "typb"],
-	["Additional Releases", "typx"],
-] as const;
 
 const STATUS = [
 	["Owned", "o"],
@@ -161,11 +147,13 @@ function MultipleFilter({
 	const [selected, setSelected] = useState(() =>
 		collectionFilterValue(location.href, family),
 	);
-	const value = selected.length
-		? family === "status"
-			? `o${selected.join("")}`
-			: `fmt.${selected.join(".")}`
-		: "";
+	let value = "";
+	if (selected.length > 0) {
+		value =
+			family === "status"
+				? `o${selected.join("")}`
+				: `fmt.${selected.join(".")}`;
+	}
 	return (
 		<form
 			onSubmit={(event) => {

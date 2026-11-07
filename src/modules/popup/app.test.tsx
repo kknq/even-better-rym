@@ -48,6 +48,9 @@ vi.mock("./reference-links-view", () => ({
 		</button>
 	),
 }));
+vi.mock("./discography-progress-view", () => ({
+	DiscographyProgressView: () => <div>Discography coverage settings</div>,
+}));
 vi.mock("./visibility-view", () => ({
 	RatingVisibilityView: ({
 		onSettingsChange,
@@ -268,6 +271,27 @@ describe("App", () => {
 			"EvenBetterRYM",
 		);
 		expect(setModuleEnabled).not.toHaveBeenCalled();
+	});
+
+	test("opens discography coverage settings from Artist profiles without toggling the feature", async () => {
+		await showApp();
+		await act(() => findButton("Artist profiles").click());
+		await act(() =>
+			featureRow("discographyProgress").querySelector("button")?.click(),
+		);
+		expect(container.querySelector("header")?.textContent).toContain(
+			"Discography Progress",
+		);
+		expect(container.textContent).toContain("Discography coverage settings");
+		expect(setModuleEnabled).not.toHaveBeenCalled();
+		await act(() =>
+			container
+				.querySelector<HTMLButtonElement>('[aria-label="Back"]')
+				?.click(),
+		);
+		expect(findButton("Artist profiles").getAttribute("aria-expanded")).toBe(
+			"true",
+		);
 	});
 });
 

@@ -1,4 +1,4 @@
-export type SerialQueue = (task: () => Promise<void>) => Promise<void>;
+export type SerialQueue = <T>(task: () => Promise<T>) => Promise<T>;
 
 // Returns a queue that starts each task once the previous one has settled,
 // even if it failed.

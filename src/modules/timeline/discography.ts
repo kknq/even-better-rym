@@ -1,3 +1,5 @@
+import { loadSection, readTotal } from "~/shared/artist-discography";
+import { timelineReleaseTypes } from "~/shared/release-types";
 import {
 	getDayOfYear,
 	isLeapYear,
@@ -30,17 +32,9 @@ function extractDecimalYearFromSpan(span: Element | null): number | null {
 	return Number.isFinite(year) ? year + 0.5 : null;
 }
 
-const DISCO_TYPES: Record<string, DiscoType> = {
-	disco_type_s: "album",
-	disco_type_l: "live",
-	disco_type_i: "single",
-	disco_type_e: "ep",
-	disco_type_x: "additional",
-};
-
 // Collect release markers (decimal year + title) from within a disco_type_* container
 function collectReleases(
-	container: Element | null,
+	container: ParentNode | null,
 	discoType: DiscoType,
 	disbandedYear: number | null,
 ): DiscoMarker[] {
@@ -66,9 +60,9 @@ function collectReleases(
 	return markers;
 }
 
-export function extractDiscographyMarkersFromDOM(
+export async function extractDiscographyMarkersFromDOM(
 	disbandedYear: number | null,
-): MarkersByType {
+): Promise<MarkersByType> {
 	const markers: MarkersByType = {
 		album: [],
 		live: [],
@@ -81,10 +75,22 @@ export function extractDiscographyMarkersFromDOM(
 	const discographyRoot = document.getElementById("discography");
 	if (!discographyRoot) return markers;
 
-	for (const [id, kind] of Object.entries(DISCO_TYPES)) {
-		const container = discographyRoot.querySelector(`#${id}`);
-		markers[kind].push(...collectReleases(container, kind, disbandedYear));
-	}
+	await timelineReleaseTypes.reduce(
+		async (previous, { id: type, type: kind }) => {
+			await previous;
+			let container: ParentNode | null = discographyRoot.querySelector(
+				`#disco_type_${type}`,
+			);
+			if (!container) return;
+			const total = readTotal(discographyRoot, type);
+			const loaded = container.querySelectorAll(".disco_release").length;
+			if (total !== null && loaded < total) {
+				container = await loadSection(type);
+			}
+			markers[kind].push(...collectReleases(container, kind, disbandedYear));
+		},
+		Promise.resolve(),
+	);
 
 	// Deduplicate by (integer year, title) within each type, preserving order
 	for (const type of Object.keys(markers) as (keyof MarkersByType)[]) {

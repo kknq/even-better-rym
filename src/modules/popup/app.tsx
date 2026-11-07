@@ -6,6 +6,7 @@ import type { PageKey } from "~/shared/pages";
 import { featureGroups, pageHints, pageLabels } from "~/shared/pages";
 
 import { CollectionView } from "./collection-view";
+import { DiscographyProgressView } from "./discography-progress-view";
 import { ReferenceLinksView } from "./reference-links-view";
 import { ShortcutView } from "./shortcut-view";
 import { styles } from "./styles";
@@ -20,6 +21,7 @@ type View =
 	| "hideReviews"
 	| "hideVotes"
 	| "referenceLinks"
+	| "discographyProgress"
 	| "userCollection"
 	| "filmCollection";
 
@@ -30,6 +32,7 @@ const viewTitles: Record<View, string> = {
 	hideReviews: "Hide Reviews",
 	hideVotes: "Hide Votes",
 	referenceLinks: "External Reference Links",
+	discographyProgress: "Discography Progress",
 	userCollection: "Music Collection",
 	filmCollection: "Film Collection",
 };
@@ -41,6 +44,7 @@ const viewSubtitles: Record<View, string> = {
 	hideReviews: "Configure visibility",
 	hideVotes: "Configure visibility",
 	referenceLinks: "Customize button colors",
+	discographyProgress: "Choose overall coverage release types",
 	userCollection: "Customize filters and columns",
 	filmCollection: "Customize filters and columns",
 };
@@ -194,6 +198,8 @@ function SettingsContent({
 	onChangeView: (view: View) => void;
 }>) {
 	switch (view) {
+		case "discographyProgress":
+			return <DiscographyProgressView />;
 		case "userCollection":
 		case "filmCollection":
 			return (
@@ -288,6 +294,7 @@ function FeatureList({
 										key === "hideVotes" ||
 										key === "whoSampled" ||
 										key === "wikipedia" ||
+										key === "discographyProgress" ||
 										key === "userCollection" ||
 										key === "filmCollection") && (
 										<button

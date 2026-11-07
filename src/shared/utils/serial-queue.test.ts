@@ -4,6 +4,10 @@ import { createSerialQueue } from "./serial-queue";
 import { sleep } from "./sleep";
 
 describe("createSerialQueue", () => {
+	test("returns the task result", async () => {
+		const enqueue = createSerialQueue();
+		await expect(enqueue(() => Promise.resolve(42))).resolves.toBe(42);
+	});
 	test("runs each task after the previous one finishes", async () => {
 		const enqueue = createSerialQueue();
 		const events: string[] = [];

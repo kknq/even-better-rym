@@ -1,25 +1,12 @@
-export type RGB = { r: number; g: number; b: number };
+import type { TimelineReleaseType } from "~/shared/release-types";
 
 export type RoleCanonEntry = { key: string; match: RegExp[] };
 
-export type DiscoType =
-	| "album"
-	| "live"
-	| "single"
-	| "ep"
-	| "additional"
-	| "show";
+export type DiscoType = TimelineReleaseType | "show";
 
 export type DiscoMarker = { year: number; title: string; type: DiscoType };
 
-export type MarkersByType = {
-	album: DiscoMarker[];
-	live: DiscoMarker[];
-	single: DiscoMarker[];
-	ep: DiscoMarker[];
-	additional: DiscoMarker[];
-	show: DiscoMarker[];
-};
+export type MarkersByType = Record<DiscoType, DiscoMarker[]>;
 
 export type Stint = {
 	start: number;
