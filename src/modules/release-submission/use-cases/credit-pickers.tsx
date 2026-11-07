@@ -5,6 +5,7 @@ import {
 	getFeaturedArtists,
 	getNonFeaturedTrackArtists,
 	getSuggestedCredits,
+	getTrackCredits,
 	getUnverifiedCreditSuggestions,
 	isSpecialCreditRole,
 	sortCreditsByTrackCoverage,
@@ -27,6 +28,7 @@ export function CreditPickers() {
 function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 	const { tracks: loadedTracks, loading, progress, error } = session;
 	const releaseArtists = session.data.artists ?? [];
+	const releaseCredits = session.data.releaseCredits ?? [];
 	const showSuggestions =
 		(session.data.tracks ?? []).some(
 			(track) =>
@@ -34,7 +36,8 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 				(Boolean(track.creditsUrl) ||
 					(track.credits?.length ?? 0) > 0 ||
 					getFeaturedArtists(track.title ?? "", track.artists).length > 0),
-		) || Boolean(session.data.unverifiedCredits?.length);
+		) ||
+		Boolean(releaseCredits.length || session.data.unverifiedCredits?.length);
 	const readReissue = () => {
 		const parent = document.querySelector<HTMLInputElement | HTMLSelectElement>(
 			"#parent_id",
@@ -56,10 +59,14 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 			);
 	const suggestions = [
 		...sortCreditsByTrackCoverage(
-			getSuggestedCredits(loadedTracks).filter(
+			getSuggestedCredits(loadedTracks, releaseCredits).filter(
 				(credit) => !isReissue || isSpecialCreditRole(credit.role),
 			),
 			loadedTracks,
+			(track) =>
+				[...getTrackCredits(track), ...releaseCredits]
+					.filter((credit) => credit.role.trim())
+					.map((credit) => credit.name),
 		),
 		...getUnverifiedCreditSuggestions(session.data.unverifiedCredits ?? []),
 	];
@@ -97,10 +104,10 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 								</div>
 							)}
 							{loading && (
-								<div role="status">
+								<output>
 									Loading song credits ({progress.completed}/{progress.total}
 									)...
-								</div>
+								</output>
 							)}
 							{error && (
 								<div

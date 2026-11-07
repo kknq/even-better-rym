@@ -79,6 +79,38 @@ function rows() {
 	];
 }
 
+test("shows album-wide credits with blank Tracks and accepts them without scope corrections", async () => {
+	await setup({
+		releaseCredits: [
+			{ name: "Chris Barnes", role: "vocals" },
+			{ name: "Scott Burns", role: "engineer" },
+		],
+		tracks: [{ position: "1" }, { position: "2" }],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(2));
+	for (const row of rows()) {
+		expect(row.cells[2]?.querySelector("input")?.value).toBe("");
+		await act(() =>
+			row
+				.querySelector<HTMLInputElement>('input[value="Credit in plain text"]')
+				?.click(),
+		);
+	}
+	await vi.waitFor(() => expect(addCreditLine).toHaveBeenCalledTimes(2));
+	expect(addCreditLine).toHaveBeenCalledWith({
+		id: undefined,
+		name: "Chris Barnes",
+		role: "vocals",
+		tracks: "",
+	});
+	expect(addCreditLine).toHaveBeenCalledWith({
+		id: undefined,
+		name: "Scott Burns",
+		role: "engineer",
+		tracks: "",
+	});
+});
+
 test("uses the selected RYM name for previews when selecting and reusing a credit artist", async () => {
 	const name = "Илья Черепко \\-Самохвалов";
 	await setup({
@@ -312,6 +344,9 @@ test("deduplicates WLR's loaded featured credits against guests using one shared
 		};
 	});
 	await setup({ artists: ["Playboi Carti"], tracks });
+	expect(
+		document.querySelector("#ebr-suggested-credit-picker output")?.textContent,
+	).toContain("Loading song credits");
 	await mountTrackPicker("2|Go2DaMoon|\n6|M3tamorphosis|\n10|Teen X|");
 	expect(
 		document.querySelector("#ebr-artist-link-picker")?.textContent,
@@ -336,6 +371,9 @@ test("deduplicates WLR's loaded featured credits against guests using one shared
 	await vi.waitFor(() =>
 		expect(document.querySelector("#ebr-guest-credit-picker")).toBeNull(),
 	);
+	expect(
+		document.querySelector("#ebr-suggested-credit-picker output"),
+	).toBeNull();
 	expect(
 		rows().map((row) => [
 			row.cells[0]?.querySelector("input")?.value,

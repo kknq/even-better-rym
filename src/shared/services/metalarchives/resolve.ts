@@ -3,12 +3,12 @@ import { fetch } from "~/shared/utils/fetch";
 import { getReleaseType } from "~/shared/utils/music";
 import { isDefined } from "~/shared/utils/types";
 import type {
-	DiscSize,
 	ReleaseType,
 	ResolveData,
 	ResolveFunction,
 	Track,
 } from "../types";
+import { getMetalArchivesCredits } from "./credits";
 import { getReleaseFormat, getVinylFormatMatch } from "./format";
 
 const parseMonthName = (month: string): number | undefined => {
@@ -142,7 +142,7 @@ const parseFormat = (document_: Document, data: ResolveData) => {
 			case "5":
 			case "4":
 			case "3":
-				data.discSize = discSize as DiscSize;
+				data.discSize = discSize;
 				break;
 			default:
 				if (discSize !== undefined) data.discSize = "non-standard";
@@ -321,6 +321,10 @@ export const resolve: ResolveFunction = async (url) => {
 
 	const title = getTitle(document_);
 	const artists = getArtists(document_);
+	if (!title || !artists.length)
+		throw new Error(
+			"Metal Archives album data is unavailable or access was blocked",
+		);
 	const date = getDate(document_);
 	const coverArt = getCoverArt(document_);
 	const label = getLabel(document_);
@@ -349,6 +353,14 @@ export const resolve: ResolveFunction = async (url) => {
 		delete data.label;
 		delete data.tracks;
 	}
+
+	const { trackCredits, releaseCredits, unverifiedCredits } =
+		getMetalArchivesCredits(document_, data.tracks ?? []);
+	data.tracks?.forEach((track, index) => {
+		if (trackCredits[index]?.length) track.credits = trackCredits[index];
+	});
+	if (releaseCredits.length) data.releaseCredits = releaseCredits;
+	if (unverifiedCredits.length) data.unverifiedCredits = unverifiedCredits;
 
 	return data;
 };
