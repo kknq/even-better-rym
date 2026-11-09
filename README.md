@@ -10,9 +10,11 @@ Turn each feature on or off from the extension popup. Settings are grouped by pu
 
 ---
 
-### Attempt to Add Streaming Links on Release Pages
+### Suggested Streaming Links on Release Pages
 
 Shows links to supported streaming services below the cover art. Existing RYM links are used first; otherwise, the extension looks for a matching release.
+
+Optionally use service branding colors instead of gray icons, with customizable colors for each service in the extension settings.
 
 ---
 

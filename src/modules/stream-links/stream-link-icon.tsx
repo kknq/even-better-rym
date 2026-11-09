@@ -10,9 +10,11 @@ import type { StreamLinkState } from "./stream-link";
 export function StreamLinkIcon({
 	service,
 	state,
+	color,
 }: Readonly<{
 	service: Service & Searchable;
 	state: StreamLinkState;
+	color?: string;
 }>) {
 	useEffect(() => {
 		const style = document.createElement("style");
@@ -21,14 +23,19 @@ export function StreamLinkIcon({
 		return () => style.remove();
 	}, []);
 
+	const coloredIconStyle = { ...iconStyle, color: color ?? iconStyle.color };
 	const renderIcon = () => {
 		if (isComplete(state) && state.data._tag === "exists") {
-			return service.icon({ style: { ...iconStyle, ...fullStyle } });
+			return service.icon({ style: { ...coloredIconStyle, ...fullStyle } });
 		}
 		if (isComplete(state) && state.data._tag === "found") {
-			return service.foundIcon({ style: { ...iconStyle, ...fullStyle } });
+			return service.foundIcon({
+				style: { ...coloredIconStyle, ...fullStyle },
+			});
 		}
-		return service.notFoundIcon({ style: { ...iconStyle, ...emptyStyle } });
+		return service.notFoundIcon({
+			style: { ...coloredIconStyle, ...emptyStyle },
+		});
 	};
 
 	return (

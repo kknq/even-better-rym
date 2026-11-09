@@ -39,7 +39,7 @@ export const pages = {
 export type PageKey = keyof typeof pages;
 
 export const pageLabels: Record<PageKey, string> = {
-	streamLinks: "Attempt to Add Streaming Links",
+	streamLinks: "Suggested Streaming Links",
 	descriptorLinks: "Descriptor Links",
 	trackTime: "Release Length to Hours Conversion",
 	releaseComments: "Load All Release Comments",

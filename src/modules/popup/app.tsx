@@ -9,6 +9,7 @@ import { CollectionView } from "./collection-view";
 import { DiscographyProgressView } from "./discography-progress-view";
 import { ReferenceLinksView } from "./reference-links-view";
 import { ShortcutView } from "./shortcut-view";
+import { StreamLinksView } from "./stream-links-view";
 import { styles } from "./styles";
 import { RatingVisibilityView, ReviewVisibilityView } from "./visibility-view";
 import { VoteVisibilityView } from "./vote-visibility-view";
@@ -21,6 +22,7 @@ type View =
 	| "hideReviews"
 	| "hideVotes"
 	| "referenceLinks"
+	| "streamLinks"
 	| "discographyProgress"
 	| "userCollection"
 	| "filmCollection";
@@ -32,6 +34,7 @@ const viewTitles: Record<View, string> = {
 	hideReviews: "Hide Reviews",
 	hideVotes: "Hide Votes",
 	referenceLinks: "External Reference Links",
+	streamLinks: "Suggested Streaming Links",
 	discographyProgress: "Discography Progress",
 	userCollection: "Music Collection",
 	filmCollection: "Film Collection",
@@ -44,6 +47,7 @@ const viewSubtitles: Record<View, string> = {
 	hideReviews: "Configure visibility",
 	hideVotes: "Configure visibility",
 	referenceLinks: "Customize button colors",
+	streamLinks: "Customize streaming icon colors",
 	discographyProgress: "Choose overall coverage release types",
 	userCollection: "Customize filters and columns",
 	filmCollection: "Customize filters and columns",
@@ -212,6 +216,8 @@ function SettingsContent({
 			return <ShortcutView onSettingsChange={onSettingsChange} />;
 		case "referenceLinks":
 			return <ReferenceLinksView onSettingsChange={onSettingsChange} />;
+		case "streamLinks":
+			return <StreamLinksView onSettingsChange={onSettingsChange} />;
 		case "hideRatings":
 			return <RatingVisibilityView onSettingsChange={onSettingsChange} />;
 		case "hideReviews":
@@ -294,6 +300,7 @@ function FeatureList({
 										key === "hideVotes" ||
 										key === "whoSampled" ||
 										key === "wikipedia" ||
+										key === "streamLinks" ||
 										key === "discographyProgress" ||
 										key === "userCollection" ||
 										key === "filmCollection") && (

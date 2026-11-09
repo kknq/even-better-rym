@@ -48,6 +48,13 @@ vi.mock("./reference-links-view", () => ({
 		</button>
 	),
 }));
+vi.mock("./stream-links-view", () => ({
+	StreamLinksView: ({ onSettingsChange }: { onSettingsChange: () => void }) => (
+		<button type="button" onClick={onSettingsChange}>
+			Streaming link settings
+		</button>
+	),
+}));
 vi.mock("./discography-progress-view", () => ({
 	DiscographyProgressView: () => <div>Discography coverage settings</div>,
 }));
@@ -229,6 +236,12 @@ describe("App", () => {
 
 	test.each([
 		["Charts", "chartShortcuts", "Chart Shortcuts", "Shortcut settings"],
+		[
+			"Release and submission tools",
+			"streamLinks",
+			"Suggested Streaming Links",
+			"Streaming link settings",
+		],
 		[
 			"External reference links",
 			"whoSampled",

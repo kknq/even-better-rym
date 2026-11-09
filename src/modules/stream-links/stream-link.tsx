@@ -24,9 +24,11 @@ type StreamLinkCompleteState =
 export function StreamLink({
 	service,
 	pageData,
+	color,
 }: Readonly<{
 	service: Service & Searchable;
 	pageData: PageDataState;
+	color?: string;
 }>) {
 	const [state, setState] = useState<StreamLinkState>(initial);
 
@@ -59,8 +61,8 @@ export function StreamLink({
 	}, [pageData, service]);
 
 	const renderIcon = useCallback(
-		() => <StreamLinkIcon service={service} state={state} />,
-		[service, state],
+		() => <StreamLinkIcon service={service} state={state} color={color} />,
+		[service, state, color],
 	);
 
 	// if we have a link available, wrap in an anchor element
