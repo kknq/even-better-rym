@@ -6,7 +6,9 @@ import {
 	loadSection,
 } from "~/shared/artist-discography";
 import {
+	getHideZeroCoverage,
 	getSelectedTypes,
+	watchHideZeroCoverage,
 	watchSelectedTypes,
 } from "~/shared/discography-progress/settings";
 import { releaseTypes } from "~/shared/release-types";
@@ -17,7 +19,9 @@ vi.mock("~/shared/artist-discography", async (importOriginal) => ({
 	loadSection: vi.fn(),
 }));
 vi.mock("~/shared/discography-progress/settings", () => ({
+	getHideZeroCoverage: vi.fn(),
 	getSelectedTypes: vi.fn(),
+	watchHideZeroCoverage: vi.fn(),
 	watchSelectedTypes: vi.fn(),
 }));
 vi.mock("~/shared/utils/messaging", () => ({
@@ -46,6 +50,7 @@ beforeEach(() => {
 		${section("s", row(1, "4.0") + row(2), 2)}
 		${section("e", row(3, "Listened"), 1)}</div>`;
 	vi.mocked(getSelectedTypes).mockResolvedValue(new Set(["s", "e"]));
+	vi.mocked(getHideZeroCoverage).mockResolvedValue(false);
 });
 
 afterEach(() => {
@@ -53,7 +58,7 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
-test("places category bars beside headings and a deduplicated overall bar above", async () => {
+test("places category bars beside headings and an overall bar above", async () => {
 	await main();
 	expect(document.querySelectorAll(".ebr-discography-category")).toHaveLength(
 		2,
@@ -103,6 +108,149 @@ test("shows an explicit empty-selection state", async () => {
 	expect(
 		document.querySelector(".ebr-discography-overall")?.textContent,
 	).toContain("extension popup");
+});
+
+test("shows zero overall coverage by default", async () => {
+	document.body.innerHTML = `<div id="discography">${section("s", row(1), 1)}</div>`;
+	await main();
+	expect(overall()?.getAttribute("value")).toBe("0");
+	expect(
+		document.querySelector<HTMLElement>(".ebr-discography-overall")?.hidden,
+	).toBe(false);
+});
+
+test("hides only the zero overall summary and applies visibility changes live", async () => {
+	document.body.innerHTML = `<div id="discography">${section("s", row(1), 1)}</div>`;
+	vi.mocked(getHideZeroCoverage).mockResolvedValue(true);
+	await main();
+	const summary = document.querySelector<HTMLElement>(
+		".ebr-discography-overall",
+	);
+	expect(summary?.hidden).toBe(true);
+	expect(
+		document.querySelector(".ebr-discography-category progress"),
+	).not.toBeNull();
+	const changed = vi.mocked(watchHideZeroCoverage).mock.calls[0][0];
+	changed(false);
+	expect(summary?.hidden).toBe(false);
+	changed(true);
+	expect(summary?.hidden).toBe(true);
+	const catalog = document.querySelector(".disco_cat_inner");
+	if (!catalog) throw new Error("Missing test catalog");
+	catalog.textContent = "4.0";
+	await vi.waitFor(() => {
+		expect(summary?.hidden).toBe(false);
+		expect(overall()?.getAttribute("value")).toBe("1");
+	});
+	catalog.textContent = "Rate";
+	await vi.waitFor(() => {
+		expect(summary?.hidden).toBe(true);
+	});
+});
+
+test("recalculates zero coverage visibility when selected release types change", async () => {
+	document.body.innerHTML = `<div id="discography">
+		${section("s", row(1), 1)}
+		${section("e", row(2, "Listened"), 1)}</div>`;
+	vi.mocked(getHideZeroCoverage).mockResolvedValue(true);
+	await main();
+	const summary = document.querySelector<HTMLElement>(
+		".ebr-discography-overall",
+	);
+	expect(summary?.hidden).toBe(false);
+	const changed = vi.mocked(watchSelectedTypes).mock.calls[0][0];
+	changed(new Set(["s"]));
+	expect(summary?.hidden).toBe(true);
+	changed(new Set());
+	expect(summary?.hidden).toBe(false);
+	expect(summary?.textContent).toContain("Select release types");
+});
+
+test("keeps loading and errors visible rather than treating unknown coverage as zero", async () => {
+	const log = vi.spyOn(console, "error").mockReturnValue(undefined);
+	const pending = Promise.withResolvers<Document>();
+	document.body.innerHTML = `<div id="discography">${section("s", row(1), 2)}</div>`;
+	vi.mocked(getHideZeroCoverage).mockResolvedValue(true);
+	vi.mocked(loadSection).mockReturnValue(pending.promise);
+	await main();
+	const summary = document.querySelector<HTMLElement>(
+		".ebr-discography-overall",
+	);
+	expect(summary?.hidden).toBe(false);
+	expect(summary?.textContent).toContain("Loading full discography");
+	pending.reject(new Error("Offline"));
+	await vi.waitFor(() => {
+		expect(summary?.textContent).toContain("Full coverage unavailable");
+	});
+	expect(summary?.hidden).toBe(false);
+	expect(log).toHaveBeenCalled();
+});
+
+test("hides zero coverage only after all selected releases finish loading", async () => {
+	const pending = Promise.withResolvers<Document>();
+	document.body.innerHTML = `<div id="discography">${section("s", row(1), 2)}</div>`;
+	vi.mocked(getHideZeroCoverage).mockResolvedValue(true);
+	vi.mocked(loadSection).mockReturnValue(pending.promise);
+	await main();
+	const summary = document.querySelector<HTMLElement>(
+		".ebr-discography-overall",
+	);
+	expect(summary?.hidden).toBe(false);
+	pending.resolve(
+		new DOMParser().parseFromString(row(1) + row(2), "text/html"),
+	);
+	await vi.waitFor(() => {
+		expect(summary?.hidden).toBe(true);
+	});
+	expect(overall()?.getAttribute("max")).toBe("2");
+	expect(
+		document.querySelector(".ebr-discography-category progress"),
+	).not.toBeNull();
+});
+
+test("reveals rate-limit notices even when only an excluded category hits the limit", async () => {
+	vi.useFakeTimers();
+	const log = vi.spyOn(console, "error").mockReturnValue(undefined);
+	document.body.innerHTML = `<div id="discography">
+		${section("s", row(1), 1)}
+		${section("j", row(2), 2)}</div>`;
+	vi.mocked(getSelectedTypes).mockResolvedValue(new Set(["s"]));
+	vi.mocked(getHideZeroCoverage).mockResolvedValue(true);
+	vi.mocked(loadSection).mockRejectedValue(
+		new DiscographyRateLimitError(Date.now() + 60_000),
+	);
+	await main();
+	const summary = document.querySelector<HTMLElement>(
+		".ebr-discography-overall",
+	);
+	expect(summary?.hidden).toBe(true);
+	document
+		.querySelector<HTMLButtonElement>(".ebr-discography-category button")
+		?.click();
+	await vi.advanceTimersByTimeAsync(0);
+	expect(summary?.hidden).toBe(false);
+	expect(summary?.textContent).toContain("rate-limited");
+	expect(log).toHaveBeenCalledOnce();
+});
+
+test("shows nonzero listening progress even if its percentage rounds down to zero", async () => {
+	document.body.innerHTML = `<div id="discography">${section(
+		"s",
+		Array.from({ length: 101 }, (_, index) =>
+			row(index + 1, index === 0 ? "4.0" : "Rate"),
+		).join(""),
+		101,
+	)}</div>`;
+	vi.mocked(getHideZeroCoverage).mockResolvedValue(true);
+	await main();
+	expect(
+		document.querySelector<HTMLElement>(".ebr-discography-overall")?.hidden,
+	).toBe(false);
+	expect(
+		document.querySelector(
+			".ebr-discography-overall .ebr-discography-percentage",
+		)?.textContent,
+	).toBe("0%");
 });
 
 test("uses watched for videos and music videos while keeping listened for audio and overall coverage", async () => {
@@ -264,13 +412,13 @@ test("updates personal edits and reattaches bars after RYM replaces its lists", 
 	expect(overall()?.getAttribute("max")).toBe("3");
 });
 
-test("does not double-count releases in multiple categories", async () => {
+test("shows completion stars when all releases in selected categories are listened to", async () => {
 	document.body.innerHTML = `<div id="discography">
 		${section("s", row(1, "4.0"), 1)}
-		${section("e", row(1, "4.0"), 1)}</div>`;
+		${section("e", row(2, "4.0"), 1)}</div>`;
 	await main();
-	expect(overall()?.getAttribute("max")).toBe("1");
-	expect(overall()?.getAttribute("value")).toBe("1");
+	expect(overall()?.getAttribute("max")).toBe("2");
+	expect(overall()?.getAttribute("value")).toBe("2");
 	expect(
 		document.querySelector(
 			".ebr-discography-overall .ebr-discography-percentage",

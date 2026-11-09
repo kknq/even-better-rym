@@ -6,7 +6,9 @@ import {
 	readTotal,
 } from "~/shared/artist-discography";
 import {
+	getHideZeroCoverage,
 	getSelectedTypes,
+	watchHideZeroCoverage,
 	watchSelectedTypes,
 } from "~/shared/discography-progress/settings";
 import { type ReleaseType, releaseTypes } from "~/shared/release-types";
@@ -67,6 +69,7 @@ export async function main(): Promise<void> {
 	if (!element || document.querySelector(".ebr-discography-overall")) return;
 	const root = element;
 	let selected = await getSelectedTypes();
+	let hideZeroCoverage = await getHideZeroCoverage();
 	const sections = new Map<ReleaseType, Section>();
 	const overall = document.createElement("section");
 	overall.className = "ebr-discography-overall";
@@ -174,6 +177,25 @@ export async function main(): Promise<void> {
 		return "Loading full discography coverage...";
 	}
 
+	function renderOverall(combined: Releases, incomplete: boolean) {
+		overall.hidden =
+			hideZeroCoverage &&
+			!incomplete &&
+			!rateLimit &&
+			selected.size > 0 &&
+			![...combined.values()].some(Boolean);
+		notice.textContent = rateLimit?.message ?? "";
+		summary.replaceChildren();
+		const text = summaryText(incomplete);
+		if (text) {
+			summary.textContent = text;
+		} else {
+			summary.append(
+				createBar("Overall discography coverage", combined, combined.size),
+			);
+		}
+	}
+
 	function render() {
 		observer.disconnect();
 		root.querySelectorAll(".ebr-discography-category").forEach((el) => {
@@ -186,20 +208,10 @@ export async function main(): Promise<void> {
 			if (!selected.has(type)) continue;
 			incomplete ||= !section.complete;
 			for (const [id, listened] of section.releases) {
-				combined.set(id, (combined.get(id) ?? false) || listened);
+				combined.set(id, listened);
 			}
 		}
-		notice.textContent = rateLimit?.message ?? "";
-		summary.replaceChildren();
-		const text = summaryText(incomplete);
-		if (text) {
-			summary.textContent = text;
-		} else {
-			// A release can appear in more than one category.
-			summary.append(
-				createBar("Overall discography coverage", combined, combined.size),
-			);
-		}
+		renderOverall(combined, incomplete);
 		observe();
 	}
 
@@ -290,5 +302,9 @@ export async function main(): Promise<void> {
 		selected = next;
 		render();
 		void loadMissing();
+	});
+	watchHideZeroCoverage((next) => {
+		hideZeroCoverage = next;
+		render();
 	});
 }

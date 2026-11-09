@@ -143,7 +143,7 @@ Adds a timeline showing group members' activity and releases. Artist pages with 
 
 ### Discography Progress
 
-Tracks rated and listened releases by category and overall. Choose which categories count in the extension popup; albums, EPs and mixtapes are included by default. Release data is cached for an hour.
+Tracks rated and listened releases by category and overall. Choose which categories count in the extension popup; albums, EPs and mixtapes are included by default. Optionally hide overall coverage when it is zero. Release data is cached for an hour.
 
 ---
 
