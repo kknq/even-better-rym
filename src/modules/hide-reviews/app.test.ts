@@ -66,6 +66,33 @@ afterEach(() => {
 });
 
 describe("Hide Reviews feature", () => {
+	it.each([
+		"buy",
+		"buy/",
+		"coverart",
+		"coverart/",
+	])("skips controls and releases bootstrap visibility on release %s pages", async (subpage) => {
+		setPathname(
+			`/release/album/%E5%8A%A3/%E5%9E%83%E5%9C%BE%E5%9C%BA/${subpage}`,
+		);
+		document.body.innerHTML = '<div id="content"></div>';
+		mocks.getReviewSettings.mockResolvedValue(
+			getSettings({ buttons: true, globalButton: true }),
+		);
+
+		await main();
+		vi.resetModules();
+		await import("./main");
+
+		expect(document.body.innerHTML).toBe('<div id="content"></div>');
+		expect(document.body.classList).not.toContain("ebr-hide-reviews");
+		expect(document.getElementById("ebr-hide-reviews-styles")).toBeNull();
+		expect(document.documentElement.classList).toContain("ebr-reviews-ready");
+		expect(document.documentElement.classList).not.toContain(
+			"ebr-reviews-pending",
+		);
+	});
+
 	it("hides reviews on release pages by default", async () => {
 		setPathname("/release/album/example");
 		document.body.innerHTML = '<div class="review_body">Review text</div>';

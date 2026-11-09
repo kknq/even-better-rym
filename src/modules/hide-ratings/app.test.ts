@@ -64,6 +64,33 @@ afterEach(() => {
 });
 
 describe("Hide Ratings feature", () => {
+	it.each([
+		"buy",
+		"buy/",
+		"coverart",
+		"coverart/",
+	])("skips controls and releases bootstrap visibility on release %s pages", async (subpage) => {
+		setPathname(
+			`/release/album/%E5%8A%A3/%E5%9E%83%E5%9C%BE%E5%9C%BA/${subpage}`,
+		);
+		document.body.innerHTML = '<div id="content"></div>';
+		mocks.getRatingSettings.mockResolvedValue(
+			getSettings({ buttons: true, globalButton: true }),
+		);
+
+		await main();
+		vi.resetModules();
+		await import("./main");
+
+		expect(document.body.innerHTML).toBe('<div id="content"></div>');
+		expect(document.body.classList).not.toContain("ebr-hide-ratings");
+		expect(document.getElementById("ebr-hide-ratings-styles")).toBeNull();
+		expect(document.documentElement.classList).toContain("ebr-ratings-ready");
+		expect(document.documentElement.classList).not.toContain(
+			"ebr-ratings-pending",
+		);
+	});
+
 	it("hides ratings on an unrated release by default", async () => {
 		setPathname("/release/album/example");
 		document.body.innerHTML = '<div class="avg_rating">4.2</div>';
