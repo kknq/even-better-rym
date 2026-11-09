@@ -4,7 +4,7 @@ import { afterEach, expect, test, vi } from "vitest";
 
 import { runScript } from "~/shared/utils/dom";
 import {
-	createCreditedNameSync,
+	createCreditedNameSuggestion,
 	removeRepeatedFiledUnderEntries,
 	syncFiledUnderEntries,
 	watchFiledUnderChanges,
@@ -32,7 +32,8 @@ function creditedNameFields() {
 		<div class="submit_field_content">
 			<div class="submit_field_description">1.4 Artist name</div>
 			<table><tbody>
-				<tr><td><input type="radio" id="credited_name_default" name="credited_name" checked></td></tr>
+				<tr><td><input type="radio" id="credited_name_default" name="credited_name" checked>
+					<span id="credited_artist_default">Kai Angel</span></td></tr>
 				<tr><td>
 					<input type="radio" id="credited_name_specified" name="credited_name">
 					<input id="credited_firstname" disabled>
@@ -54,69 +55,64 @@ function creditedNameFields() {
 	};
 }
 
-test("shows a light red automatic-alias warning in section 1.4 above the radio buttons", () => {
-	creditedNameFields();
-	const sync = createCreditedNameSync();
+const suggestion = () =>
+	document.querySelector<HTMLElement>(".ebr-credited-name-suggestion");
+
+const acceptSuggestion = () =>
+	suggestion()?.querySelector<HTMLInputElement>("input[type=button]")?.click();
+
+test("suggests crediting under the imported name above the 1.4 radio buttons without changing them", () => {
+	const fields = creditedNameFields();
+	const sync = createCreditedNameSuggestion();
 	sync("zavet");
-	const warning = document.querySelector<HTMLElement>(
-		".ebr-automatic-alias-warning",
+	const box = suggestion();
+	expect(box?.textContent).toContain('"zavet"');
+	expect(box?.textContent).toContain('default "Kai Angel"');
+	expect(box?.querySelector("input")?.title).toContain("Last Name");
+	expect(box?.firstElementChild?.getAttribute("style")).toContain("flex");
+	expect(box?.style.color).toBe("");
+	expect(box?.querySelector("span")?.style.color).toBe("rgb(138, 28, 28)");
+	expect((box?.firstElementChild as HTMLElement | null)?.style.background).toBe(
+		"rgb(255, 240, 240)",
 	);
-	expect(warning?.getAttribute("role")).toBe("alert");
-	expect(warning?.textContent).toContain('"zavet"');
-	expect(warning?.textContent).toContain("before submitting");
-	expect(warning?.style.background).toBe("rgb(255, 240, 240)");
-	expect(warning?.parentElement?.className).toBe("submit_field_content");
-	expect(warning?.previousElementSibling?.className).toBe(
-		"submit_field_description",
-	);
-	expect(warning?.nextElementSibling?.tagName).toBe("TABLE");
+	expect(box?.parentElement?.className).toBe("submit_field_content");
+	expect(box?.nextElementSibling?.tagName).toBe("TABLE");
+	expect(fields.defaultRadio.checked).toBe(true);
+	expect(fields.last.value).toBe("");
+	expect(fields.last.disabled).toBe(true);
 	sync("Another Alias");
 	expect(
-		document.querySelectorAll(".ebr-automatic-alias-warning"),
+		document.querySelectorAll(".ebr-credited-name-suggestion"),
 	).toHaveLength(1);
-	expect(
-		document.querySelector(".ebr-automatic-alias-warning")?.textContent,
-	).toContain('"Another Alias"');
+	expect(suggestion()?.textContent).toContain('"Another Alias"');
 	sync(undefined);
-	expect(document.querySelector(".ebr-automatic-alias-warning")).toBeNull();
+	expect(suggestion()).toBeNull();
 });
 
-test.each([
-	"first",
-	"last",
-	"defaultRadio",
-	"specifiedRadio",
-] as const)("removes the alias warning when the user changes %s", (field) => {
-	const fields = creditedNameFields();
-	createCreditedNameSync()("zavet");
-	expect(document.querySelector(".ebr-automatic-alias-warning")).not.toBeNull();
-	fields[field].dispatchEvent(new Event("input", { bubbles: true }));
-	expect(document.querySelector(".ebr-automatic-alias-warning")).toBeNull();
-});
-
-test("renders alias text without interpreting HTML", () => {
+test("renders the suggested name without interpreting HTML", () => {
 	creditedNameFields();
 	const alias = '<img src=x onerror="alert(1)">';
-	createCreditedNameSync()(alias);
-	const warning = document.querySelector(".ebr-automatic-alias-warning");
-	expect(warning?.textContent).toContain(alias);
-	expect(warning?.querySelector("img")).toBeNull();
+	createCreditedNameSuggestion()(alias);
+	expect(suggestion()?.textContent).toContain(alias);
+	expect(suggestion()?.querySelector("img")).toBeNull();
 });
 
-test("selects the custom artist name and puts the whole alias in Last name", () => {
+test("accepting the suggestion selects Use: and puts the whole name in Last Name", () => {
 	const fields = creditedNameFields();
 	fields.first.value = "Old first";
 	fields.last.value = "Old last";
 	const changed = vi.fn();
 	document.body.addEventListener("change", changed);
 	try {
-		createCreditedNameSync()("zavet");
+		createCreditedNameSuggestion()("zavet");
+		acceptSuggestion();
 		expect(fields.defaultRadio.checked).toBe(false);
 		expect(fields.specifiedRadio.checked).toBe(true);
 		expect(fields.first.value).toBe("");
 		expect(fields.last.value).toBe("zavet");
 		expect(fields.first.disabled).toBe(false);
 		expect(fields.last.disabled).toBe(false);
+		expect(suggestion()).toBeNull();
 		expect(
 			changed.mock.calls.map(([event]) => (event as Event).target),
 		).toContain(fields.last);
@@ -125,66 +121,44 @@ test("selects the custom artist name and puts the whole alias in Last name", () 
 	}
 });
 
-test("restores the original default fields when an automatic alias is removed", () => {
+test("restores the original fields when an accepted name is no longer imported", () => {
 	const fields = creditedNameFields();
 	fields.first.value = "Saved first";
 	fields.last.value = "Saved last";
-	const sync = createCreditedNameSync();
+	const sync = createCreditedNameSuggestion();
 	sync("zavet");
+	acceptSuggestion();
+	sync("zavet");
+	expect(suggestion()).toBeNull();
 	sync(undefined);
 	expect(fields.defaultRadio.checked).toBe(true);
-	expect(fields.specifiedRadio.checked).toBe(false);
 	expect(fields.first.value).toBe("Saved first");
 	expect(fields.last.value).toBe("Saved last");
-	expect(fields.first.disabled).toBe(true);
 	expect(fields.last.disabled).toBe(true);
 	sync("Another Alias");
-	expect(fields.last.value).toBe("Another Alias");
+	expect(fields.last.value).toBe("Saved last");
+	expect(suggestion()?.textContent).toContain('"Another Alias"');
 });
 
-test("preserves an existing manually specified artist name", () => {
+test("keeps an accepted name the user edited afterwards", () => {
 	const fields = creditedNameFields();
+	const sync = createCreditedNameSuggestion();
+	sync("zavet");
+	acceptSuggestion();
+	fields.last.value = "Manual edit";
+	sync(undefined);
+	expect(fields.specifiedRadio.checked).toBe(true);
+	expect(fields.last.value).toBe("Manual edit");
+});
+
+test("does not suggest anything without a differing name or when it is already used", () => {
+	const fields = creditedNameFields();
+	createCreditedNameSuggestion()(undefined);
+	expect(suggestion()).toBeNull();
 	fields.specifiedRadio.click();
-	fields.first.value = "Manual first";
-	fields.last.value = "Manual last";
-	createCreditedNameSync()("zavet");
-	expect(fields.specifiedRadio.checked).toBe(true);
-	expect(fields.first.value).toBe("Manual first");
-	expect(fields.last.value).toBe("Manual last");
-	expect(document.querySelector(".ebr-automatic-alias-warning")).toBeNull();
-});
-
-test.each([
-	"first",
-	"last",
-] as const)("stops controlling the artist name after the user edits %s", (field) => {
-	const fields = creditedNameFields();
-	const sync = createCreditedNameSync();
-	sync("zavet");
-	fields[field].value = "Manual edit";
-	sync(undefined);
-	sync("Another Alias");
-	expect(fields.specifiedRadio.checked).toBe(true);
-	expect(fields[field].value).toBe("Manual edit");
-});
-
-test("preserves the user's explicit switch back to Use default", () => {
-	const fields = creditedNameFields();
-	const sync = createCreditedNameSync();
-	sync("zavet");
-	fields.defaultRadio.click();
-	sync("Another Alias");
-	sync(undefined);
-	expect(fields.defaultRadio.checked).toBe(true);
-	expect(fields.specifiedRadio.checked).toBe(false);
-});
-
-test("does not touch default artist-name fields when there is no alias", () => {
-	const fields = creditedNameFields();
-	createCreditedNameSync()(undefined);
-	expect(fields.defaultRadio.checked).toBe(true);
-	expect(fields.last.value).toBe("");
-	expect(fields.last.disabled).toBe(true);
+	fields.last.value = "zavet";
+	createCreditedNameSuggestion()("zavet");
+	expect(suggestion()).toBeNull();
 });
 
 test("preserves unmanaged artists while removing and reordering managed ones", async () => {

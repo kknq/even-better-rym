@@ -1,7 +1,7 @@
 import { equals } from "~/shared/utils/array";
 import { forceQuerySelector, runScript } from "~/shared/utils/dom";
 import { createSerialQueue } from "~/shared/utils/serial-queue";
-
+import { showInlineNotice } from "./inline-notice";
 import type {
 	FiledUnderChanges,
 	FiledUnderEntry,
@@ -164,103 +164,127 @@ type CreditedName = {
 	last: string;
 };
 
-const showAliasWarning = (
-	field: HTMLInputElement,
-	alias: string,
-	fields: HTMLInputElement[],
-): (() => void) => {
-	const warning = document.createElement("div");
-	warning.className = "ebr-automatic-alias-warning";
-	warning.setAttribute("role", "alert");
-	Object.assign(warning.style, {
-		margin: "8px 0",
-		padding: "8px 10px",
-		background: "#fff0f0",
-		color: "#8a1c1c",
-		border: "1px solid #e5a0a0",
-		borderRadius: "3px",
-		overflowWrap: "anywhere",
-	});
-	warning.textContent = `EvenBetterRYM automatically set the credited artist name to "${alias}". Please check that this alias is correct before submitting.`;
-	const controls = field.closest("table");
-	if (controls) controls.before(warning);
-	else field.insertAdjacentElement("afterend", warning);
-	const removeWarning = () => {
-		warning.remove();
-		for (const input of fields) {
-			input.removeEventListener("input", removeWarning);
-			input.removeEventListener("change", removeWarning);
-		}
-	};
-	for (const input of fields) {
-		input.addEventListener("input", removeWarning);
-		input.addEventListener("change", removeWarning);
-	}
-	return removeWarning;
+type CreditedNameFields = {
+	defaultRadio: HTMLInputElement;
+	specifiedRadio: HTMLInputElement;
+	first: HTMLInputElement;
+	last: HTMLInputElement;
 };
 
-export function createCreditedNameSync(): (alias: string | undefined) => void {
-	let original: CreditedName | undefined;
-	let written: CreditedName | undefined;
-	let manuallyEdited = false;
-	let removeWarning: (() => void) | undefined;
+const getCreditedNameFields = (): CreditedNameFields => {
+	const query = forceQuerySelector<HTMLInputElement>(document);
+	return {
+		defaultRadio: query("#credited_name_default"),
+		specifiedRadio: query("#credited_name_specified"),
+		first: query("#credited_firstname"),
+		last: query("#credited_lastname"),
+	};
+};
+
+const readCreditedName = (fields: CreditedNameFields): CreditedName => ({
+	useDefault: fields.defaultRadio.checked,
+	first: fields.first.value,
+	last: fields.last.value,
+});
+
+const isSameCreditedName = (a: CreditedName, b: CreditedName): boolean =>
+	a.useDefault === b.useDefault && a.first === b.first && a.last === b.last;
+
+const writeCreditedName = (
+	fields: CreditedNameFields,
+	next: CreditedName,
+): void => {
+	const radio = next.useDefault ? fields.defaultRadio : fields.specifiedRadio;
+	if (!radio.checked) radio.click();
+	fields.first.disabled = next.useDefault;
+	fields.last.disabled = next.useDefault;
+	for (const [field, value] of [
+		[fields.first, next.first],
+		[fields.last, next.last],
+	] as const) {
+		if (field.value === value) continue;
+		field.value = value;
+		field.dispatchEvent(new Event("input", { bubbles: true }));
+		field.dispatchEvent(new Event("change", { bubbles: true }));
+	}
+};
+
+// Shows a light red notice above section 1.4's radio buttons suggesting the
+// imported name be credited under "Use:" in Last Name.
+const showCreditedNameSuggestion = (
+	fields: CreditedNameFields,
+	alias: string,
+	onApply: () => void,
+): (() => void) => {
+	const apply = () => {
+		onApply();
+		return undefined;
+	};
+	const defaultName = document
+		.querySelector("#credited_artist_default")
+		?.textContent?.trim();
+	return showInlineNotice({
+		className: "ebr-credited-name-suggestion",
+		message: `Imported name "${alias}" differs from the default${defaultName ? ` "${defaultName}"` : ""}.`,
+		action: {
+			value: `Credit as "${alias}"`,
+			title: `Select "Use:" and put "${alias}" in the Last Name field`,
+			onClick: apply,
+		},
+		// Less above, offsetting the description's line spacing, and more
+		// below, offsetting the table's tight top margin.
+		margin: "3px 0 9px",
+		place: (notice) => {
+			const controls = fields.last.closest("table");
+			if (controls) controls.before(notice);
+			else fields.last.insertAdjacentElement("afterend", notice);
+		},
+	});
+};
+
+type AcceptedCreditedName = {
+	original: CreditedName;
+	written: CreditedName;
+};
+
+// Puts back the fields an accepted suggestion replaced, unless the user has
+// changed them since.
+const restoreUntouchedName = (
+	fields: CreditedNameFields,
+	accepted: AcceptedCreditedName,
+): void => {
+	if (isSameCreditedName(readCreditedName(fields), accepted.written))
+		writeCreditedName(fields, accepted.original);
+};
+
+// Returns a function that, given the imported name when it differs from the
+// default artist name, suggests crediting the release under it in section
+// 1.4. The name is only written once the suggestion is accepted, and an
+// untouched accepted name is restored when the imported name changes.
+export function createCreditedNameSuggestion(): (
+	alias: string | undefined,
+) => void {
+	let accepted: AcceptedCreditedName | undefined;
+	let removeSuggestion: (() => void) | undefined;
 	return (alias) => {
-		if (alias === undefined) removeWarning?.();
-		if (manuallyEdited || (alias === undefined && written === undefined))
-			return;
-		const query = forceQuerySelector<HTMLInputElement>(document);
-		const defaultRadio = query("#credited_name_default");
-		const specifiedRadio = query("#credited_name_specified");
-		const first = query("#credited_firstname");
-		const last = query("#credited_lastname");
-		const current = {
-			useDefault: defaultRadio.checked,
-			first: first.value,
-			last: last.value,
-		};
-		if (
-			written !== undefined &&
-			(current.useDefault !== written.useDefault ||
-				current.first !== written.first ||
-				current.last !== written.last)
-		) {
-			manuallyEdited = true;
-			removeWarning?.();
-			return;
+		removeSuggestion?.();
+		removeSuggestion = undefined;
+		if (accepted?.written.last === alias) return;
+		if (alias === undefined && accepted === undefined) return;
+		const fields = getCreditedNameFields();
+		if (accepted !== undefined) {
+			restoreUntouchedName(fields, accepted);
+			accepted = undefined;
 		}
-		if (written === undefined && !current.useDefault) return;
-		const next =
-			alias === undefined
-				? original
-				: { useDefault: false, first: "", last: alias };
-		if (next === undefined) return;
-		original ??= current;
-		const radio = next.useDefault ? defaultRadio : specifiedRadio;
-		if (!radio.checked) radio.click();
-		first.disabled = next.useDefault;
-		last.disabled = next.useDefault;
-		for (const [field, value] of [
-			[first, next.first],
-			[last, next.last],
-		] as const) {
-			if (field.value === value) continue;
-			field.value = value;
-			field.dispatchEvent(new Event("input", { bubbles: true }));
-			field.dispatchEvent(new Event("change", { bubbles: true }));
-		}
-		if (alias === undefined) {
-			original = undefined;
-			written = undefined;
-		} else {
-			written = next;
-			removeWarning?.();
-			removeWarning = showAliasWarning(last, alias, [
-				defaultRadio,
-				specifiedRadio,
-				first,
-				last,
-			]);
-		}
+		if (alias === undefined) return;
+		const target = { useDefault: false, first: "", last: alias };
+		if (isSameCreditedName(readCreditedName(fields), target)) return;
+		removeSuggestion = showCreditedNameSuggestion(fields, alias, () => {
+			removeSuggestion?.();
+			removeSuggestion = undefined;
+			accepted = { original: readCreditedName(fields), written: target };
+			writeCreditedName(fields, target);
+		});
 	};
 }
 
