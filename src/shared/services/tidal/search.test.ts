@@ -1,11 +1,34 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { fetch } from "~/shared/utils/fetch";
+import { withArtistAlias } from "../search-matching";
 import { requestToken } from "./auth";
 import { search } from "./search";
 
 vi.mock("~/shared/utils/fetch", () => ({ fetch: vi.fn() }));
 vi.mock("./auth", () => ({ requestToken: vi.fn() }));
+
+const result = (albums: { id: string; title: string; artist: string }[]) =>
+	JSON.stringify({
+		data: [
+			{
+				relationships: {
+					albums: { data: albums.map(({ id }) => ({ id, type: "albums" })) },
+				},
+			},
+		],
+		included: albums.flatMap(({ id, title, artist }) => [
+			{
+				id,
+				type: "albums",
+				attributes: { title },
+				relationships: {
+					artists: { data: [{ id: `artist-${id}`, type: "artists" }] },
+				},
+			},
+			{ id: `artist-${id}`, type: "artists", attributes: { name: artist } },
+		]),
+	});
 
 describe("Tidal search", () => {
 	beforeEach(() => {
@@ -19,15 +42,10 @@ describe("Tidal search", () => {
 
 	test("uses the query endpoint and reads albums from the result collection", async () => {
 		vi.mocked(fetch).mockResolvedValue(
-			JSON.stringify({
-				data: [
-					{
-						relationships: {
-							albums: { data: [{ id: "123" }, { id: "456" }] },
-						},
-					},
-				],
-			}),
+			result([
+				{ id: "456", title: "Master of Puppets", artist: "Metallica" },
+				{ id: "123", title: "A/B", artist: "Björk & friends" },
+			]),
 		);
 
 		await expect(
@@ -49,9 +67,92 @@ describe("Tidal search", () => {
 				"filter[query]": "Björk & friends A/B",
 				explicitFilter: "INCLUDE",
 				countryCode: "GB",
-				include: "albums",
+				include: "albums,albums.artists",
 			},
 		});
+	});
+
+	test("rejects the reported Metallica false positive for 7Б", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([{ id: "456", title: "Master of Puppets", artist: "Metallica" }]),
+		);
+		await expect(
+			search({ artist: "7Б", artistAlias: "7B", title: "Рок Жив!" }),
+		).resolves.toBeUndefined();
+	});
+
+	test("matches 7Б's Latin alias and reissue title", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{ id: "109495987", title: "Рок жив! (Переиздание)", artist: "7B" },
+			]),
+		);
+		await expect(
+			search({ artist: "7Б", artistAlias: "7B", title: "Рок Жив!" }),
+		).resolves.toBe("https://tidal.com/browse/album/109495987");
+	});
+
+	test("prefers an exact title over a reissue", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{ id: "1", title: "Album (Reissue)", artist: "Artist" },
+				{ id: "2", title: "Album", artist: "Artist" },
+			]),
+		);
+		await expect(search({ artist: "Artist", title: "Album" })).resolves.toBe(
+			"https://tidal.com/browse/album/2",
+		);
+	});
+
+	test.each([
+		{ title: "Another Album", artist: "Artist" },
+		{ title: "Album", artist: "Another Artist" },
+		{ title: "Album Live", artist: "Artist" },
+	])("rejects mismatched metadata: %j", async (album) => {
+		vi.mocked(fetch).mockResolvedValue(result([{ id: "1", ...album }]));
+		await expect(
+			search({ artist: "Artist", title: "Album" }),
+		).resolves.toBeUndefined();
+	});
+
+	test("does not accept album IDs without artist and title metadata", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			JSON.stringify({
+				data: [{ relationships: { albums: { data: [{ id: "1" }] } } }],
+			}),
+		);
+		await expect(
+			search({ artist: "Artist", title: "Album" }),
+		).resolves.toBeUndefined();
+	});
+
+	test("retries with a supplied alias after unmatched results", async () => {
+		vi.mocked(fetch)
+			.mockResolvedValueOnce(
+				result([{ id: "1", title: "Master of Puppets", artist: "Metallica" }]),
+			)
+			.mockResolvedValueOnce(
+				result([{ id: "2", title: "Рок жив!", artist: "7B" }]),
+			);
+		await expect(
+			withArtistAlias(search)({
+				artist: "7Б",
+				artistAlias: "7B",
+				title: "Рок Жив!",
+			}),
+		).resolves.toBe("https://tidal.com/browse/album/2");
+		expect(
+			vi.mocked(fetch).mock.calls[1][0].urlParameters?.["filter[query]"],
+		).toBe("7B Рок Жив!");
+	});
+
+	test("surfaces API errors instead of treating them as empty results", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			JSON.stringify({ errors: [{ detail: "Unavailable" }] }),
+		);
+		await expect(search({ artist: "Artist", title: "Album" })).rejects.toThrow(
+			"Tidal search failed: Unavailable",
+		);
 	});
 
 	test("defaults to the US region", async () => {

@@ -14,7 +14,7 @@ export const pages = {
 	userCollection: "/collection",
 	filmCollection: "/film_collection",
 	userPage: "/~",
-	followStatus: ["/~", "/friends/"],
+	followStatus: ["/~", "/friends/", "/account/friends"],
 	listComments: "/list/",
 	voteHistoryGenres: "/rgenre/vote_history",
 	voteHistoryDescriptors: "/rdescriptor/vote_history",
@@ -24,6 +24,8 @@ export const pages = {
 	genreChartControls: "/genre/",
 	artistSearchHint: "/artist/",
 	discographyProgress: "/artist/",
+	discographySort: "/artist/",
+	discographyOrder: "/artist/",
 	timeline: "/artist/",
 	map: "/artist/",
 	hideVotes: "/r",
@@ -38,7 +40,7 @@ export const pages = {
 export type PageKey = keyof typeof pages;
 
 export const pageLabels: Record<PageKey, string> = {
-	streamLinks: "Attempt to Add Streaming Links",
+	streamLinks: "Suggested Streaming Links",
 	descriptorLinks: "Descriptor Links",
 	trackTime: "Release Length to Hours Conversion",
 	releaseComments: "Load All Release Comments",
@@ -63,6 +65,8 @@ export const pageLabels: Record<PageKey, string> = {
 	genreChartControls: "Genre Chart Controls",
 	artistSearchHint: "Artist Search Hint",
 	discographyProgress: "Discography Progress",
+	discographySort: "Keep Discography Sorting",
+	discographyOrder: "Discography Section Order",
 	timeline: "Artist Timeline",
 	map: "Artist Location Map",
 	hideVotes: "Hide Votes on Genre/Descriptor Pages",
@@ -119,6 +123,8 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 			[
 				"artistSearchHint",
 				"discographyProgress",
+				"discographySort",
+				"discographyOrder",
 				"timeline",
 				"map",
 				"artistSubmission",
@@ -159,7 +165,7 @@ export const pageHints: Record<PageKey, string> = {
 	userPage:
 		"Adds edit buttons for favorite artists and other comments on your profile.",
 	followStatus:
-		"Shows whether users follow you on their profiles and under names in your friends list, with a one-minute cache.",
+		"Shows whether users follow you on profiles, in your friends list, and beside friends' activity and online status, with a one-minute cache.",
 	listComments:
 		"Makes list comments wider and taller, improves readability, enlarges the editor, and adds top/bottom scroll controls.",
 	voteHistoryGenres:
@@ -176,6 +182,10 @@ export const pageHints: Record<PageKey, string> = {
 	artistSearchHint: "Shows the artist's search hint below their name",
 	discographyProgress:
 		"Shows listening progress by release type and overall on artist pages. Configure which release types count toward overall coverage.",
+	discographySort:
+		"On artist pages, keeps your chosen discography sort when showing all releases in a section, and keeps expanded sections open after sorting.",
+	discographyOrder:
+		"On artist pages, shows discography sections in your preferred order, for example additional releases above singles.",
 	timeline:
 		"On artist pages, adds an inline timeline visualizing member activity and discography.",
 	map: "On artist pages, adds an interactive map showing concert locations.",

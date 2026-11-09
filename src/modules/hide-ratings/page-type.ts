@@ -1,6 +1,8 @@
 import type { VisibilityPage } from "~/shared/visibility/settings";
 
 export const getRatingsPageType = (pathname: string): VisibilityPage | null => {
+	if (/^\/release\/[^/]+\/[^/]+\/[^/]+\/(?:buy|coverart)\/?$/.test(pathname))
+		return null;
 	if (pathname.startsWith("/release/")) return "release";
 	if (pathname.startsWith("/film/")) return "film";
 	if (pathname.startsWith("/artist/") || pathname.startsWith("/films/"))

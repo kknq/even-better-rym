@@ -25,6 +25,9 @@ export const isSearchInput = (value: unknown): value is SearchInput =>
 	value !== null &&
 	"artist" in value &&
 	typeof value.artist === "string" &&
+	(!("artistAlias" in value) ||
+		value.artistAlias === undefined ||
+		typeof value.artistAlias === "string") &&
 	"title" in value &&
 	typeof value.title === "string" &&
 	(!("releaseType" in value) ||

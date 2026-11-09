@@ -2,11 +2,14 @@ import { useEffect, useState } from "preact/hooks";
 
 import {
 	getRatingSettings,
+	getReleaseControlLayout,
 	getReviewSettings,
 	type RatingSettings,
+	type ReleaseControlLayout,
 	type ReviewSettings,
 	reviewVisibilityPages,
 	setRatingSettings,
+	setReleaseControlLayout,
 	setReviewSettings,
 	visibilityPages,
 } from "~/shared/visibility/settings";
@@ -173,6 +176,7 @@ export function RatingVisibilityView({
 				onChange={(buttons, globalButton) =>
 					save({ ...settings, buttons, globalButton })
 				}
+				onSettingsChange={onSettingsChange}
 			/>
 		</main>
 	);
@@ -251,6 +255,7 @@ export function ReviewVisibilityView({
 				onChange={(buttons, globalButton) =>
 					save({ ...settings, buttons, globalButton })
 				}
+				onSettingsChange={onSettingsChange}
 			/>
 		</main>
 	);
@@ -261,12 +266,26 @@ function ButtonSettings({
 	globalButton,
 	pageControlLabel,
 	onChange,
+	onSettingsChange,
 }: Readonly<{
 	buttons: boolean;
 	globalButton: boolean;
 	pageControlLabel: string;
 	onChange: (buttons: boolean, globalButton: boolean) => void;
+	onSettingsChange: () => void;
 }>) {
+	const [layout, setLayout] = useState<ReleaseControlLayout | null>(null);
+
+	useEffect(() => {
+		void getReleaseControlLayout().then(setLayout);
+	}, []);
+
+	const saveLayout = async (next: ReleaseControlLayout): Promise<void> => {
+		await setReleaseControlLayout(next);
+		setLayout(next);
+		onSettingsChange();
+	};
+
 	return (
 		<div style={styles.card}>
 			<div style={styles.groupHeader}>Controls</div>
@@ -284,6 +303,22 @@ function ButtonSettings({
 					onChange={() => onChange(buttons, !globalButton)}
 				/>
 			</div>
+			<label style={styles.selectRow}>
+				<span style={styles.label}>Release / film button layout</span>
+				<select
+					value={layout ?? "inline"}
+					disabled={layout === null}
+					title="Shared by Hide Ratings and Hide Reviews"
+					onChange={(event) => {
+						void saveLayout(event.currentTarget.value as ReleaseControlLayout);
+					}}
+					style={styles.select}
+				>
+					<option value="section">Separate section</option>
+					<option value="inline">Inline with Rate/Catalog</option>
+				</select>
+				<small>Shared by Hide Ratings and Hide Reviews.</small>
+			</label>
 		</div>
 	);
 }

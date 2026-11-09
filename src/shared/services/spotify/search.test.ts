@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { sendBackgroundMessage } from "~/shared/utils/messaging";
+import { withArtistAlias } from "../search-matching";
 import { search } from "./search";
 
 vi.mock("~/shared/utils/messaging", () => ({
@@ -11,6 +12,41 @@ const diagnostics = [
 	{ stage: "frame-finished", details: '{"status":"error"}' },
 ];
 const metadata = { artist: "Artist", title: "Album" };
+
+test("passes RYM's artist alias to the background search", async () => {
+	vi.mocked(sendBackgroundMessage).mockResolvedValue({
+		id: "request",
+		type: "spotifySearch",
+		data: {},
+	});
+	await search({ artist: "7Б", artistAlias: "7B", title: "Рок Жив!" });
+	expect(sendBackgroundMessage).toHaveBeenCalledWith({
+		type: "spotifySearch",
+		data: { artist: "7Б", artistAlias: "7B", title: "Рок Жив!" },
+	});
+});
+
+test("uses the shared retry for an alternate artist name", async () => {
+	const url = "https://open.spotify.com/album/3HYnc1NZK0U8K5uJU7d1uf";
+	vi.mocked(sendBackgroundMessage)
+		.mockResolvedValueOnce({ id: "original", type: "spotifySearch", data: {} })
+		.mockResolvedValueOnce({
+			id: "alias",
+			type: "spotifySearch",
+			data: { url },
+		});
+	await expect(
+		withArtistAlias(search)({
+			artist: "7Б",
+			artistAlias: "7B",
+			title: "Солнцу решать",
+		}),
+	).resolves.toBe(url);
+	expect(sendBackgroundMessage).toHaveBeenNthCalledWith(2, {
+		type: "spotifySearch",
+		data: { artist: "7B", artistAlias: "7Б", title: "Солнцу решать" },
+	});
+});
 
 beforeEach(() => {
 	vi.mocked(sendBackgroundMessage).mockReset();

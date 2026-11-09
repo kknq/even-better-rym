@@ -10,9 +10,11 @@ Turn each feature on or off from the extension popup. Settings are grouped by pu
 
 ---
 
-### Attempt to Add Streaming Links on Release Pages
+### Suggested Streaming Links on Release Pages
 
 Shows links to supported streaming services below the cover art. Existing RYM links are used first; otherwise, the extension looks for a matching release.
+
+Optionally use service branding colors instead of gray icons, with customizable colors for each service in the extension settings.
 
 ---
 
@@ -101,6 +103,8 @@ Lets you edit your favorite artists and other comments directly from your profil
 
 Shows **follows you** in green or **does not follow you** in muted red at the bottom of other users' profile details and beneath names in your friends list. Your followers list is cached for one minute.
 
+On the friends' recent activity page, green ticks and muted-red crosses beside nicknames show the same status in recently updated activity and the online/offline list.
+
 ---
 
 ### List Comment Enhancements
@@ -141,7 +145,19 @@ Adds a timeline showing group members' activity and releases. Artist pages with 
 
 ### Discography Progress
 
-Tracks rated and listened releases by category and overall. Choose which categories count in the extension popup; albums, EPs and mixtapes are included by default. Release data is cached for an hour.
+Tracks rated and listened releases by category and overall. Choose which categories count in the extension popup; albums, EPs and mixtapes are included by default. Optionally hide overall coverage when it is zero. Release data is cached for an hour.
+
+---
+
+### Keep Discography Sorting
+
+Keeps your chosen discography sort when you show all releases in a section, and keeps expanded sections open when you change the sort.
+
+---
+
+### Discography Section Order
+
+Shows artist discography sections in your preferred order, for example additional releases above singles. Drag sections or use the arrows in the extension popup. A custom order enables reordering automatically; returning to RYM's default order disables it.
 
 ---
 
@@ -177,6 +193,8 @@ Adds links on release genre and descriptor pages to switch between their genre a
 ### Hide Ratings
 
 Hides community rating values while preserving page layout. Configure the supported pages and whether ratings are hidden only until you rate a release or at all times; a toggle reveals them on demand.
+
+Release and film visibility buttons appear inline with Rate/Catalog by default, wrapping individually on smaller screens. Switch to a separate section in the rating or review settings; this shared layout preference applies to both controls.
 
 - **Release pages** (`/release/*`, `/film/*`) — Ratings remain visible when you have rated the release; otherwise, averages, rankings, review ratings, and track scores are hidden.
 - **Artist pages** (`/artist/*`) — Ratings remain visible only for releases you have rated. Lazy-loaded discography entries follow the current toggle state.

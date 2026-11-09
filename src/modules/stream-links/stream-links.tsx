@@ -1,11 +1,14 @@
 import { useEffect } from "preact/hooks";
 
 import { SEARCHABLES } from "~/shared/services";
+import type { StreamLinkSettings } from "~/shared/stream-links/settings";
 
 import { StreamLink } from "./stream-link";
 import { usePageData } from "./use-page-data";
 
-export function StreamLinks() {
+export function StreamLinks({
+	settings,
+}: Readonly<{ settings: StreamLinkSettings }>) {
 	const pageData = usePageData();
 
 	useEffect(() => {
@@ -33,7 +36,14 @@ export function StreamLinks() {
 			}}
 		>
 			{SEARCHABLES.map((service) => (
-				<StreamLink key={service.id} service={service} pageData={pageData} />
+				<StreamLink
+					key={service.id}
+					service={service}
+					pageData={pageData}
+					color={
+						settings.useServiceColors ? settings.colors[service.id] : undefined
+					}
+				/>
 			))}
 		</div>
 	);

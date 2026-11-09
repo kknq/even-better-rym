@@ -3,8 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>What's new in EvenBetterRYM 3.2.0</title>
+    <title>What's new in EvenBetterRYM 3.3.0</title>
     <link rel="stylesheet" href="changelog.css" />
+    <script src="changelog.js" defer></script>
   </head>
   <body>
     <header class="header">
@@ -17,6 +18,156 @@
 
     <main>
       <!-- Replace this release section with the notes for each new extension version. -->
+      <section class="release" aria-labelledby="version-3-3-0">
+        <header class="release-header">
+          <h2 class="version" id="version-3-3-0">3.3.0</h2>
+          <p class="date">10 November 2026</p>
+          <p class="release-subtitle">Probably last relatively big update for a while (I am going on vacation again)</p>
+        </header>
+        <ul class="changes">
+          <li class="change">
+            <span class="badge">New</span>
+            <div>
+              <h3 class="change-title">Custom discography section order</h3>
+              <p class="change-description">
+                Arrange artist discography sections in your preferred order.
+                Drag sections or use the arrows in the extension popup to move
+                categories around.
+              </p>
+              <a href="https://femboy.beauty/w9ymHC">
+                <img
+                  class="change-preview"
+                  src="https://femboy.beauty/w9ymHC"
+                  alt="Custom discography section order settings in the extension popup"
+                  loading="lazy"
+                />
+              </a>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">New</span>
+            <div>
+              <h3 class="change-title">Keep discography sorting</h3>
+              <p class="change-description">
+                Keep your chosen sort when showing all releases in a discography
+                section. Expanded sections also stay open when you change the sort,
+                which was a RYM bug I fixed. I don't like how it works still, but
+                I had to reuse RYM methods, I don't think I have another solution.
+                It's not that bad.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">New</span>
+            <div>
+              <h3 class="change-title">Colored streaming-service icons</h3>
+              <p class="change-description">
+                Suggested streaming links can now use service branding colors
+                instead of gray icons. Enable colors and customize each service's
+                color in the extension popup. It looks like this:
+              </p>
+              <a href="https://femboy.beauty/UvowGe">
+                <img
+                  class="change-preview"
+                  src="https://femboy.beauty/UvowGe"
+                  width="1018"
+                  height="1132"
+                  alt="Colored streaming-service icons beneath release cover art"
+                  loading="lazy"
+                />
+              </a>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">New</span>
+            <div>
+              <h3 class="change-title">Follow status in friends' recent activity</h3>
+              <p class="change-description">
+                Green ticks and muted-red crosses beside nicknames now show
+                whether users follow you back on the friends' recent activity
+                page:
+              </p>
+              <a href="https://femboy.beauty/Gk2I3N">
+                <img
+                  class="change-preview"
+                  src="https://femboy.beauty/Gk2I3N"
+                  alt="Follow-status indicators beside usernames in friends' recent activity"
+                  loading="lazy"
+                />
+              </a>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Improved</span>
+            <div>
+              <h3 class="change-title">Less automation in imported release artists</h3>
+              <p class="change-description">
+                To be honest it was my fault for forgetting to put
+                several guardrails on considering that the user might
+                just miss the changes done here. Instead of automatic
+                work that was done on sections 1.3a and 1.4 on import
+                it will now sit behind the button and require user input
+                to do the same thing.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Improved</span>
+            <div>
+              <h3 class="change-title">Discography progress</h3>
+              <p class="change-description">
+                Added an option to hide overall discography coverage when it is
+                zero. Fixed bug where when several editions are rated the release
+                wasn't counted.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Improved</span>
+            <div>
+              <h3 class="change-title">Content visibility controls</h3>
+              <p class="change-description">
+                The way that the controls looked on the release pages pissed
+                me off for a while because of warping and I kept forgetting to
+                fix it (I almost did again). I tried moving them around, but
+                I don't know if I like it. I fixed the wrapping, it is still
+                in the Rate/Catalog section by default, but you have option
+                to move them into their own section which looks like this:
+              </p>
+              <a href="https://femboy.beauty/Ye5GMV">
+                <img
+                  class="change-preview"
+                  src="https://femboy.beauty/Ye5GMV"
+                  alt="Rating and review controls in a separate Content visibility section"
+                  loading="lazy"
+                />
+              </a>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">More accurate suggested streaming links</h3>
+              <p class="change-description">
+                Still trying to make it better. Thanks
+                <a href="https://rateyourmusic.com/~dyslexicon">dyslexicon</a>
+                for reporting several issues.
+              </p>
+            </div>
+          </li>
+          <li class="change">
+            <span class="badge">Fixes</span>
+            <div>
+              <h3 class="change-title">List comment send button</h3>
+              <p class="change-description">
+                Fixed the send button's sizing and alignment beside the enlarged
+                list comment editor.
+              </p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
       <section class="release" aria-labelledby="version-3-2-0">
         <header class="release-header">
           <h2 class="version" id="version-3-2-0">3.2.0</h2>
@@ -516,5 +667,9 @@
         <p class="footer-thanks">Thanks for using EvenBetterRYM.</p>
       </footer>
     </main>
+    <dialog class="preview-dialog" aria-label="Image preview">
+      <button class="preview-close" type="button" aria-label="Close preview" autofocus>&times;</button>
+      <img class="preview-image" alt="" />
+    </dialog>
   </body>
 </html>

@@ -1,0 +1,45 @@
+.ebr-follow-status-icon {
+	display: inline-block;
+	margin-left: 0.4em;
+	font-weight: bold;
+}
+
+.ui_breadcrumb_frame.ebr-follow-status-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.75em;
+	white-space: normal;
+}
+
+.ebr-follow-status-heading > .ui_breadcrumb {
+	margin: 0;
+	min-width: 0;
+}
+
+.ebr-follow-status-heading > .clearfix {
+	display: none;
+}
+
+.ebr-follow-status-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35em 1em;
+	margin-left: auto;
+	padding: 0.65em 1em;
+	border: 1px solid #e6d69d;
+	border-radius: 5px;
+	background: #fff7db;
+	color: #625016;
+	font-size: 1em;
+	line-height: 1.5;
+}
+
+.ebr-follow-status-legend > span {
+	white-space: nowrap;
+}
+
+.ebr-follow-status-legend > span > span {
+	font-weight: bold;
+}

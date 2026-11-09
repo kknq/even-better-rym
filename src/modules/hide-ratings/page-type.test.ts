@@ -9,6 +9,17 @@ import {
 describe("getRatingsPageType", () => {
 	it.each([
 		["/release/album/example", "release"],
+		["/release/album/artist/title/", "release"],
+		["/release/album/artist/buy/", "release"],
+		["/release/album/artist/coverart/", "release"],
+		["/release/album/artist/title/reviews/", "release"],
+		["/release/album/artist/title/reviews/2/", "release"],
+		["/release/album/artist/title/buy", null],
+		["/release/album/artist/title/buy/", null],
+		["/release/album/artist/title/coverart", null],
+		["/release/album/artist/title/coverart/", null],
+		["/release/album/%E5%8A%A3/%E5%9E%83%E5%9C%BE%E5%9C%BA/buy/", null],
+		["/release/album/%E5%8A%A3/%E5%9E%83%E5%9C%BE%E5%9C%BA/coverart/", null],
 		["/film/example", "film"],
 		["/artist/example", "artist"],
 		["/films/example", "artist"],

@@ -1,15 +1,52 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { get, set } from "~/shared/utils/storage";
 
 import {
 	defaultPageSettings,
 	defaultRatingSettings,
 	defaultReviewSettings,
+	getReleaseControlLayout,
 	mergeRatingSettings,
 	mergeReviewSettings,
+	setReleaseControlLayout,
 	visibilityPages,
 } from "./settings";
 
+vi.mock("~/shared/utils/storage", () => ({
+	get: vi.fn(),
+	set: vi.fn(),
+}));
+
+beforeEach(() => {
+	vi.resetAllMocks();
+});
+
 describe("visibility settings", () => {
+	it("defaults to the old inline placement without overwriting existing visibility preferences", async () => {
+		vi.mocked(get).mockResolvedValue(undefined);
+
+		expect(await getReleaseControlLayout()).toBe("inline");
+		expect(get).toHaveBeenCalledExactlyOnceWith(
+			"brym.visibility.release-control-layout",
+		);
+		expect(set).not.toHaveBeenCalled();
+	});
+
+	it.each([
+		"section",
+		"inline",
+	] as const)("persists and restores the shared %s layout separately from visibility policies", async (layout) => {
+		await setReleaseControlLayout(layout);
+		vi.mocked(get).mockResolvedValue(layout);
+
+		expect(await getReleaseControlLayout()).toBe(layout);
+		expect(set).toHaveBeenCalledExactlyOnceWith(
+			"brym.visibility.release-control-layout",
+			layout,
+		);
+	});
+
 	it("enables every supported page by default", () => {
 		expect(Object.keys(defaultPageSettings())).toEqual(visibilityPages);
 		expect(Object.values(defaultPageSettings())).toEqual(

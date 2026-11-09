@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { fetch } from "~/shared/utils/fetch";
+import { withArtistAlias } from "../search-matching";
 import type { ReleaseType } from "../types";
 import type { SearchObject } from "./codec";
 
@@ -36,6 +37,67 @@ describe("Apple Music search", () => {
 
 	beforeEach(() => {
 		vi.mocked(fetch).mockReset();
+	});
+
+	test("finds 7Б using RYM's alias and Apple's reissue title", async () => {
+		respond({
+			results: [
+				{
+					artistId: 255593401,
+					artistName: "7B",
+					collectionName: "Рок жив! (Переиздание)",
+					collectionViewUrl:
+						"https://music.apple.com/pl/album/reissue/1463939392",
+				},
+			],
+		});
+		await expect(
+			search({
+				artist: "7Б",
+				artistAlias: "7B",
+				title: "Рок Жив!",
+				serviceRegions: { applemusic: "PL" },
+			}),
+		).resolves.toContain("/1463939392");
+	});
+
+	test("retries the combined search with a supplied alias", async () => {
+		respond(
+			{ results: [] },
+			{ results: [] },
+			{
+				results: [
+					{
+						...album,
+						artistName: "7B",
+					},
+				],
+			},
+		);
+		await expect(
+			withArtistAlias(search)({
+				...metadata,
+				artist: "7Б",
+				artistAlias: "7B",
+			}),
+		).resolves.toBeDefined();
+		expect(vi.mocked(fetch).mock.calls[2][0].urlParameters?.term).toBe(
+			"7B Balls",
+		);
+	});
+
+	test("prefers an exact title over a reissue in the same results", async () => {
+		respond({
+			results: [
+				{
+					...album,
+					collectionName: "Balls (Reissue)",
+					collectionViewUrl: "https://music.apple.com/pl/album/reissue/1",
+				},
+				album,
+			],
+		});
+		await expect(search(metadata)).resolves.toContain("/balls/");
 	});
 
 	test("rejects the reported false positive and finds Balls in the artist catalog", async () => {

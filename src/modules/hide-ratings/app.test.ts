@@ -9,6 +9,7 @@ import { main } from "./app";
 
 const mocks = vi.hoisted(() => ({
 	getRatingSettings: vi.fn(),
+	getReleaseControlLayout: vi.fn(),
 	getSessionVisibility: vi.fn(),
 	isOwnProfile: vi.fn(),
 	isOwnUserPage: vi.fn(),
@@ -17,6 +18,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("~/shared/visibility/settings", async (importOriginal) => ({
 	...(await importOriginal<typeof import("~/shared/visibility/settings")>()),
 	getRatingSettings: mocks.getRatingSettings,
+	getReleaseControlLayout: mocks.getReleaseControlLayout,
 }));
 
 vi.mock("~/shared/visibility/session-state", () => ({
@@ -54,6 +56,7 @@ beforeEach(() => {
 	document.documentElement.innerHTML = "<head></head><body></body>";
 	setPathname("/");
 	mocks.getRatingSettings.mockResolvedValue(getSettings());
+	mocks.getReleaseControlLayout.mockResolvedValue("inline");
 	mocks.getSessionVisibility.mockReturnValue(null);
 	mocks.isOwnProfile.mockReturnValue(false);
 	mocks.isOwnUserPage.mockReturnValue(false);
@@ -64,6 +67,108 @@ afterEach(() => {
 });
 
 describe("Hide Ratings feature", () => {
+	it("uses the saved inline layout with ratings enabled on their own", async () => {
+		setPathname("/release/album/example/");
+		document.body.innerHTML = `
+			<div class="release_my_catalog">
+				<div class="my_catalog_rate_tracks"><div id="track_rating_btn">Track ratings</div></div>
+			</div>
+		`;
+		mocks.getReleaseControlLayout.mockResolvedValue("inline");
+
+		await main();
+		await main();
+
+		expect(document.querySelector(".ebr-release-visibility")).toBeNull();
+		expect(
+			document.querySelector(".release_my_catalog #ebr-show-rating-btn"),
+		).not.toBeNull();
+		expect(
+			document.querySelectorAll("#ebr-show-rating-btn-release-wrapper"),
+		).toHaveLength(1);
+		document.getElementById("ebr-show-rating-btn")?.click();
+		expect(document.body.classList).not.toContain("ebr-hide-ratings");
+	});
+
+	it.each([
+		true,
+		false,
+	])("gates compact release spacing on page enablement (%s), not button visibility", async (enabled) => {
+		setPathname("/release/album/example/");
+		document.body.innerHTML = '<div class="release_my_catalog"></div>';
+		mocks.getRatingSettings.mockResolvedValue(
+			getSettings({
+				buttons: false,
+				pages: { ...defaultRatingSettings().pages, release: enabled },
+			}),
+		);
+
+		await main();
+
+		expect(
+			document.body.classList.contains("ebr-release-visibility-enabled"),
+		).toBe(enabled);
+		expect(document.querySelector(".ebr-release-visibility")).toBeNull();
+	});
+
+	it.each([
+		"/latest",
+		"/release/album/example/reviews/",
+	])("does not compact catalog headings on %s", async (pathname) => {
+		setPathname(pathname);
+
+		await main();
+
+		expect(document.body.classList).not.toContain(
+			"ebr-release-visibility-enabled",
+		);
+	});
+
+	it("creates a separate section with ratings enabled on their own", async () => {
+		setPathname("/release/album/example/");
+		document.body.innerHTML = '<div class="release_my_catalog"></div>';
+		mocks.getRatingSettings.mockResolvedValue(getSettings({ buttons: true }));
+		mocks.getReleaseControlLayout.mockResolvedValue("section");
+
+		await main();
+		await main();
+
+		const controls = document.getElementById("ebr-release-visibility-controls");
+		expect(controls?.children).toHaveLength(1);
+		expect(controls?.querySelector("#ebr-show-rating-btn")).not.toBeNull();
+		expect(document.getElementById("ebr-show-review-btn-release")).toBeNull();
+
+		document.getElementById("ebr-show-rating-btn")?.click();
+		expect(document.body.classList).not.toContain("ebr-hide-ratings");
+	});
+
+	it.each([
+		"buy",
+		"buy/",
+		"coverart",
+		"coverart/",
+	])("skips controls and releases bootstrap visibility on release %s pages", async (subpage) => {
+		setPathname(
+			`/release/album/%E5%8A%A3/%E5%9E%83%E5%9C%BE%E5%9C%BA/${subpage}`,
+		);
+		document.body.innerHTML = '<div id="content"></div>';
+		mocks.getRatingSettings.mockResolvedValue(
+			getSettings({ buttons: true, globalButton: true }),
+		);
+
+		await main();
+		vi.resetModules();
+		await import("./main");
+
+		expect(document.body.innerHTML).toBe('<div id="content"></div>');
+		expect(document.body.classList).not.toContain("ebr-hide-ratings");
+		expect(document.getElementById("ebr-hide-ratings-styles")).toBeNull();
+		expect(document.documentElement.classList).toContain("ebr-ratings-ready");
+		expect(document.documentElement.classList).not.toContain(
+			"ebr-ratings-pending",
+		);
+	});
+
 	it("hides ratings on an unrated release by default", async () => {
 		setPathname("/release/album/example");
 		document.body.innerHTML = '<div class="avg_rating">4.2</div>';

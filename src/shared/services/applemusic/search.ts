@@ -1,10 +1,11 @@
 import { fetch } from "~/shared/utils/fetch";
-
+import {
+	getSearchArtists,
+	isReissueTitle,
+	normalizeSearchText as normalize,
+} from "../search-matching";
 import type { SearchFunction } from "../types";
 import type { SearchObject } from "./codec";
-
-const normalize = (value: string): string =>
-	value.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 
 export const toRegionalAppleMusicUrl = (
 	collectionViewUrl: string,
@@ -23,6 +24,7 @@ export const toRegionalAppleMusicUrl = (
 
 export const search: SearchFunction = async ({
 	artist,
+	artistAlias,
 	title,
 	releaseType,
 	serviceRegions,
@@ -48,12 +50,13 @@ export const search: SearchFunction = async ({
 	};
 	const toUrl = (url: string) =>
 		appleMusicRegion ? toRegionalAppleMusicUrl(url, appleMusicRegion) : url;
-	const artistName = normalize(artist);
+	const artists = getSearchArtists(artist, artistAlias);
+	const artistNames = new Set(artists.map(normalize));
 	const albumTitle = normalize(title);
 	const isMatchingAlbum = (album: SearchObject["results"][number]) => {
 		if (
 			!album.collectionViewUrl ||
-			normalize(album.artistName ?? "") !== artistName
+			!artistNames.has(normalize(album.artistName ?? ""))
 		)
 			return false;
 		const collectionTitle = normalize(album.collectionName ?? "");
@@ -64,32 +67,44 @@ export const search: SearchFunction = async ({
 		);
 	};
 
+	const findAlbum = (results: SearchObject["results"]) =>
+		results.find(isMatchingAlbum) ??
+		results.find(
+			(album) =>
+				album.collectionViewUrl &&
+				artistNames.has(normalize(album.artistName ?? "")) &&
+				isReissueTitle(album.collectionName ?? "", title),
+		);
+	const visitedArtists = new Set<number>();
 	const response = await request("search", {
 		term: `${artist} ${title}`,
 		media: "music",
 		entity: "album",
 		limit: "200",
 	});
-	const collectionViewUrl =
-		response.results.find(isMatchingAlbum)?.collectionViewUrl;
-	if (collectionViewUrl) return toUrl(collectionViewUrl);
+	const match = findAlbum(response.results);
+	if (match?.collectionViewUrl) return toUrl(match.collectionViewUrl);
 
-	const artists = await request("search", {
+	const candidates = await request("search", {
 		term: artist,
 		media: "music",
 		entity: "musicArtist",
 		limit: "200",
 	});
-	for (const candidate of artists.results) {
-		if (normalize(candidate.artistName) !== artistName) continue;
+	for (const candidate of candidates.results) {
+		if (
+			!artistNames.has(normalize(candidate.artistName)) ||
+			visitedArtists.has(candidate.artistId)
+		)
+			continue;
+		visitedArtists.add(candidate.artistId);
 		const albums = await request("lookup", {
 			id: String(candidate.artistId),
 			entity: "album",
 			limit: "200",
 		});
-		const match = albums.results.find(
-			(album) =>
-				album.artistId === candidate.artistId && isMatchingAlbum(album),
+		const match = findAlbum(
+			albums.results.filter((album) => album.artistId === candidate.artistId),
 		);
 		if (match?.collectionViewUrl) return toUrl(match.collectionViewUrl);
 	}

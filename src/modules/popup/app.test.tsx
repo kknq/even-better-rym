@@ -48,8 +48,18 @@ vi.mock("./reference-links-view", () => ({
 		</button>
 	),
 }));
+vi.mock("./stream-links-view", () => ({
+	StreamLinksView: ({ onSettingsChange }: { onSettingsChange: () => void }) => (
+		<button type="button" onClick={onSettingsChange}>
+			Streaming link settings
+		</button>
+	),
+}));
 vi.mock("./discography-progress-view", () => ({
 	DiscographyProgressView: () => <div>Discography coverage settings</div>,
+}));
+vi.mock("./discography-order-view", () => ({
+	DiscographyOrderView: () => <div>Discography section order settings</div>,
 }));
 vi.mock("./visibility-view", () => ({
 	RatingVisibilityView: ({
@@ -230,6 +240,12 @@ describe("App", () => {
 	test.each([
 		["Charts", "chartShortcuts", "Chart Shortcuts", "Shortcut settings"],
 		[
+			"Release and submission tools",
+			"streamLinks",
+			"Suggested Streaming Links",
+			"Streaming link settings",
+		],
+		[
 			"External reference links",
 			"whoSampled",
 			"External Reference Links",
@@ -269,6 +285,21 @@ describe("App", () => {
 		expect(findButton(group).getAttribute("aria-expanded")).toBe("true");
 		expect(container.querySelector("header")?.textContent).toContain(
 			"EvenBetterRYM",
+		);
+		expect(setModuleEnabled).not.toHaveBeenCalled();
+	});
+
+	test("opens section ordering settings without a separate enable switch", async () => {
+		await showApp();
+		await act(() => findButton("Artist profiles").click());
+		expect(
+			featureRow("discographyOrder").querySelector('[role="switch"]'),
+		).toBeNull();
+		await act(() =>
+			featureRow("discographyOrder").querySelector("button")?.click(),
+		);
+		expect(container.textContent).toContain(
+			"Discography section order settings",
 		);
 		expect(setModuleEnabled).not.toHaveBeenCalled();
 	});

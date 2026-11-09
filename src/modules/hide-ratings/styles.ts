@@ -200,19 +200,6 @@ export const injectHideStyles = (): void => {
 		#page_film .ebr-release-review-toggle:hover {
 			background-color: #a4680d;
 		}
-		.my_catalog_review .ebr-release-toggle-wrapper {
-			display: inline-block;
-			float: none !important;
-			vertical-align: middle;
-		}
-		.my_catalog_review {
-			display: flex;
-			align-items: center;
-		}
-		.my_catalog_rate_tracks {
-			display: flex;
-			align-items: center;
-		}
 		.ebr-suggestion-rating-toggle {
 			width: 100%;
 			margin-top: .5em;

@@ -4,7 +4,11 @@ import {
 	captureSpotifyPageErrors,
 	spotifyPageDiagnostics,
 } from "./diagnostics";
-import { isFrameRequest, type SearchResult } from "./messages";
+import {
+	type FrameRequest,
+	isFrameRequest,
+	type SearchResult,
+} from "./messages";
 import { readSpotifySearchPage } from "./read-results";
 
 // Only the extension's hidden frame host can request a lookup. Ordinary Spotify
@@ -12,15 +16,9 @@ import { readSpotifySearchPage } from "./read-results";
 if (window.parent !== window) {
 	const pageErrors = captureSpotifyPageErrors();
 	const extensionOrigin = browser.runtime.getURL("").replace(/\/$/, "");
-	const onRequest = async (event: MessageEvent<unknown>) => {
-		if (
-			event.source !== window.parent ||
-			event.origin !== extensionOrigin ||
-			!isFrameRequest(event.data)
-		)
-			return;
+	const onRequest = async (request: FrameRequest) => {
 		window.removeEventListener("message", onMessage);
-		const { id, category, data } = event.data;
+		const { id, category, data } = request;
 		let result: SearchResult;
 		try {
 			const url = await readSpotifySearchPage(
@@ -28,6 +26,7 @@ if (window.parent !== window) {
 				data.title,
 				category,
 				data.releaseType ?? null,
+				data.artistAlias,
 			);
 			result = url ? { status: "found", url } : { status: "not-found" };
 			if (pageErrors.hasErrors())
@@ -54,7 +53,13 @@ if (window.parent !== window) {
 		);
 	};
 	const onMessage = (event: MessageEvent<unknown>) => {
-		void onRequest(event);
+		if (
+			event.source !== window.parent ||
+			event.origin !== extensionOrigin ||
+			!isFrameRequest(event.data)
+		)
+			return;
+		void onRequest(event.data);
 	};
 	window.addEventListener("message", onMessage);
 	window.parent.postMessage({ type: "ebr-spotify-ready" }, extensionOrigin);

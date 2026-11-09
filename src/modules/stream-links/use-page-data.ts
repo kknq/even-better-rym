@@ -16,7 +16,7 @@ import {
 	loading,
 } from "~/shared/utils/one-shot";
 
-import { getSearchArtistName } from "./metadata";
+import { getSearchArtistMetadata } from "./metadata";
 import { getReleaseTypeFromPath } from "./release-type";
 
 export type PageDataState = OneShot<Error, PageData>;
@@ -46,9 +46,10 @@ export const usePageData = (): PageDataState => {
 type PageData = {
 	metadata: {
 		artist: string;
+		artistAlias?: string;
 		title: string;
 		releaseType?: ReleaseType;
-		serviceRegions?: StreamingPreferences["service_regions"];
+		serviceRegions: StreamingPreferences["service_regions"];
 	};
 	links: Links;
 };
@@ -60,7 +61,7 @@ async function getPageData(): Promise<PageData> {
 	]);
 	return {
 		metadata: {
-			artist,
+			...artist,
 			title,
 			releaseType: getReleaseTypeFromPath(location.pathname),
 			serviceRegions: linksData.serviceRegions,
@@ -71,7 +72,7 @@ async function getPageData(): Promise<PageData> {
 
 async function getArtist() {
 	const artistElement = await waitForElement<HTMLAnchorElement>("a.artist");
-	return getSearchArtistName(
+	return getSearchArtistMetadata(
 		artistElement.text,
 		artistElement.querySelector(".subtext")?.textContent,
 	);
@@ -86,7 +87,7 @@ async function getTitle() {
 
 async function getLinks(): Promise<{
 	links: Links;
-	serviceRegions?: StreamingPreferences["service_regions"];
+	serviceRegions: StreamingPreferences["service_regions"];
 }> {
 	await waitForDocumentReady();
 

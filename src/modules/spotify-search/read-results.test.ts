@@ -63,6 +63,39 @@ afterEach(() => {
 });
 
 describe("readSpotifySearchPage", () => {
+	test("matches 7Б's explicitly supplied Latin alias", async () => {
+		setSearchPage([resultLink("Рок жив!", albumUrl, "Рок жив!2018 • 7B")]);
+		await expect(
+			readSpotifySearchPage("7Б", "Рок Жив!", "albums", null, "7B"),
+		).resolves.toBe(albumUrl);
+	});
+
+	test("recognizes 7Б's reissue title with its Latin alias", async () => {
+		setSearchPage([
+			resultLink(
+				"Рок жив! (Переиздание)",
+				albumUrl,
+				"Рок жив! (Переиздание)2018 • 7B",
+			),
+		]);
+		const result = readSpotifySearchPage(
+			"7Б",
+			"Рок Жив!",
+			"albums",
+			null,
+			"7B",
+		);
+		await vi.advanceTimersByTimeAsync(1_500);
+		await expect(result).resolves.toBe(albumUrl);
+	});
+
+	test("does not treat an unprovided transliteration as the requested artist", async () => {
+		setSearchPage([resultLink("Рок жив!", albumUrl, "Рок жив!2018 • 7B")]);
+		const result = readSpotifySearchPage("7Б", "Рок Жив!");
+		await vi.advanceTimersByTimeAsync(7_000);
+		await expect(result).resolves.toBeUndefined();
+	});
+
 	test("returns an exact album link with the requested artist", async () => {
 		setSearchPage([resultLink(title, albumUrl)]);
 

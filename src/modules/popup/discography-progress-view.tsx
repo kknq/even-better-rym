@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "preact/hooks";
 import {
+	getHideZeroCoverage,
 	getSelectedTypes,
+	setHideZeroCoverage,
 	setSelectedTypes,
 } from "~/shared/discography-progress/settings";
 import { type ReleaseType, releaseTypes } from "~/shared/release-types";
@@ -8,13 +10,19 @@ import { styles } from "./styles";
 
 export function DiscographyProgressView() {
 	const [selected, setSelected] = useState<Set<ReleaseType> | null>(null);
+	const [hideZeroCoverage, updateHideZeroCoverage] = useState(false);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState("");
 
 	const load = useCallback(async () => {
 		setError("");
 		try {
-			setSelected(await getSelectedTypes());
+			const [types, hideZero] = await Promise.all([
+				getSelectedTypes(),
+				getHideZeroCoverage(),
+			]);
+			setSelected(types);
+			updateHideZeroCoverage(hideZero);
 		} catch (error) {
 			console.error("EvenBetterRYM: could not load coverage settings", error);
 			setError("Could not load discography settings.");
@@ -25,22 +33,37 @@ export function DiscographyProgressView() {
 		void load();
 	}, [load]);
 
-	const toggle = async (type: ReleaseType) => {
-		if (!selected || saving) return;
-		const next = new Set(selected);
-		if (next.has(type)) next.delete(type);
-		else next.add(type);
+	const saveSetting = async (update: () => Promise<void>, message: string) => {
+		if (saving) return;
 		setSaving(true);
 		setError("");
 		try {
-			await setSelectedTypes(next);
-			setSelected(next);
+			await update();
 		} catch (error) {
 			console.error("EvenBetterRYM: could not save coverage settings", error);
-			setError("Could not save release types. Please try again.");
+			setError(message);
 		} finally {
 			setSaving(false);
 		}
+	};
+
+	const toggle = async (type: ReleaseType) => {
+		if (!selected) return;
+		const next = new Set(selected);
+		if (next.has(type)) next.delete(type);
+		else next.add(type);
+		await saveSetting(async () => {
+			await setSelectedTypes(next);
+			setSelected(next);
+		}, "Could not save release types. Please try again.");
+	};
+
+	const toggleHideZeroCoverage = async () => {
+		const next = !hideZeroCoverage;
+		await saveSetting(async () => {
+			await setHideZeroCoverage(next);
+			updateHideZeroCoverage(next);
+		}, "Could not save coverage visibility. Please try again.");
 	};
 
 	const loadingContent = error ? (
@@ -69,6 +92,19 @@ export function DiscographyProgressView() {
 						artist pages immediately. Missing releases load automatically only
 						for selected types; other categories have a Load coverage button.
 					</p>
+					<div style={styles.card}>
+						<label style={styles.row}>
+							<span style={styles.label}>
+								Hide overall discography coverage when it is zero
+							</span>
+							<input
+								type="checkbox"
+								checked={hideZeroCoverage}
+								disabled={saving}
+								onChange={() => void toggleHideZeroCoverage()}
+							/>
+						</label>
+					</div>
 					<div style={styles.card}>
 						<div style={styles.groupHeader}>Overall coverage release types</div>
 						{(Object.keys(releaseTypes) as ReleaseType[]).map(

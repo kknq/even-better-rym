@@ -49,6 +49,15 @@ function creditedName() {
 	};
 }
 
+const acceptCreditedNameSuggestion = () =>
+	act(() =>
+		document
+			.querySelector<HTMLInputElement>(
+				".ebr-credited-name-suggestion input[type=button]",
+			)
+			?.click(),
+	);
+
 afterEach(() => {
 	const container = document.querySelector(
 		"#section_filed_under",
@@ -105,7 +114,7 @@ test.each([
 		await vi.waitFor(() =>
 			expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
 				[{ id: "2068672", name: "劣 [Lie]" }],
-				new Set(["2068672"]),
+				new Set(),
 			),
 		);
 		expect(creditedName()).toEqual({
@@ -117,7 +126,7 @@ test.each([
 		expect(published.mock.calls.at(-1)?.[0].detail.labels).toEqual(
 			new Map([["劣", "[Artist2068672]"]]),
 		);
-		expect(document.querySelector(".ebr-automatic-alias-warning")).toBeNull();
+		expect(document.querySelector(".ebr-credited-name-suggestion")).toBeNull();
 	} finally {
 		document.removeEventListener("releaseArtistLabelsEvent", published);
 	}
@@ -145,22 +154,19 @@ test.each([
 				new CustomEvent("releaseArtistsEvent", { detail: ["zavet"] }),
 			);
 		});
-		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
-			[entry],
-			new Set(["1479561"]),
-		);
+		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith([entry], new Set());
 		expect(published.mock.calls.at(-1)?.[0].detail.labels).toEqual(
 			new Map([["zavet", "[Artist1479561,zavet]"]]),
 		);
+		expect(creditedName().useDefault).toBe(true);
+		await acceptCreditedNameSuggestion();
 		expect(creditedName()).toEqual({
 			useDefault: false,
 			specified: true,
 			first: "",
 			last: "zavet",
 		});
-		expect(
-			document.querySelector(".ebr-automatic-alias-warning")?.textContent,
-		).toContain('"zavet"');
+		expect(document.querySelector(".ebr-credited-name-suggestion")).toBeNull();
 		expect(document.body.textContent).toContain("filed under Kai Angel");
 		expect(document.body.textContent).not.toContain("(from parent)");
 		expect(
@@ -176,23 +182,22 @@ test.each([
 				.querySelector<HTMLInputElement>('input[value="Don\'t file under"]')
 				?.click(),
 		);
-		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
-			[],
-			new Set(["1479561"]),
-		);
+		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith([], new Set());
 		expect(creditedName().useDefault).toBe(true);
 		expect(creditedName().last).toBe("");
-		expect(document.querySelector(".ebr-automatic-alias-warning")).toBeNull();
+		expect(document.querySelector(".ebr-credited-name-suggestion")).toBeNull();
+		expect(
+			document.querySelector(
+				'input[value="Overwrite with performers from the import"]',
+			),
+		).toBeNull();
 		expect(restore?.disabled).toBe(false);
 		await act(() => restore?.click());
-		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
-			[entry],
-			new Set(["1479561"]),
-		);
-		expect(creditedName().last).toBe("zavet");
+		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith([entry], new Set());
+		expect(creditedName().useDefault).toBe(true);
 		expect(
-			document.querySelector(".ebr-automatic-alias-warning")?.textContent,
-		).toContain("before submitting");
+			document.querySelector(".ebr-credited-name-suggestion")?.textContent,
+		).toContain('"zavet"');
 	} finally {
 		document.removeEventListener("releaseArtistLabelsEvent", published);
 	}
@@ -234,7 +239,7 @@ test.each([
 test.each([
 	false,
 	true,
-])("only manages pre-existing entries on an issue (issue=%s)", async (issue) => {
+])("never removes pre-existing entries without confirmation (issue=%s)", async (issue) => {
 	document.body.innerHTML = `${issue ? '<input id="filed_under_same_as_parent_no">' : ""}
 		<div id="section_filed_under"></div>`;
 	await act(async () => {
@@ -245,11 +250,13 @@ test.each([
 			new CustomEvent("releaseArtistsEvent", { detail: ["Imported"] }),
 		);
 	});
-	expect(syncFiledUnderEntries).toHaveBeenCalledWith(
-		[],
-		new Set(issue ? ["1"] : []),
-	);
-	expect(readFiledUnderEntries).toHaveBeenCalledTimes(issue ? 1 : 0);
+	expect(syncFiledUnderEntries).toHaveBeenCalledWith([], new Set());
+	expect(readFiledUnderEntries).toHaveBeenCalledOnce();
+	expect(
+		document.querySelector(
+			'input[value="Overwrite with performers from the import"]',
+		),
+	).toBeNull();
 });
 
 test("matches parent links automatically but only offers other parent artists as explicit aliases", async () => {
@@ -302,7 +309,7 @@ test("matches parent links automatically but only offers other parent artists as
 	});
 	expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
 		[{ id: "1639184", name: "1000 Eyes" }],
-		new Set(["1639184"]),
+		new Set(),
 	);
 	expect(parentButton?.disabled).toBe(true);
 });
@@ -337,10 +344,7 @@ test("maps the imported alias zavet to the existing Kai Angel parent link withou
 		expect(select?.value).toBe("");
 		expect(select?.options[1]?.textContent).toBe("Kai Angel");
 		expect(document.querySelector('input[value="Use parent link"]')).toBeNull();
-		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
-			[],
-			new Set(["1479561"]),
-		);
+		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith([], new Set());
 		await act(() => {
 			document
 				.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
@@ -357,7 +361,7 @@ test("maps the imported alias zavet to the existing Kai Angel parent link withou
 		});
 		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
 			[{ id: "1479561", name: "Kai Angel" }],
-			new Set(["1479561"]),
+			new Set(),
 		);
 		expect(select?.value).toBe("1479561");
 		expect(search?.value).toBe("");
@@ -370,6 +374,7 @@ test("maps the imported alias zavet to the existing Kai Angel parent link withou
 		expect(published.mock.calls.at(-1)?.[0].detail.labels).toEqual(
 			new Map([["zavet", "[Artist1479561,zavet]"]]),
 		);
+		await acceptCreditedNameSuggestion();
 		expect(creditedName()).toEqual({
 			useDefault: false,
 			specified: true,
@@ -381,10 +386,7 @@ test("maps the imported alias zavet to the existing Kai Angel parent link withou
 			select.value = "";
 			select.dispatchEvent(new Event("change", { bubbles: true }));
 		});
-		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
-			[],
-			new Set(["1479561"]),
-		);
+		expect(syncFiledUnderEntries).toHaveBeenLastCalledWith([], new Set());
 		expect(published.mock.calls.at(-1)?.[0].detail.labels).toEqual(new Map());
 		expect(creditedName().useDefault).toBe(true);
 		expect(creditedName().last).toBe("");
@@ -426,6 +428,7 @@ test("uses the imported alias as the native artist name after a differently name
 			new Set(["1479561"]),
 		),
 	);
+	await acceptCreditedNameSuggestion();
 	expect(creditedName()).toEqual({
 		useDefault: false,
 		specified: true,
@@ -492,6 +495,12 @@ test.each([
 		);
 		expect(document.querySelector("#shortcutsearchframe")).toBeNull();
 		await vi.waitFor(() =>
+			expect(
+				document.querySelector(".ebr-credited-name-suggestion") !== null,
+			).toBe(selected !== "Molchat Doma"),
+		);
+		await acceptCreditedNameSuggestion();
+		await vi.waitFor(() =>
 			expect(creditedName().last).toBe(
 				selected === "Molchat Doma" ? "" : "Molchat Doma",
 			),
@@ -513,6 +522,7 @@ test("restores an untouched automatic alias when the next import uses the canoni
 			new CustomEvent("releaseArtistsEvent", { detail: ["zavet"] }),
 		);
 	});
+	await acceptCreditedNameSuggestion();
 	expect(creditedName().last).toBe("zavet");
 	await act(() => {
 		document.dispatchEvent(
@@ -539,6 +549,7 @@ test("preserves a manually edited artist name when the next import starts", asyn
 			new CustomEvent("releaseArtistsEvent", { detail: ["zavet"] }),
 		);
 	});
+	await acceptCreditedNameSuggestion();
 	const last = document.querySelector<HTMLInputElement>("#credited_lastname");
 	if (!last) throw new Error("Missing artist Last name field");
 	last.value = "Manually credited name";
@@ -669,4 +680,228 @@ test("cancelling clears the search field without changing the chosen artist", as
 		"filed under 1000 Eyes (from parent)",
 	);
 	expect(document.querySelector('input[value="Cancel selection"]')).toBeNull();
+});
+
+async function pickImportedArtistOverParent() {
+	vi.mocked(readFiledUnderEntries).mockReturnValueOnce([
+		{ id: "1479561", name: "Kai Angel" },
+	]);
+	document.body.innerHTML = `
+		<input id="filed_under_same_as_parent_no">
+		<div id="section_filed_under">
+			<div class="gosearch"><input id="filed_under_searchterm">
+				<input type="button" value="Search"></div>
+		</div>
+	`;
+	await act(async () => injectReleaseArtistPicker());
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistsEvent", { detail: ["Other"] }),
+		);
+	});
+	await act(() => {
+		document
+			.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
+			?.click();
+	});
+	const changed = vi.mocked(watchFiledUnderChanges).mock.calls.at(-1)?.[0];
+	if (!changed) throw new Error("Missing filed-under watcher");
+	await act(() =>
+		changed({
+			added: [{ id: "5", name: "Other" }],
+			presentIds: new Set(["1479561", "5"]),
+		}),
+	);
+	return changed;
+}
+
+test("keeps existing performers and only replaces them after the suggestion is accepted", async () => {
+	await pickImportedArtistOverParent();
+	expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
+		[{ id: "5", name: "Other" }],
+		new Set(["5"]),
+	);
+	const replace = document.querySelector<HTMLInputElement>(
+		'input[value="Overwrite with performers from the import"]',
+	);
+	const notice = replace?.closest(".ebr-replace-filed-under-notice");
+	expect(notice?.textContent).toContain("Already filed under Kai Angel.");
+	expect(notice?.parentElement?.id).toBe("section_filed_under");
+	expect(notice?.closest("table")).toBeNull();
+	await act(() => replace?.click());
+	expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
+		[{ id: "5", name: "Other" }],
+		new Set(["5", "1479561"]),
+	);
+	expect(
+		document.querySelector(
+			'input[value="Overwrite with performers from the import"]',
+		),
+	).toBeNull();
+});
+
+test("drops the replacement suggestion once existing performers are removed by hand", async () => {
+	const changed = await pickImportedArtistOverParent();
+	await act(() => changed({ added: [], presentIds: new Set(["5"]) }));
+	expect(
+		document.querySelector(
+			'input[value="Overwrite with performers from the import"]',
+		),
+	).toBeNull();
+});
+
+test("lists every previously filed artist but only overwrites those the import didn't choose", async () => {
+	vi.mocked(readFiledUnderEntries).mockReturnValueOnce([
+		{ id: "1639184", name: "1000 Eyes" },
+		{ id: "1734947", name: "Cicada Sirens" },
+	]);
+	document.body.innerHTML = `
+		<input id="filed_under_same_as_parent_no">
+		<div id="section_filed_under"></div>
+	`;
+	await act(async () => injectReleaseArtistPicker());
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistsEvent", {
+				detail: ["1000 Eyes", "Tom Schley"],
+			}),
+		);
+	});
+	const notice = document.querySelector<HTMLElement>(
+		".ebr-replace-filed-under-notice",
+	);
+	expect(notice?.textContent).toContain(
+		"Already filed under 1000 Eyes and Cicada Sirens.",
+	);
+	expect(notice?.style.margin).toBe("1em 0px");
+	const overwrite = notice?.querySelector<HTMLInputElement>("input");
+	expect(overwrite?.title).toContain("Remove Cicada Sirens from");
+	await act(() =>
+		document
+			.querySelectorAll("tr")[1]
+			?.querySelector<HTMLInputElement>('input[value="Don\'t file under"]')
+			?.click(),
+	);
+	await act(() =>
+		document
+			.querySelector<HTMLInputElement>(".ebr-replace-filed-under-notice input")
+			?.click(),
+	);
+	expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
+		[{ id: "1639184", name: "1000 Eyes" }],
+		new Set(["1639184", "1734947"]),
+	);
+	expect(document.querySelector(".ebr-replace-filed-under-notice")).toBeNull();
+});
+
+test("asks to decide on every imported artist before overwriting", async () => {
+	vi.mocked(readFiledUnderEntries).mockReturnValueOnce([
+		{ id: "1639184", name: "1000 Eyes" },
+		{ id: "1734947", name: "Cicada Sirens" },
+	]);
+	document.body.innerHTML = `
+		<input id="filed_under_same_as_parent_no">
+		<div id="section_filed_under"></div>
+	`;
+	await act(async () => injectReleaseArtistPicker());
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistsEvent", {
+				detail: ["1000 Eyes", "Tom Schley"],
+			}),
+		);
+	});
+	const overwrite = () =>
+		document.querySelector<HTMLInputElement>(
+			".ebr-replace-filed-under-notice input",
+		);
+	const error = () =>
+		document.querySelector<HTMLElement>(".ebr-inline-notice-error");
+	expect(error()?.hidden).toBe(true);
+	await act(() => overwrite()?.click());
+	expect(error()?.hidden).toBe(false);
+	expect(error()?.getAttribute("role")).toBe("alert");
+	expect(error()?.style.color).toBe("rgb(224, 0, 0)");
+	expect(error()?.previousElementSibling?.contains(overwrite() ?? null)).toBe(
+		true,
+	);
+	expect(error()?.textContent).toBe(
+		'Before overwriting, decide on Tom Schley in Release artists: link it to a RYM artist or click "Don\'t file under".',
+	);
+	expect(syncFiledUnderEntries).not.toHaveBeenCalledWith(
+		expect.anything(),
+		new Set(["1639184", "1734947"]),
+	);
+	const tomRow = [...document.querySelectorAll("tr")].find((row) =>
+		row.textContent?.includes("Tom Schley"),
+	);
+	await act(() =>
+		tomRow
+			?.querySelector<HTMLInputElement>('input[value="Don\'t file under"]')
+			?.click(),
+	);
+	expect(error()?.hidden).toBe(true);
+	await act(() => overwrite()?.click());
+	expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
+		[{ id: "1639184", name: "1000 Eyes" }],
+		new Set(["1639184", "1734947"]),
+	);
+	expect(document.querySelector(".ebr-replace-filed-under-notice")).toBeNull();
+});
+
+test("lists multiple undecided artists and only overwrites after all are decided", async () => {
+	vi.mocked(readFiledUnderEntries).mockReturnValueOnce([
+		{ id: "1639184", name: "1000 Eyes" },
+		{ id: "1734947", name: "Cicada Sirens" },
+	]);
+	document.body.innerHTML = `
+		<input id="filed_under_same_as_parent_no">
+		<div id="section_filed_under"></div>
+	`;
+	await act(async () => injectReleaseArtistPicker());
+	await act(() => {
+		document.dispatchEvent(
+			new CustomEvent("releaseArtistsEvent", {
+				detail: ["1000 Eyes", "Tom Schley", "Jane Doe", "Jan Kowalski"],
+			}),
+		);
+	});
+	const overwrite = () =>
+		document.querySelector<HTMLInputElement>(
+			".ebr-replace-filed-under-notice input",
+		);
+	const error = () =>
+		document.querySelector<HTMLElement>(".ebr-inline-notice-error");
+	const undecided = ["Tom Schley", "Jane Doe", "Jan Kowalski"];
+	const expectedLists = [
+		"Tom Schley, Jane Doe, and Jan Kowalski",
+		"Jane Doe and Jan Kowalski",
+		"Jan Kowalski",
+	];
+	for (const [index, name] of undecided.entries()) {
+		await act(() => overwrite()?.click());
+		expect(error()?.hidden).toBe(false);
+		expect(error()?.textContent).toBe(
+			`Before overwriting, decide on ${expectedLists[index]} in Release artists: link ${index === 2 ? "it" : "each"} to a RYM artist or click "Don't file under".`,
+		);
+		expect(syncFiledUnderEntries).not.toHaveBeenCalledWith(
+			expect.anything(),
+			new Set(["1639184", "1734947"]),
+		);
+		const row = [...document.querySelectorAll("tr")].find((row) =>
+			row.textContent?.includes(name),
+		);
+		const skip = row?.querySelector<HTMLInputElement>(
+			'input[value="Don\'t file under"]',
+		);
+		expect(skip).not.toBeNull();
+		await act(() => skip?.click());
+		expect(error()?.hidden).toBe(true);
+	}
+	await act(() => overwrite()?.click());
+	expect(syncFiledUnderEntries).toHaveBeenLastCalledWith(
+		[{ id: "1639184", name: "1000 Eyes" }],
+		new Set(["1639184", "1734947"]),
+	);
+	expect(document.querySelector(".ebr-replace-filed-under-notice")).toBeNull();
 });

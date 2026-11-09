@@ -1,5 +1,6 @@
 import { render } from "preact";
 
+import { getStreamLinkSettings } from "~/shared/stream-links/settings";
 import { waitForElement } from "~/shared/utils/dom";
 
 import { insertStreamLinks } from "./placement";
@@ -21,5 +22,6 @@ export const main = async () => {
 		insertStreamLinks(siblingElement, app);
 	}
 
-	render(<StreamLinks />, app);
+	const settings = await getStreamLinkSettings();
+	render(<StreamLinks settings={settings} />, app);
 };

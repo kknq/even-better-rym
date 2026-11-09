@@ -3,7 +3,14 @@ import { getCurrentUsername, normalizeUsername } from "~/shared/utils/user";
 
 import { cacheFollowers, getFollowers, parseFollowers } from "./followers";
 
-type StatusTarget = { username: string; status: HTMLSpanElement };
+type StatusTarget = {
+	username: string;
+	status: HTMLSpanElement;
+	icon?: boolean;
+};
+
+const FOLLOWER_COLOR = "var(--gen-bg-darkgreen, #2a6b2a)";
+const NON_FOLLOWER_COLOR = "#a34f4f";
 
 const createStatus = (): HTMLSpanElement => {
 	const status = document.createElement("span");
@@ -19,19 +26,19 @@ const updateStatuses = async (
 ): Promise<void> => {
 	try {
 		const followers = new Set(await loadFollowers());
-		for (const { username, status } of targets) {
+		for (const { username, status, icon } of targets) {
 			const followsYou = followers.has(normalizeUsername(username));
-			status.textContent = followsYou ? "follows you" : "does not follow you";
-			status.style.color = followsYou
-				? "var(--gen-bg-darkgreen, #2a6b2a)"
-				: "#a34f4f";
-			status.title =
-				"Based on your followers list, cached for up to one minute.";
+			const label = followsYou ? "follows you" : "does not follow you";
+			status.textContent = icon ? (followsYou ? "\u2713" : "\u2717") : label;
+			status.style.color = followsYou ? FOLLOWER_COLOR : NON_FOLLOWER_COLOR;
+			if (icon) status.setAttribute("aria-label", label);
+			status.title = `${label}. Based on your followers list, cached for up to one minute.`;
 		}
 	} catch (error) {
 		console.error("EvenBetterRYM: could not load follow status", error);
-		for (const { status } of targets) {
-			status.textContent = "follow status unavailable";
+		for (const { status, icon } of targets) {
+			status.textContent = icon ? "?" : "follow status unavailable";
+			if (icon) status.setAttribute("aria-label", "follow status unavailable");
 			status.title =
 				"Could not load your followers. Reload the page to try again.";
 		}
@@ -114,9 +121,72 @@ export const addFriendListFollowStatus = async (): Promise<void> => {
 	});
 };
 
+export const addAccountFriendsFollowStatus = async (): Promise<void> => {
+	if (!/^\/account\/friends\/?$/.test(location.pathname)) return;
+	const username = getCurrentUsername();
+	if (!username) return;
+
+	const targets: StatusTarget[] = [];
+	for (const heading of document.querySelectorAll(".bubble_header")) {
+		const title = heading.textContent?.trim().toLowerCase();
+		const section = heading.nextElementSibling;
+		if (!section?.classList.contains("bubble_content")) continue;
+		const selector =
+			title === "recently updated"
+				? ":scope > table.mbgen > tbody > tr > td > a.user"
+				: title === "online status"
+					? ":scope > a.user"
+					: null;
+		if (!selector) continue;
+
+		for (const link of section.querySelectorAll<HTMLAnchorElement>(selector)) {
+			if (
+				link.nextElementSibling?.classList.contains("ebr-follow-status-icon")
+			) {
+				continue;
+			}
+			const url = new URL(link.getAttribute("href") ?? "", location.origin);
+			const name = /^\/~([^/]+)\/?$/.exec(url.pathname)?.[1];
+			if (!name || url.origin !== location.origin) continue;
+
+			const status = createStatus();
+			status.className = "ebr-follow-status-icon";
+			status.textContent = "...";
+			status.setAttribute("aria-label", "checking follow status");
+			link.after(status);
+			targets.push({ username: name, status, icon: true });
+		}
+	}
+	if (targets.length === 0) return;
+
+	const frame = document
+		.querySelector("#page_breadcrumb > #ui_breadcrumb_item_page_breadcrumb")
+		?.closest(".ui_breadcrumb_frame");
+	if (frame && !frame.querySelector(".ebr-follow-status-legend")) {
+		frame.classList.add("ebr-follow-status-heading");
+		const legend = document.createElement("aside");
+		legend.className = "ebr-follow-status-legend";
+		legend.setAttribute("aria-label", "Follow status legend");
+		for (const followsYou of [true, false]) {
+			const item = document.createElement("span");
+			const icon = document.createElement("span");
+			icon.textContent = followsYou ? "\u2713" : "\u2717";
+			icon.style.color = followsYou ? FOLLOWER_COLOR : NON_FOLLOWER_COLOR;
+			icon.setAttribute("aria-hidden", "true");
+			item.append(icon, followsYou ? " follows you" : " does not follow you");
+			legend.append(item);
+		}
+		frame.append(legend);
+	}
+
+	await updateStatuses(targets, () => getFollowers(username));
+};
+
 export const main = async (): Promise<void> => {
 	await waitForDocumentReady();
-	if (location.pathname.startsWith("/friends/")) {
+	if (/^\/account\/friends\/?$/.test(location.pathname)) {
+		await addAccountFriendsFollowStatus();
+	} else if (location.pathname.startsWith("/friends/")) {
 		await addFriendListFollowStatus();
 	} else {
 		await addFollowStatus();

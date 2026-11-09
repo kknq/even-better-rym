@@ -5,7 +5,7 @@ import { waitForElement } from "~/shared/utils/dom";
 
 import {
 	clearFiledUnderSearch,
-	createCreditedNameSync,
+	createCreditedNameSuggestion,
 	readFiledUnderEntries,
 	removeRepeatedFiledUnderEntries,
 	searchFiledUnder,
@@ -13,7 +13,9 @@ import {
 	syncFiledUnderEntries,
 	watchFiledUnderChanges,
 } from "../utils/filed-under";
+import { showInlineNotice } from "../utils/inline-notice";
 import type {
+	FiledUnderEntry,
 	FiledUnderListChange,
 	ReleaseArtistChoice,
 	ReleaseArtistChoices,
@@ -45,6 +47,9 @@ import { useLatestState } from "./use-latest-state";
 
 type ReleasePickerSession = ReleasePickerArtists & {
 	initialChoices: ReleaseArtistChoices;
+	// Entries already in Filed under when the import started, which are only
+	// removed once the user accepts replacing them.
+	existingEntries: FiledUnderEntry[];
 };
 
 type ReleasePickerImport = {
@@ -100,8 +105,7 @@ function getReleasePickerSession(
 		names.length === 1 &&
 		pageArtistId !== null &&
 		/^[1-9]\d*$/.test(pageArtistId);
-	const existingEntries =
-		isIssue || usePageArtist ? readFiledUnderEntries() : [];
+	const existingEntries = readFiledUnderEntries();
 	const parentEntries = isIssue ? existingEntries : [];
 	const initialChoices = pairInheritedArtists(names, parentEntries);
 	if (usePageArtist) {
@@ -111,7 +115,7 @@ function getReleasePickerSession(
 		if (entry !== undefined)
 			initialChoices.set(names[0], { kind: "linked", entry });
 	}
-	return { names, parentEntries, initialChoices };
+	return { names, parentEntries, initialChoices, existingEntries };
 }
 
 // Tracks the picker session started by the most recent import, numbered so
@@ -160,18 +164,32 @@ function ReleasePickerPanel({
 		activeName: undefined,
 	}));
 	const { choices, activeName } = state;
-	// Ids of the entries this picker may remove: the parent's and any chosen,
-	// less any the user added back by hand.
-	const managedIds = useRef(
-		new Set(session.parentEntries.map((entry) => entry.id)),
+	// Ids of the entries this picker may remove: any it chose, less any the
+	// user added back by hand. Entries listed before the import are only added
+	// once the user accepts replacing them.
+	const managedIds = useRef(new Set<string>());
+	// The entries listed before the import that are still listed and haven't
+	// been replaced.
+	const [keptEntries, setKeptEntries] = useState(session.existingEntries);
+	const syncCreditedName = useRef(createCreditedNameSuggestion());
+	const replaceableEntries = getReplaceableEntries(
+		keptEntries,
+		getChosenEntries(session.names, choices),
 	);
-	const syncCreditedName = useRef(createCreditedNameSync());
+	const undecidedNames = session.names.filter((name) => !choices.has(name));
+	const noticeKey = [
+		...[keptEntries, replaceableEntries].map((entries) =>
+			entries.map((entry) => `${entry.id}:${entry.name}`).join("|"),
+		),
+		undecidedNames.join("|"),
+	].join("/");
 
 	useEffect(() => {
 		let active = true;
 		const chosenEntries = getChosenEntries(session.names, choices);
+		const keptIds = new Set(keptEntries.map((entry) => entry.id));
 		for (const entry of chosenEntries) {
-			managedIds.current.add(entry.id);
+			if (!keptIds.has(entry.id)) managedIds.current.add(entry.id);
 		}
 		if (!hasSameEntries(chosenEntries, session.parentEntries)) {
 			switchAwayFromSameAsParent();
@@ -191,7 +209,7 @@ function ReleasePickerPanel({
 		return () => {
 			active = false;
 		};
-	}, [session, choices]);
+	}, [session, choices, keptEntries]);
 
 	useEffect(
 		() => () => {
@@ -212,6 +230,10 @@ function ReleasePickerPanel({
 			if (change.added.length > 0) {
 				void removeRepeatedFiledUnderEntries().catch(reportSubmissionError);
 			}
+			setKeptEntries((kept) => {
+				const present = kept.filter((entry) => change.presentIds.has(entry.id));
+				return present.length === kept.length ? kept : present;
+			});
 			commit(next);
 		};
 		return watchFiledUnderChanges(handleListChange);
@@ -226,6 +248,16 @@ function ReleasePickerPanel({
 		commit({ choices, activeName: name });
 		searchFiledUnder(name);
 	};
+	useEffect(() => {
+		if (replaceableEntries.length === 0) return undefined;
+		return showReplaceExistingNotice(keptEntries, replaceableEntries, () => {
+			if (undecidedNames.length > 0)
+				return getUndecidedArtistsError(undecidedNames);
+			for (const entry of replaceableEntries) managedIds.current.add(entry.id);
+			setKeptEntries([]);
+			return undefined;
+		});
+	}, [noticeKey]);
 	return (
 		<PickerPanel
 			title="Release artists"
@@ -332,4 +364,50 @@ function describeChoice(choice: ReleaseArtistChoice | undefined): string {
 	}
 	const source = choice.kind === "linked" ? "" : " (from parent)";
 	return `filed under ${choice.entry.name}${source}`;
+}
+
+// Returns the entries listed before the import that no row has chosen, which
+// can be replaced once at least one imported artist is chosen.
+function getReplaceableEntries(
+	keptEntries: FiledUnderEntry[],
+	chosenEntries: FiledUnderEntry[],
+): FiledUnderEntry[] {
+	if (chosenEntries.length === 0) return [];
+	const chosenIds = new Set(chosenEntries.map((entry) => entry.id));
+	return keptEntries.filter((entry) => !chosenIds.has(entry.id));
+}
+
+const formatList = (names: string[], type: "conjunction" | "disjunction") =>
+	new Intl.ListFormat("en", { type }).format(names);
+
+const formatNames = (entries: FiledUnderEntry[]): string =>
+	formatList(
+		entries.map((entry) => entry.name),
+		"conjunction",
+	);
+
+const getUndecidedArtistsError = (names: string[]): string =>
+	`Before overwriting, decide on ${formatList(names, "conjunction")} in Release artists: link ${names.length === 1 ? "it" : "each"} to a RYM artist or click "Don't file under".`;
+
+// Shows a light red notice in File under performer listing every artist
+// filed under before the import, offering to remove those the import didn't
+// choose.
+function showReplaceExistingNotice(
+	existingEntries: FiledUnderEntry[],
+	replaceableEntries: FiledUnderEntry[],
+	onReplace: () => string | undefined,
+): () => void {
+	return showInlineNotice({
+		className: "ebr-replace-filed-under-notice",
+		message: `Already filed under ${formatNames(existingEntries)}.`,
+		action: {
+			value: "Overwrite with performers from the import",
+			title: `Remove ${formatNames(replaceableEntries)} from File under performer, keeping the chosen imported artists`,
+			onClick: onReplace,
+		},
+		// Matches the Release artists panel's 1em margin above.
+		margin: "1em 0",
+		place: (notice) =>
+			document.querySelector("#section_filed_under")?.prepend(notice),
+	});
 }
