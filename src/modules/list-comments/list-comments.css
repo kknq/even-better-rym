@@ -145,6 +145,7 @@ html:not(.ebr-list-comments-ready) #list_comments_commentarea {
 }
 
 .ebr-list-comments-enabled #list_comments_commentform textarea {
+	display: block;
 	box-sizing: border-box;
 	width: 100% !important;
 	height: 144px;
@@ -155,8 +156,28 @@ html:not(.ebr-list-comments-ready) #list_comments_commentarea {
 	resize: vertical;
 }
 
+.ebr-list-comments-enabled #list_comments_commentform table,
+.ebr-list-comments-enabled #list_comments_commentform tbody {
+	display: block;
+	width: 100%;
+}
+
+.ebr-list-comments-enabled #list_comments_commentform tr {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 50px;
+	gap: 8px;
+}
+
 .ebr-list-comments-enabled #list_comments_commentform td {
-	vertical-align: bottom;
+	display: block;
+	min-width: 0;
+	width: auto !important;
+}
+
+.ebr-list-comments-enabled #list_comments_commentform input[type="button"] {
+	box-sizing: border-box;
+	height: 100% !important;
+	font-size: 16px;
 }
 
 .ebr-list-comments-enabled #list_comments_dummybutton {
