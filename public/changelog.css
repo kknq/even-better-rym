@@ -137,6 +137,51 @@ main {
 	overflow-wrap: anywhere;
 }
 
+.change-preview {
+	display: block;
+	width: 33.333%;
+	height: auto;
+	margin-top: 12px;
+	border-radius: 4px;
+	cursor: zoom-in;
+}
+
+body:has(.preview-dialog[open]) {
+	overflow: hidden;
+}
+
+.preview-dialog {
+	max-width: 90vw;
+	max-height: 90vh;
+	padding: 44px 12px 12px;
+	border: 0;
+	border-radius: 8px;
+}
+
+.preview-dialog::backdrop {
+	background: rgba(0, 0, 0, 0.8);
+}
+
+.preview-close {
+	position: absolute;
+	top: 4px;
+	right: 8px;
+	width: 36px;
+	height: 36px;
+	border: 0;
+	background: transparent;
+	color: #1a1a1a;
+	font-size: 28px;
+	cursor: pointer;
+}
+
+.preview-image {
+	display: block;
+	max-width: 100%;
+	max-height: calc(90vh - 56px);
+	object-fit: contain;
+}
+
 .footer {
 	margin: 18px 0;
 	color: #888;

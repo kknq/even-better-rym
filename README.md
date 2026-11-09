@@ -194,6 +194,8 @@ Adds links on release genre and descriptor pages to switch between their genre a
 
 Hides community rating values while preserving page layout. Configure the supported pages and whether ratings are hidden only until you rate a release or at all times; a toggle reveals them on demand.
 
+Release and film visibility buttons appear inline with Rate/Catalog by default, wrapping individually on smaller screens. Switch to a separate section in the rating or review settings; this shared layout preference applies to both controls.
+
 - **Release pages** (`/release/*`, `/film/*`) — Ratings remain visible when you have rated the release; otherwise, averages, rankings, review ratings, and track scores are hidden.
 - **Artist pages** (`/artist/*`) — Ratings remain visible only for releases you have rated. Lazy-loaded discography entries follow the current toggle state.
 - **Charts, homepage, and new releases** — Available rating values are hidden because the page does not provide per-release rating status for the current user.
