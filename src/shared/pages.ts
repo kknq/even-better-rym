@@ -14,7 +14,7 @@ export const pages = {
 	userCollection: "/collection",
 	filmCollection: "/film_collection",
 	userPage: "/~",
-	followStatus: ["/~", "/friends/"],
+	followStatus: ["/~", "/friends/", "/account/friends"],
 	listComments: "/list/",
 	voteHistoryGenres: "/rgenre/vote_history",
 	voteHistoryDescriptors: "/rdescriptor/vote_history",
@@ -159,7 +159,7 @@ export const pageHints: Record<PageKey, string> = {
 	userPage:
 		"Adds edit buttons for favorite artists and other comments on your profile.",
 	followStatus:
-		"Shows whether users follow you on their profiles and under names in your friends list, with a one-minute cache.",
+		"Shows whether users follow you on profiles, in your friends list, and beside friends' activity and online status, with a one-minute cache.",
 	listComments:
 		"Makes list comments wider and taller, improves readability, enlarges the editor, and adds top/bottom scroll controls.",
 	voteHistoryGenres:

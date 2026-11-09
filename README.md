@@ -101,6 +101,8 @@ Lets you edit your favorite artists and other comments directly from your profil
 
 Shows **follows you** in green or **does not follow you** in muted red at the bottom of other users' profile details and beneath names in your friends list. Your followers list is cached for one minute.
 
+On the friends activity page, green ticks and muted-red crosses beside nicknames show the same status in recently updated activity and the online/offline list.
+
 ---
 
 ### List Comment Enhancements

@@ -195,9 +195,11 @@ const sharedManifest = {
 		},
 		{
 			js: ["src/modules/follow-status/main.ts"],
+			css: ["src/modules/follow-status/follow-status.css"],
 			matches: [
 				"*://*.rateyourmusic.com/~*",
 				"*://*.rateyourmusic.com/friends/*",
+				"*://*.rateyourmusic.com/account/friends/*",
 			],
 			run_at: "document_start",
 		},
