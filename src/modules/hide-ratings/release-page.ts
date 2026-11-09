@@ -1,5 +1,9 @@
 import { eyeIcon } from "~/shared/icons/eye";
 import {
+	getReleaseVisibilityControls,
+	setupReleaseVisibilityLayout,
+} from "~/shared/visibility/release-controls";
+import {
 	hasOwnReleaseRating,
 	observeOwnReleaseRating,
 } from "~/shared/visibility/release-rating";
@@ -11,6 +15,7 @@ export const setupReleasePage = (
 	settings: RatingSettings,
 	showButton: boolean,
 ): void => {
+	setupReleaseVisibilityLayout();
 	markRankingRow();
 	const updateRatingPolicy = (hasReleaseRating: boolean) => {
 		document.body.classList.toggle("ebr-release-rated", hasReleaseRating);
@@ -82,15 +87,13 @@ const markRankingRow = (): void => {
 };
 
 const insertReleaseButton = (): void => {
-	const buttonRow = document.querySelector<HTMLElement>(
-		".release_my_catalog, .page_release_section_reviews, #content",
-	);
-	if (!buttonRow || document.getElementById("ebr-show-rating-btn")) return;
+	if (document.getElementById("ebr-show-rating-btn")) return;
+	const controls = getReleaseVisibilityControls();
+	if (!controls) return;
 
 	const wrapper = document.createElement("div");
 	wrapper.id = "ebr-show-rating-btn-release-wrapper";
 	wrapper.classList.add("ebr-release-toggle-wrapper");
-	wrapper.style.float = "left";
 
 	const button = document.createElement("div");
 	button.id = "ebr-show-rating-btn";
@@ -100,20 +103,7 @@ const insertReleaseButton = (): void => {
 	wireButton(button);
 	wrapper.appendChild(button);
 
-	const reviewControls = buttonRow.querySelector(".my_catalog_review");
-	const isFilm = document.documentElement.id === "page_film";
-	const controlRow = isFilm ? (reviewControls ?? buttonRow) : buttonRow;
-	const nativeControl = isFilm
-		? controlRow.querySelector("#review_btn")
-		: buttonRow.querySelector("#track_rating_btn");
-	const clearEl = controlRow.querySelector(".clear");
-	const reviewWrapper = document.getElementById(
-		"ebr-show-review-btn-release-wrapper",
-	);
-	if (reviewWrapper) reviewWrapper.before(wrapper);
-	else if (nativeControl) nativeControl.after(wrapper);
-	else if (clearEl) clearEl.before(wrapper);
-	else controlRow.appendChild(wrapper);
+	controls.prepend(wrapper);
 };
 
 const insertSuggestionButton = (): void => {

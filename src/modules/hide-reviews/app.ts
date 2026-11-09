@@ -4,6 +4,10 @@ import { waitForDocumentReady } from "~/shared/utils/dom";
 import { isOwnProfile, isOwnUserPage } from "~/shared/utils/user";
 import { prepareCollectionRows } from "~/shared/visibility/collection";
 import {
+	getReleaseVisibilityControls,
+	setupReleaseVisibilityLayout,
+} from "~/shared/visibility/release-controls";
+import {
 	hasOwnReleaseRating,
 	observeOwnReleaseRating,
 } from "~/shared/visibility/release-rating";
@@ -79,6 +83,7 @@ export const main = async (): Promise<void> => {
 		isReleaseOrFilmPage(page) &&
 		!isReleaseReviewList(globalThis.location.pathname)
 	) {
+		setupReleaseVisibilityLayout();
 		observeOwnReleaseRating(applyReleaseRatingPolicy);
 	}
 	if (settings.globalButton) {
@@ -97,16 +102,13 @@ export const main = async (): Promise<void> => {
 };
 
 const insertReleaseReviewButton = (): void => {
-	const buttonRow = document.querySelector<HTMLElement>(
-		".release_my_catalog, .page_release_section_reviews, #content",
-	);
-	if (!buttonRow || document.getElementById("ebr-show-review-btn-release"))
-		return;
+	if (document.getElementById("ebr-show-review-btn-release")) return;
+	const controls = getReleaseVisibilityControls();
+	if (!controls) return;
 
 	const wrapper = document.createElement("div");
 	wrapper.id = "ebr-show-review-btn-release-wrapper";
 	wrapper.classList.add("ebr-release-toggle-wrapper");
-	wrapper.style.float = "left";
 
 	const button = document.createElement("div");
 	button.id = "ebr-show-review-btn-release";
@@ -116,20 +118,7 @@ const insertReleaseReviewButton = (): void => {
 	wireReviewButton(button, false);
 	wrapper.appendChild(button);
 
-	const reviewControls = buttonRow.querySelector(".my_catalog_review");
-	const isFilm = document.documentElement.id === "page_film";
-	const controlRow = isFilm ? (reviewControls ?? buttonRow) : buttonRow;
-	const nativeControl = isFilm
-		? controlRow.querySelector("#review_btn")
-		: buttonRow.querySelector("#track_rating_btn");
-	const ratingWrapper = document.getElementById(
-		"ebr-show-rating-btn-release-wrapper",
-	);
-	const clearEl = controlRow.querySelector(".clear");
-	if (ratingWrapper) ratingWrapper.after(wrapper);
-	else if (nativeControl) nativeControl.after(wrapper);
-	else if (clearEl) clearEl.before(wrapper);
-	else controlRow.appendChild(wrapper);
+	controls.appendChild(wrapper);
 };
 
 const insertReviewButton = (

@@ -1,0 +1,43 @@
+body.ebr-release-visibility-enabled
+	.release_right_column
+	.section_my_catalog.section_outer {
+	padding-top: 0.75em;
+	padding-bottom: 0.75em;
+}
+
+.ebr-release-visibility {
+	clear: both;
+	padding: 0.75em 30px;
+	border-top: 1px solid var(--mono-e, #eee);
+	border-bottom: 1px solid var(--mono-e, #eee);
+}
+
+.section_my_catalog + .ebr-release-visibility {
+	border-top: 0;
+}
+
+#ebr-release-visibility-controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3em;
+}
+
+#ebr-release-visibility-controls > .ebr-release-toggle-wrapper {
+	flex: 0 1 145px;
+	min-width: 0;
+	max-width: 100%;
+}
+
+#ebr-release-visibility-controls .review_btn {
+	float: none;
+	width: 100%;
+	max-width: 100%;
+	margin: 0;
+	cursor: pointer;
+}
+
+@media (max-width: 64em) {
+	.ebr-release-visibility {
+		padding: 0.75em 1em;
+	}
+}

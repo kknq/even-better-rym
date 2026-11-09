@@ -65,6 +65,57 @@ afterEach(() => {
 
 describe("Hide Ratings feature", () => {
 	it.each([
+		true,
+		false,
+	])("gates compact release spacing on page enablement (%s), not button visibility", async (enabled) => {
+		setPathname("/release/album/example/");
+		document.body.innerHTML = '<div class="release_my_catalog"></div>';
+		mocks.getRatingSettings.mockResolvedValue(
+			getSettings({
+				buttons: false,
+				pages: { ...defaultRatingSettings().pages, release: enabled },
+			}),
+		);
+
+		await main();
+
+		expect(
+			document.body.classList.contains("ebr-release-visibility-enabled"),
+		).toBe(enabled);
+		expect(document.querySelector(".ebr-release-visibility")).toBeNull();
+	});
+
+	it.each([
+		"/latest",
+		"/release/album/example/reviews/",
+	])("does not compact catalog headings on %s", async (pathname) => {
+		setPathname(pathname);
+
+		await main();
+
+		expect(document.body.classList).not.toContain(
+			"ebr-release-visibility-enabled",
+		);
+	});
+
+	it("creates a separate section with ratings enabled on their own", async () => {
+		setPathname("/release/album/example/");
+		document.body.innerHTML = '<div class="release_my_catalog"></div>';
+		mocks.getRatingSettings.mockResolvedValue(getSettings({ buttons: true }));
+
+		await main();
+		await main();
+
+		const controls = document.getElementById("ebr-release-visibility-controls");
+		expect(controls?.children).toHaveLength(1);
+		expect(controls?.querySelector("#ebr-show-rating-btn")).not.toBeNull();
+		expect(document.getElementById("ebr-show-review-btn-release")).toBeNull();
+
+		document.getElementById("ebr-show-rating-btn")?.click();
+		expect(document.body.classList).not.toContain("ebr-hide-ratings");
+	});
+
+	it.each([
 		"buy",
 		"buy/",
 		"coverart",
