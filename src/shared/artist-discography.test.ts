@@ -25,6 +25,21 @@ function row(id: number, status: string) {
 		<div class="disco_avg_rating">4.5</div></div>`;
 }
 
+function editions(id: number, statuses: string[]) {
+	return `<div class="disco_issues_section" id="issues_${id}">
+		<ul class="issues expanded">${statuses
+			.map(
+				(status, index) => `
+			<li id="issue_${id + index}" class="issue_info">
+				<span class="disco_cat_inner_issue">
+					<span><i class="fa fa-caret-left"></i></span>
+					<span id="disco_cat_catalog_msg_${id + index}">${status}</span>
+				</span>
+			</li>`,
+			)
+			.join("")}</ul></div>`;
+}
+
 beforeEach(() => {
 	vi.resetAllMocks();
 	document.body.innerHTML = "";
@@ -33,6 +48,25 @@ beforeEach(() => {
 });
 
 describe("discography data", () => {
+	test.each([
+		[["3.5", "2.5"], true],
+		[["Wishlist", "3.5"], true],
+		[["Not listened", "Listened/CD"], true],
+		[["Wishlist", "Vinyl"], false],
+		[["Not listened", "Rate"], false],
+	])("counts multiple editions once using their personal statuses: %j", (statuses, listened) => {
+		document.body.innerHTML =
+			row(16390215, "2 cataloged") + editions(16390215, statuses);
+		expect(readReleases(document)).toEqual(
+			new Map([["release_16390215", listened]]),
+		);
+	});
+
+	test("leaves aggregate catalog counts unresolved until edition details are available", () => {
+		document.body.innerHTML = row(16390215, "2 cataloged");
+		expect(readReleases(document).has("release_16390215")).toBe(false);
+	});
+
 	test("counts personal ratings and listened status, not ownership or averages", () => {
 		document.body.innerHTML = [
 			row(1, "4.0/Wishlist"),
@@ -353,6 +387,85 @@ describe("background section loading", () => {
 		expect(runScript).toHaveBeenCalledTimes(2);
 	});
 
+	test("loads collapsed edition ratings without expanding the page and caches the resolved release", async () => {
+		document.body.innerHTML = `<span id="disco_header_showing_e">Showing all (1)</span>
+			<div id="disco_type_e">${row(16390215, "2 cataloged")}
+				<div id="issues_16390215"></div></div>`;
+		const before = document.body.innerHTML;
+		reply(
+			`RYMartistPage._expandIssuesCallback(16390215, ${JSON.stringify(editions(16390215, ["3.5", "2.5"]).replace(/^<div[^>]*>|<\/div>$/g, ""))})`,
+		);
+		const pending = load("e");
+		await vi.runAllTimersAsync();
+		expect(readReleases(await pending)).toEqual(
+			new Map([["release_16390215", true]]),
+		);
+		expect(runScript).toHaveBeenCalledOnce();
+		expect(vi.mocked(runScript).mock.calls[0][0]).toContain(
+			"/httprequest/ExpandDiscographyIssues",
+		);
+		expect(vi.mocked(runScript).mock.calls[0][0]).toContain(
+			'"album_id":"16390215"',
+		);
+		expect(document.body.innerHTML).toBe(before);
+		const cached = await load("e");
+		expect(readReleases(cached).get("release_16390215")).toBe(true);
+		expect(runScript).toHaveBeenCalledOnce();
+	});
+
+	test("paces edition requests after loading a missing section", async () => {
+		document.body.innerHTML =
+			'<span id="disco_header_showing_e">Showing 1 of 2</span>';
+		vi.mocked(runScript).mockImplementationOnce((script) => {
+			dispatchResult(script, {
+				body: `RYMartistPage._expandDiscographySectionCallback("e", ${JSON.stringify(row(1, "Rate") + row(16390215, "2 cataloged"))})`,
+			});
+			return Promise.resolve();
+		});
+		reply(
+			`RYMartistPage._expandIssuesCallback("16390215", ${JSON.stringify(editions(16390215, ["Wishlist", "3.5"]))})`,
+		);
+		const pending = load("e");
+		await vi.advanceTimersByTimeAsync(0);
+		expect(runScript).toHaveBeenCalledTimes(1);
+		await vi.advanceTimersByTimeAsync(749);
+		expect(runScript).toHaveBeenCalledTimes(1);
+		await vi.advanceTimersByTimeAsync(101);
+		expect(readReleases(await pending)).toEqual(
+			new Map([
+				["release_1", false],
+				["release_16390215", true],
+			]),
+		);
+		expect(runScript).toHaveBeenCalledTimes(2);
+	});
+
+	test("stops further edition requests after a rate limit", async () => {
+		document.body.innerHTML = `<span id="disco_header_showing_e">Showing all (2)</span>
+			<div id="disco_type_e">${row(1, "2 cataloged") + row(3, "2 cataloged")}</div>`;
+		vi.mocked(runScript).mockImplementation((script) => {
+			dispatchResult(script, { status: 429, retryAfter: "120" });
+			return Promise.resolve();
+		});
+		const failed = expect(load("e")).rejects.toMatchObject({
+			name: "DiscographyRateLimitError",
+		});
+		await vi.runAllTimersAsync();
+		await failed;
+		expect(runScript).toHaveBeenCalledOnce();
+		expect(saved.has(cacheKey("e"))).toBe(false);
+	});
+
+	test("rejects missing edition statuses rather than reporting false incomplete listening", async () => {
+		document.body.innerHTML = `<span id="disco_header_showing_e">Showing all (1)</span>
+			<div id="disco_type_e">${row(1, "2 cataloged")}</div>`;
+		reply('RYMartistPage._expandIssuesCallback(1, "<ul></ul>")');
+		const failed = expect(load("e")).rejects.toThrow("Incomplete EPs response");
+		await vi.runAllTimersAsync();
+		await failed;
+		expect(saved.has(cacheKey("e"))).toBe(false);
+	});
+
 	test("propagates script injection failures", async () => {
 		vi.mocked(runScript).mockRejectedValue(new Error("Cannot inject"));
 		const failed = expect(load("s")).rejects.toThrow("Cannot inject");
@@ -382,7 +495,7 @@ describe("background section loading", () => {
 			return Promise.resolve();
 		});
 		const respond = () => {
-			const type = /type: "([a-z])"/.exec(script)?.[1];
+			const type = /"type":"([a-z])"/.exec(script)?.[1];
 			if (!type) throw new Error("Missing section type");
 			dispatchResult(script, {
 				body: `RYMartistPage._expandDiscographySectionCallback("${type}", ${JSON.stringify(row(1, "Rate"))})`,

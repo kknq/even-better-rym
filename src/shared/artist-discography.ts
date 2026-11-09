@@ -8,17 +8,44 @@ import { getCurrentUsername, normalizeUsername } from "~/shared/utils/user";
 
 export type Releases = Map<string, boolean>;
 
+function isListened(catalog: Element): boolean {
+	const statuses = (catalog.textContent?.trim() ?? "")
+		.split("/")
+		.map((part) => part.trim());
+	const rating = Number(statuses[0]);
+	return (
+		(rating > 0 && rating <= 5) ||
+		statuses.some((status) => /^listened$/i.test(status)) ||
+		catalog.matches('[title="Listened"], [aria-label="Listened"]') ||
+		!!catalog.querySelector('[title="Listened"], [aria-label="Listened"]')
+	);
+}
+
+function editionCatalogs(root: ParentNode, releaseId: string): Element[] {
+	return [
+		...root.querySelectorAll(
+			`#issues_${releaseId} .disco_cat_inner_issue [id^="disco_cat_catalog_msg_"]`,
+		),
+	];
+}
+
+function hasMultipleCatalogs(row: Element): boolean {
+	return /^\d+\s+cataloged$/i.test(
+		row.querySelector(".disco_cat_inner")?.textContent?.trim() ?? "",
+	);
+}
+
 export function readReleases(root: ParentNode): Releases {
 	const releases: Releases = new Map();
 	for (const row of root.querySelectorAll(".disco_release")) {
 		if (!/^release_\d+$/.test(row.id)) continue;
+		const catalogs = editionCatalogs(root, row.id.slice("release_".length));
+		// An aggregate catalog count does not reveal whether any edition was heard.
+		if (hasMultipleCatalogs(row) && catalogs.length === 0) continue;
 		const catalog = row.querySelector(".disco_cat_inner");
-		const text = catalog?.textContent?.trim() ?? "";
-		const statuses = text.split("/").map((part) => part.trim());
-		const rating = Number(statuses[0]);
 		const listened =
-			(rating > 0 && rating <= 5) ||
-			statuses.some((status) => /^listened$/i.test(status)) ||
+			(catalog !== null && isListened(catalog)) ||
+			catalogs.some(isListened) ||
 			!!row.querySelector(
 				'.disco_cat [title="Listened"], .disco_cat [aria-label="Listened"]',
 			);
@@ -73,9 +100,14 @@ export function parseSectionResponse(
 	body: string,
 	type: ReleaseType,
 ): Document {
-	const callback = new RegExp(
+	return parseCallbackResponse(
+		body,
 		String.raw`RYMartistPage\._expandDiscographySectionCallback\(\s*["']${type}["']\s*,\s*`,
-	).exec(body);
+	);
+}
+
+function parseCallbackResponse(body: string, pattern: string): Document {
+	const callback = new RegExp(pattern).exec(body);
 	if (!callback) throw new Error("Missing discography response callback");
 	let index = callback.index + callback[0].length;
 	const quote = body[index++];
@@ -158,34 +190,86 @@ export function loadSection(type: ReleaseType): Promise<Document> {
 	const request = enqueue(async () => {
 		const cached = await readCachedSection(key, type);
 		if (cached !== null) return cached;
-		await checkCooldown();
-		await sleep(Math.max(0, nextRequestAt - Date.now()));
-		await checkCooldown();
-		try {
-			const section = await fetchSection(type);
-			await cacheSection(key, section);
-			return section;
-		} catch (error) {
-			if (error instanceof DiscographyRateLimitError) {
-				cooldownUntil = Math.max(cooldownUntil, error.retryAt);
-				try {
-					await storage.set(cooldownKey, cooldownUntil);
-				} catch (storageError) {
-					console.error(
-						"EvenBetterRYM: could not persist discography rate-limit cooldown",
-						storageError,
-					);
-				}
-			}
-			throw error;
-		} finally {
-			nextRequestAt = Date.now() + requestInterval();
-		}
+		const section = await loadCompleteSection(type);
+		await cacheSection(key, section);
+		return section;
 	}).finally(() => {
 		requests.delete(key);
 	});
 	requests.set(key, request);
 	return request;
+}
+
+async function pacedRequest(params: Record<string, string>): Promise<string> {
+	await checkCooldown();
+	await sleep(Math.max(0, nextRequestAt - Date.now()));
+	await checkCooldown();
+	try {
+		return await fetchResponse(params);
+	} catch (error) {
+		if (error instanceof DiscographyRateLimitError) {
+			cooldownUntil = Math.max(cooldownUntil, error.retryAt);
+			try {
+				await storage.set(cooldownKey, cooldownUntil);
+			} catch (storageError) {
+				console.error(
+					"EvenBetterRYM: could not persist discography rate-limit cooldown",
+					storageError,
+				);
+			}
+		}
+		throw error;
+	} finally {
+		nextRequestAt = Date.now() + requestInterval();
+	}
+}
+
+async function loadCompleteSection(type: ReleaseType): Promise<Document> {
+	const visible = document.querySelector(`#disco_type_${type}`);
+	const total = readTotal(document, type);
+	let section: Document;
+	if (
+		visible &&
+		total !== null &&
+		visible.querySelectorAll(".disco_release").length >= total
+	) {
+		section = new DOMParser().parseFromString(visible.innerHTML, "text/html");
+	} else {
+		const body = await pacedRequest({
+			action: "ExpandDiscographySection",
+			type,
+		});
+		section = parseSectionResponse(body, type);
+	}
+	await [...section.querySelectorAll(".disco_release")].reduce(
+		async (previous, row) => {
+			await previous;
+			if (!hasMultipleCatalogs(row)) return;
+			const releaseId = /^release_(\d+)$/.exec(row.id)?.[1];
+			if (!releaseId || editionCatalogs(section, releaseId).length > 0) return;
+			const body = await pacedRequest({
+				action: "ExpandDiscographyIssues",
+				album_id: releaseId,
+			});
+			const issues = parseCallbackResponse(
+				body,
+				String.raw`RYMartistPage\._expandIssuesCallback\(\s*["']?${releaseId}["']?\s*,\s*`,
+			);
+			const panel = section.querySelector(`#issues_${releaseId}`);
+			const html = issues.body.innerHTML;
+			if (panel) {
+				panel.innerHTML = html;
+			} else {
+				const container = section.createElement("div");
+				container.id = `issues_${releaseId}`;
+				container.innerHTML = html;
+				row.after(container);
+			}
+		},
+		Promise.resolve(),
+	);
+	validateSection(section, type);
+	return section;
 }
 
 function validateSection(section: Document, type: ReleaseType): void {
@@ -223,7 +307,7 @@ async function cacheSection(key: string, section: Document): Promise<void> {
 	}
 }
 
-async function fetchSection(type: ReleaseType): Promise<Document> {
+async function fetchResponse(params: Record<string, string>): Promise<string> {
 	const id = crypto.randomUUID();
 	const origin = location.origin;
 	const body = await new Promise<string>((resolve, reject) => {
@@ -273,17 +357,16 @@ async function fetchSection(type: ReleaseType): Promise<Document> {
 					throw new Error("RYM artist session is unavailable");
 				const data = new FormData();
 				const params = {
-					action: "ExpandDiscographySection",
 					artist_id: RYMartistPage.artist_id,
 					artist_key: RYMartistPage.artist_key,
-					type: ${JSON.stringify(type)},
 					sort: "release_date.a,title.a",
 					show_appearances: false,
 					rym_ajax_req: 1,
 					request_token: rym.session.token,
+					...${JSON.stringify(params)},
 				};
 				for (const [key, value] of Object.entries(params)) data.append(key, String(value));
-				const response = await fetch("/httprequest/ExpandDiscographySection", {
+				const response = await fetch(${JSON.stringify(`/httprequest/${params.action}`)}, {
 					method: "POST", body: data, credentials: "include", signal: controller.signal,
 				});
 				if (response.status === 429) {
@@ -315,7 +398,5 @@ async function fetchSection(type: ReleaseType): Promise<Document> {
 			reject(new Error(message, { cause: error }));
 		});
 	});
-	const section = parseSectionResponse(body, type);
-	validateSection(section, type);
-	return section;
+	return body;
 }

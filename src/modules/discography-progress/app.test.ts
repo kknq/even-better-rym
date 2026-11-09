@@ -204,6 +204,40 @@ test("loads missing releases without modifying or expanding the RYM list", async
 	).toHaveLength(1);
 });
 
+test.each([
+	["3.5", "Rate", 2],
+	["Wishlist", "3.5", 2],
+	["Wishlist", "Vinyl", 1],
+])("resolves multiple editions and counts the release once: %s / %s", async (first, second, listened) => {
+	document.body.innerHTML = `<div id="discography">
+		${section("s", row(17312448, "3.0"), 1)}
+		${section("e", row(16390215, "2 cataloged"), 1)}</div>`;
+	vi.mocked(loadSection).mockResolvedValue(
+		new DOMParser().parseFromString(
+			`${row(16390215, "2 cataloged")}
+			<div id="issues_16390215"><ul class="issues expanded">
+				<li class="issue_info"><span class="disco_cat_inner_issue">
+					<span id="disco_cat_catalog_msg_16390215">${first}</span>
+				</span></li>
+				<li class="issue_info"><span class="disco_cat_inner_issue">
+					<span id="disco_cat_catalog_msg_16742074">${second}</span>
+				</span></li>
+			</ul></div>`,
+			"text/html",
+		),
+	);
+	await main();
+	await vi.waitFor(() => {
+		expect(overall()?.getAttribute("value")).toBe(String(listened));
+	});
+	expect(overall()?.getAttribute("max")).toBe("2");
+	expect(loadSection).toHaveBeenCalledExactlyOnceWith("e");
+	expect(document.querySelector("#disco_type_e")?.textContent).toContain(
+		"2 cataloged",
+	);
+	expect(document.querySelectorAll(".issue_info")).toHaveLength(0);
+});
+
 test("prefers current visible ratings over cached listening statuses", async () => {
 	document.body.innerHTML = `<div id="discography">${section("s", row(1, "4.5"), 2)}</div>`;
 	vi.mocked(loadSection).mockResolvedValue(
