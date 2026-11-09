@@ -15,6 +15,6 @@ export const Tidal: Service & Searchable & Resolvable = {
 	icon: TidalIcon,
 	foundIcon: TidalFoundIcon,
 	notFoundIcon: TidalNotFoundIcon,
-	search: withCache("tidal-search", search),
+	search: withCache("tidal-search-v2", search),
 	resolve: withCache("tidal-resolve-v3", resolve),
 };

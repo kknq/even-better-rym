@@ -8,6 +8,7 @@ import type { SearchFunction } from "../types";
 
 export const search: SearchFunction = async ({
 	artist,
+	artistAlias,
 	title,
 	releaseType,
 }) => {
@@ -18,6 +19,7 @@ export const search: SearchFunction = async ({
 		type: "spotifySearch",
 		data: {
 			artist,
+			...(artistAlias ? { artistAlias } : {}),
 			title,
 			...(releaseType === "single" || releaseType === "music video"
 				? { releaseType }
@@ -33,13 +35,11 @@ export const search: SearchFunction = async ({
 		)
 	) {
 		const log = response.data.error ? console.warn : console.info;
+		let status = response.data.url ? "found" : "not-found";
+		if (response.data.error) status = "error";
 		log("[EvenBetterRYM Spotify] search diagnostics", {
 			requestId: response.id,
-			status: response.data.error
-				? "error"
-				: response.data.url
-					? "found"
-					: "not-found",
+			status,
 			...response.data,
 		});
 	}

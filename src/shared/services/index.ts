@@ -9,6 +9,7 @@ import { MetalArchives } from "./metalarchives";
 import { Mixcloud } from "./mixcloud";
 import { NTS } from "./nts";
 import { Qobuz } from "./qobuz";
+import { withArtistAlias } from "./search-matching";
 import { Soundcloud } from "./soundcloud";
 import { Spotify } from "./spotify";
 import { Tidal } from "./tidal";
@@ -36,8 +37,12 @@ export const SERVICES: Service[] = [
 	Mixcloud,
 ];
 
-export const SEARCHABLES: (Service & Searchable)[] =
-	SERVICES.filter(isSearchable);
+export const SEARCHABLES: (Service & Searchable)[] = SERVICES.filter(
+	isSearchable,
+).map((service) => ({
+	...service,
+	search: withArtistAlias(service.search),
+}));
 export const RESOLVABLES: (Service & Resolvable)[] =
 	SERVICES.filter(isResolvable);
 export const EMBEDDABLES: (Service & Embeddable)[] =

@@ -1,6 +1,13 @@
 import { describe, expect, test } from "vitest";
 
-import { isSearchResult } from "./messages";
+import { isSearchInput, isSearchResult } from "./messages";
+
+test("validates the optional artist alias string in search messages", () => {
+	const input = { artist: "7Б", title: "Рок Жив!" };
+	expect(isSearchInput({ ...input, artistAlias: "7B" })).toBe(true);
+	expect(isSearchInput({ ...input, artistAlias: ["7B"] })).toBe(false);
+	expect(isSearchInput({ ...input, artistAlias: 7 })).toBe(false);
+});
 
 describe("isSearchResult", () => {
 	test("accepts not-found as a successful search outcome", () => {

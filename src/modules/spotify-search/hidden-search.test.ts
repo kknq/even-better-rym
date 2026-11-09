@@ -35,6 +35,15 @@ function respond(result: SearchResult) {
 	return request;
 }
 
+test("passes the artist alias to the reader without duplicating shared search retries", async () => {
+	const data = { artist: "7Б", artistAlias: "7B", title: "Рок Жив!" };
+	const pending = searchHiddenSpotify(data);
+	expect(respond({ status: "not-found" }).data).toEqual(data);
+	await expect(pending).resolves.toMatchObject({ status: "not-found" });
+	expect(document.querySelector("iframe")).toBeNull();
+	expect(vi.getTimerCount()).toBe(0);
+});
+
 test.each([
 	{
 		artist: "72%",
