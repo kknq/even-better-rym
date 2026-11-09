@@ -8,9 +8,11 @@ import {
 	defaultRatingSettings,
 	defaultReviewSettings,
 	getRatingSettings,
+	getReleaseControlLayout,
 	getReviewSettings,
 	reviewVisibilityPages,
 	setRatingSettings,
+	setReleaseControlLayout,
 	setReviewSettings,
 	visibilityPages,
 } from "~/shared/visibility/settings";
@@ -19,8 +21,10 @@ import { RatingVisibilityView, ReviewVisibilityView } from "./visibility-view";
 vi.mock("~/shared/visibility/settings", async (importOriginal) => ({
 	...(await importOriginal<typeof import("~/shared/visibility/settings")>()),
 	getRatingSettings: vi.fn(),
+	getReleaseControlLayout: vi.fn(),
 	getReviewSettings: vi.fn(),
 	setRatingSettings: vi.fn(),
+	setReleaseControlLayout: vi.fn(),
 	setReviewSettings: vi.fn(),
 }));
 vi.mock("webextension-polyfill", () => ({
@@ -35,10 +39,47 @@ beforeEach(() => {
 	vi.resetAllMocks();
 	vi.mocked(getRatingSettings).mockResolvedValue(defaultRatingSettings());
 	vi.mocked(getReviewSettings).mockResolvedValue(defaultReviewSettings());
+	vi.mocked(getReleaseControlLayout).mockResolvedValue("inline");
+	vi.mocked(setReleaseControlLayout).mockResolvedValue();
 	vi.mocked(setRatingSettings).mockResolvedValue();
 	vi.mocked(setReviewSettings).mockResolvedValue();
 	container = document.createElement("div");
 	document.body.appendChild(container);
+});
+
+describe("shared release control layout", () => {
+	test.each([
+		"ratings",
+		"reviews",
+	] as const)("loads and saves the shared layout from the %s settings", async (view) => {
+		vi.mocked(getReleaseControlLayout).mockResolvedValue("section");
+		if (view === "ratings") await showRatings();
+		else await showReviews();
+
+		expect(selectFor("Release / film button layout").value).toBe("section");
+		expect(setReleaseControlLayout).not.toHaveBeenCalled();
+
+		await changeSelect("Release / film button layout", "inline");
+
+		expect(setReleaseControlLayout).toHaveBeenCalledExactlyOnceWith("inline");
+		expect(selectFor("Release / film button layout").value).toBe("inline");
+		expect(onSettingsChange).toHaveBeenCalledOnce();
+		expect(setRatingSettings).not.toHaveBeenCalled();
+		expect(setReviewSettings).not.toHaveBeenCalled();
+	});
+
+	test("loads the same saved choice when switching between rating and review settings", async () => {
+		vi.mocked(getReleaseControlLayout).mockResolvedValue("section");
+		await showRatings();
+		await changeSelect("Release / film button layout", "inline");
+		await act(() => render(null, container));
+		vi.mocked(getReleaseControlLayout).mockResolvedValue("inline");
+
+		await showReviews();
+
+		expect(selectFor("Release / film button layout").value).toBe("inline");
+		expect(setReleaseControlLayout).toHaveBeenCalledExactlyOnceWith("inline");
+	});
 });
 
 afterEach(async () => {
@@ -73,6 +114,9 @@ async function showRatings() {
 	await vi.waitFor(() =>
 		expect(container.querySelector("main")).not.toBeNull(),
 	);
+	await vi.waitFor(() =>
+		expect(selectFor("Release / film button layout").disabled).toBe(false),
+	);
 }
 
 async function showReviews() {
@@ -84,6 +128,9 @@ async function showReviews() {
 	);
 	await vi.waitFor(() =>
 		expect(container.querySelector("main")).not.toBeNull(),
+	);
+	await vi.waitFor(() =>
+		expect(selectFor("Release / film button layout").disabled).toBe(false),
 	);
 }
 

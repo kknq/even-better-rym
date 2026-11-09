@@ -7,15 +7,19 @@ import {
 	hasOwnReleaseRating,
 	observeOwnReleaseRating,
 } from "~/shared/visibility/release-rating";
-import type { RatingSettings } from "~/shared/visibility/settings";
+import type {
+	RatingSettings,
+	ReleaseControlLayout,
+} from "~/shared/visibility/settings";
 import { wireButton } from "./button";
 import { fireHide, fireShow } from "./events";
 
 export const setupReleasePage = (
 	settings: RatingSettings,
 	showButton: boolean,
+	layout: ReleaseControlLayout = "inline",
 ): void => {
-	setupReleaseVisibilityLayout();
+	setupReleaseVisibilityLayout(layout);
 	markRankingRow();
 	const updateRatingPolicy = (hasReleaseRating: boolean) => {
 		document.body.classList.toggle("ebr-release-rated", hasReleaseRating);

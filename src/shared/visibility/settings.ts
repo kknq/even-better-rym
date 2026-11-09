@@ -34,6 +34,7 @@ export type FriendRatingVisibility = "always" | "after-release-rated" | "never";
 export type TrackRatingVisibility = "after-release-rated" | "after-track-rated";
 export type FriendReviewVisibility = "always" | "after-release-rated" | "never";
 export type ReviewVisibility = "always" | "unrated";
+export type ReleaseControlLayout = "section" | "inline";
 
 export type RatingSettings = {
 	pages: VisibilityPageSettings;
@@ -63,6 +64,25 @@ type ReviewSettingsOverrides = Omit<Partial<ReviewSettings>, "pages"> & {
 
 const RATINGS_STORAGE_KEY = "brym.visibility.ratings";
 const REVIEWS_STORAGE_KEY = "brym.visibility.reviews";
+const RELEASE_CONTROL_LAYOUT_STORAGE_KEY =
+	"brym.visibility.release-control-layout";
+
+export const getReleaseControlLayout =
+	async (): Promise<ReleaseControlLayout> => {
+		const storage = await import("~/shared/utils/storage");
+		return (
+			(await storage.get<ReleaseControlLayout>(
+				RELEASE_CONTROL_LAYOUT_STORAGE_KEY,
+			)) ?? "inline"
+		);
+	};
+
+export const setReleaseControlLayout = async (
+	layout: ReleaseControlLayout,
+): Promise<void> => {
+	const storage = await import("~/shared/utils/storage");
+	await storage.set(RELEASE_CONTROL_LAYOUT_STORAGE_KEY, layout);
+};
 
 export const defaultPageSettings = (): VisibilityPageSettings =>
 	Object.fromEntries(

@@ -9,6 +9,7 @@ import { main } from "./app";
 
 const mocks = vi.hoisted(() => ({
 	getRatingSettings: vi.fn(),
+	getReleaseControlLayout: vi.fn(),
 	getSessionVisibility: vi.fn(),
 	isOwnProfile: vi.fn(),
 	isOwnUserPage: vi.fn(),
@@ -17,6 +18,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("~/shared/visibility/settings", async (importOriginal) => ({
 	...(await importOriginal<typeof import("~/shared/visibility/settings")>()),
 	getRatingSettings: mocks.getRatingSettings,
+	getReleaseControlLayout: mocks.getReleaseControlLayout,
 }));
 
 vi.mock("~/shared/visibility/session-state", () => ({
@@ -54,6 +56,7 @@ beforeEach(() => {
 	document.documentElement.innerHTML = "<head></head><body></body>";
 	setPathname("/");
 	mocks.getRatingSettings.mockResolvedValue(getSettings());
+	mocks.getReleaseControlLayout.mockResolvedValue("inline");
 	mocks.getSessionVisibility.mockReturnValue(null);
 	mocks.isOwnProfile.mockReturnValue(false);
 	mocks.isOwnUserPage.mockReturnValue(false);
@@ -64,6 +67,29 @@ afterEach(() => {
 });
 
 describe("Hide Ratings feature", () => {
+	it("uses the saved inline layout with ratings enabled on their own", async () => {
+		setPathname("/release/album/example/");
+		document.body.innerHTML = `
+			<div class="release_my_catalog">
+				<div class="my_catalog_rate_tracks"><div id="track_rating_btn">Track ratings</div></div>
+			</div>
+		`;
+		mocks.getReleaseControlLayout.mockResolvedValue("inline");
+
+		await main();
+		await main();
+
+		expect(document.querySelector(".ebr-release-visibility")).toBeNull();
+		expect(
+			document.querySelector(".release_my_catalog #ebr-show-rating-btn"),
+		).not.toBeNull();
+		expect(
+			document.querySelectorAll("#ebr-show-rating-btn-release-wrapper"),
+		).toHaveLength(1);
+		document.getElementById("ebr-show-rating-btn")?.click();
+		expect(document.body.classList).not.toContain("ebr-hide-ratings");
+	});
+
 	it.each([
 		true,
 		false,
@@ -102,6 +128,7 @@ describe("Hide Ratings feature", () => {
 		setPathname("/release/album/example/");
 		document.body.innerHTML = '<div class="release_my_catalog"></div>';
 		mocks.getRatingSettings.mockResolvedValue(getSettings({ buttons: true }));
+		mocks.getReleaseControlLayout.mockResolvedValue("section");
 
 		await main();
 		await main();

@@ -1,7 +1,10 @@
 import { waitForDocumentReady } from "~/shared/utils/dom";
 import { isOwnProfile, isOwnUserPage } from "~/shared/utils/user";
 import { prepareCollectionRows } from "~/shared/visibility/collection";
-import { getRatingSettings } from "~/shared/visibility/settings";
+import {
+	getRatingSettings,
+	getReleaseControlLayout,
+} from "~/shared/visibility/settings";
 import { setupBodyListeners } from "./events";
 import { insertGlobalRatingButton, setupGenericPage } from "./generic-page";
 import {
@@ -39,7 +42,7 @@ export const main = async (): Promise<void> => {
 		(pageType === "release" || pageType === "film") &&
 		!isReleaseReviewList(globalThis.location.pathname)
 	) {
-		setupReleasePage(settings, showPageButton);
+		setupReleasePage(settings, showPageButton, await getReleaseControlLayout());
 	} else if (pageType === "artist") {
 		setupProfilePage(settings.ratings, showPageButton);
 	} else {

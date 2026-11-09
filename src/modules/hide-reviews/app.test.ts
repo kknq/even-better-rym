@@ -12,6 +12,7 @@ import { main } from "./app";
 
 const mocks = vi.hoisted(() => ({
 	getReviewSettings: vi.fn(),
+	getReleaseControlLayout: vi.fn(),
 	getSessionVisibility: vi.fn(),
 	isOwnProfile: vi.fn(),
 	isOwnUserPage: vi.fn(),
@@ -20,6 +21,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("~/shared/visibility/settings", async (importOriginal) => ({
 	...(await importOriginal<typeof import("~/shared/visibility/settings")>()),
 	getReviewSettings: mocks.getReviewSettings,
+	getReleaseControlLayout: mocks.getReleaseControlLayout,
 }));
 
 vi.mock("~/shared/visibility/session-state", () => ({
@@ -59,6 +61,7 @@ beforeEach(() => {
 	document.documentElement.innerHTML = "<head></head><body></body>";
 	setPathname("/");
 	mocks.getReviewSettings.mockResolvedValue(getSettings());
+	mocks.getReleaseControlLayout.mockResolvedValue("inline");
 	mocks.getSessionVisibility.mockReturnValue(null);
 	mocks.isOwnProfile.mockReturnValue(false);
 	mocks.isOwnUserPage.mockReturnValue(false);
@@ -104,11 +107,15 @@ describe("Hide Reviews feature", () => {
 	});
 
 	it.each([
-		["release", "ratings-first"],
-		["release", "reviews-first"],
-		["film", "ratings-first"],
-		["film", "reviews-first"],
-	])("shares a separate section on %s pages when loaded %s", async (page, order) => {
+		["release", "ratings-first", "section"],
+		["release", "reviews-first", "section"],
+		["film", "ratings-first", "section"],
+		["film", "reviews-first", "section"],
+		["release", "ratings-first", "inline"],
+		["release", "reviews-first", "inline"],
+		["film", "ratings-first", "inline"],
+		["film", "reviews-first", "inline"],
+	] as const)("shares controls on %s pages when loaded %s using the %s layout", async (page, order, layout) => {
 		document.documentElement.id =
 			page === "film" ? "page_film" : "page_release";
 		setPathname(page === "film" ? "/film/example/" : "/release/album/example/");
@@ -124,16 +131,17 @@ describe("Hide Reviews feature", () => {
 		`;
 		const catalog = document.querySelector(".section_my_catalog")?.innerHTML;
 		mocks.getReviewSettings.mockResolvedValue(getSettings({ buttons: true }));
+		mocks.getReleaseControlLayout.mockResolvedValue(layout);
 
 		if (order === "ratings-first")
-			setupReleasePage(defaultRatingSettings(), true);
+			setupReleasePage(defaultRatingSettings(), true, layout);
 		await main();
 		if (order === "reviews-first")
-			setupReleasePage(defaultRatingSettings(), true);
+			setupReleasePage(defaultRatingSettings(), true, layout);
 
 		const controls = document.getElementById("ebr-release-visibility-controls");
 		expect(document.querySelectorAll(".ebr-release-visibility")).toHaveLength(
-			1,
+			layout === "section" ? 1 : 0,
 		);
 		expect(controls?.children).toHaveLength(2);
 		expect(controls?.firstElementChild?.id).toBe(
@@ -142,9 +150,21 @@ describe("Hide Reviews feature", () => {
 		expect(controls?.lastElementChild?.id).toBe(
 			"ebr-show-review-btn-release-wrapper",
 		);
-		expect(document.querySelector(".section_my_catalog")?.innerHTML).toBe(
-			catalog,
-		);
+		if (layout === "section") {
+			expect(document.querySelector(".section_my_catalog")?.innerHTML).toBe(
+				catalog,
+			);
+		} else {
+			expect(controls?.parentElement?.classList).toContain(
+				"release_my_catalog",
+			);
+			expect(controls?.previousElementSibling?.className).toBe(
+				"my_catalog_rate_tracks",
+			);
+			expect(
+				document.getElementById("track_rating_btn")?.parentElement?.className,
+			).toBe("my_catalog_rate_tracks");
+		}
 
 		const button = document.getElementById("ebr-show-review-btn-release");
 		button?.click();
@@ -155,10 +175,14 @@ describe("Hide Reviews feature", () => {
 		expect(document.body.classList).toContain("ebr-hide-reviews");
 	});
 
-	it("creates the section with reviews enabled on their own", async () => {
+	it.each([
+		"section",
+		"inline",
+	] as const)("uses the %s layout with reviews enabled on their own", async (layout) => {
 		setPathname("/release/album/example/");
 		document.body.innerHTML = '<div class="release_my_catalog"></div>';
 		mocks.getReviewSettings.mockResolvedValue(getSettings({ buttons: true }));
+		mocks.getReleaseControlLayout.mockResolvedValue(layout);
 
 		await main();
 		await main();

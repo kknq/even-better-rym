@@ -16,6 +16,7 @@ import {
 	setSessionVisibility,
 } from "~/shared/visibility/session-state";
 import {
+	getReleaseControlLayout,
 	getReviewSettings,
 	type ReviewVisibilityPage,
 } from "~/shared/visibility/settings";
@@ -83,7 +84,7 @@ export const main = async (): Promise<void> => {
 		isReleaseOrFilmPage(page) &&
 		!isReleaseReviewList(globalThis.location.pathname)
 	) {
-		setupReleaseVisibilityLayout();
+		setupReleaseVisibilityLayout(await getReleaseControlLayout());
 		observeOwnReleaseRating(applyReleaseRatingPolicy);
 	}
 	if (settings.globalButton) {

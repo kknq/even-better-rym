@@ -22,6 +22,20 @@ body.ebr-release-visibility-enabled
 	gap: 0.3em;
 }
 
+.ebr-release-catalog-inline {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+#ebr-release-visibility-controls.ebr-release-visibility-inline {
+	display: contents;
+}
+
+#ebr-release-visibility-controls.ebr-release-visibility-inline
+	> .ebr-release-toggle-wrapper {
+	margin: 0 0.3em 0.3em 0;
+}
+
 #ebr-release-visibility-controls > .ebr-release-toggle-wrapper {
 	flex: 0 1 145px;
 	min-width: 0;
