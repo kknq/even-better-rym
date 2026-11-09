@@ -147,6 +147,12 @@ Tracks rated and listened releases by category and overall. Choose which categor
 
 ---
 
+### Keep Discography Sorting
+
+Keeps your chosen discography sort when you show all releases in a section, and keeps expanded sections open when you change the sort.
+
+---
+
 ### Artist Location Clear Buttons
 
 Adds a **clear location** button beside each location section when submitting or editing an artist profile.
