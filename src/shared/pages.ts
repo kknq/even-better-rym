@@ -25,6 +25,7 @@ export const pages = {
 	artistSearchHint: "/artist/",
 	discographyProgress: "/artist/",
 	discographySort: "/artist/",
+	discographyOrder: "/artist/",
 	timeline: "/artist/",
 	map: "/artist/",
 	hideVotes: "/r",
@@ -65,6 +66,7 @@ export const pageLabels: Record<PageKey, string> = {
 	artistSearchHint: "Artist Search Hint",
 	discographyProgress: "Discography Progress",
 	discographySort: "Keep Discography Sorting",
+	discographyOrder: "Discography Section Order",
 	timeline: "Artist Timeline",
 	map: "Artist Location Map",
 	hideVotes: "Hide Votes on Genre/Descriptor Pages",
@@ -122,6 +124,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 				"artistSearchHint",
 				"discographyProgress",
 				"discographySort",
+				"discographyOrder",
 				"timeline",
 				"map",
 				"artistSubmission",
@@ -181,6 +184,8 @@ export const pageHints: Record<PageKey, string> = {
 		"Shows listening progress by release type and overall on artist pages. Configure which release types count toward overall coverage.",
 	discographySort:
 		"On artist pages, keeps your chosen discography sort when showing all releases in a section, and keeps expanded sections open after sorting.",
+	discographyOrder:
+		"On artist pages, shows discography sections in your preferred order, for example additional releases above singles.",
 	timeline:
 		"On artist pages, adds an inline timeline visualizing member activity and discography.",
 	map: "On artist pages, adds an interactive map showing concert locations.",

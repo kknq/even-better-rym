@@ -6,6 +6,7 @@ import type { PageKey } from "~/shared/pages";
 import { featureGroups, pageHints, pageLabels } from "~/shared/pages";
 
 import { CollectionView } from "./collection-view";
+import { DiscographyOrderView } from "./discography-order-view";
 import { DiscographyProgressView } from "./discography-progress-view";
 import { ReferenceLinksView } from "./reference-links-view";
 import { ShortcutView } from "./shortcut-view";
@@ -24,6 +25,7 @@ type View =
 	| "referenceLinks"
 	| "streamLinks"
 	| "discographyProgress"
+	| "discographyOrder"
 	| "userCollection"
 	| "filmCollection";
 
@@ -36,6 +38,7 @@ const viewTitles: Record<View, string> = {
 	referenceLinks: "External Reference Links",
 	streamLinks: "Suggested Streaming Links",
 	discographyProgress: "Discography Progress",
+	discographyOrder: "Discography Section Order",
 	userCollection: "Music Collection",
 	filmCollection: "Film Collection",
 };
@@ -49,6 +52,7 @@ const viewSubtitles: Record<View, string> = {
 	referenceLinks: "Customize button colors",
 	streamLinks: "Customize streaming icon colors",
 	discographyProgress: "Choose overall coverage release types",
+	discographyOrder: "Arrange artist page sections",
 	userCollection: "Customize filters and columns",
 	filmCollection: "Customize filters and columns",
 };
@@ -204,6 +208,8 @@ function SettingsContent({
 	switch (view) {
 		case "discographyProgress":
 			return <DiscographyProgressView />;
+		case "discographyOrder":
+			return <DiscographyOrderView />;
 		case "userCollection":
 		case "filmCollection":
 			return (
@@ -302,6 +308,7 @@ function FeatureList({
 										key === "wikipedia" ||
 										key === "streamLinks" ||
 										key === "discographyProgress" ||
+										key === "discographyOrder" ||
 										key === "userCollection" ||
 										key === "filmCollection") && (
 										<button
@@ -320,10 +327,12 @@ function FeatureList({
 												: "Configure"}
 										</button>
 									)}
-									<Toggle
-										checked={features[key]}
-										onChange={() => void onToggleFeature(key)}
-									/>
+									{key !== "discographyOrder" && (
+										<Toggle
+											checked={features[key]}
+											onChange={() => void onToggleFeature(key)}
+										/>
+									)}
 								</label>
 							))}
 					</div>

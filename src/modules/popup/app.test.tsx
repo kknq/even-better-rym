@@ -58,6 +58,9 @@ vi.mock("./stream-links-view", () => ({
 vi.mock("./discography-progress-view", () => ({
 	DiscographyProgressView: () => <div>Discography coverage settings</div>,
 }));
+vi.mock("./discography-order-view", () => ({
+	DiscographyOrderView: () => <div>Discography section order settings</div>,
+}));
 vi.mock("./visibility-view", () => ({
 	RatingVisibilityView: ({
 		onSettingsChange,
@@ -282,6 +285,21 @@ describe("App", () => {
 		expect(findButton(group).getAttribute("aria-expanded")).toBe("true");
 		expect(container.querySelector("header")?.textContent).toContain(
 			"EvenBetterRYM",
+		);
+		expect(setModuleEnabled).not.toHaveBeenCalled();
+	});
+
+	test("opens section ordering settings without a separate enable switch", async () => {
+		await showApp();
+		await act(() => findButton("Artist profiles").click());
+		expect(
+			featureRow("discographyOrder").querySelector('[role="switch"]'),
+		).toBeNull();
+		await act(() =>
+			featureRow("discographyOrder").querySelector("button")?.click(),
+		);
+		expect(container.textContent).toContain(
+			"Discography section order settings",
 		);
 		expect(setModuleEnabled).not.toHaveBeenCalled();
 	});

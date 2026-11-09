@@ -1,3 +1,8 @@
+import {
+	isDefaultSectionOrder,
+	parseSectionOrder,
+	sectionOrderKey,
+} from "./discography-order/order";
 import { type PageKey, pages } from "./pages";
 import * as storage from "./utils/storage";
 
@@ -7,6 +12,11 @@ const modulesDisabledByDefault = new Set<PageKey>([
 ]);
 
 export const getModuleEnabled = async (key: PageKey): Promise<boolean> => {
+	if (key === "discographyOrder") {
+		return !isDefaultSectionOrder(
+			parseSectionOrder(await storage.get<unknown>(sectionOrderKey)),
+		);
+	}
 	const enabled = await storage.get<boolean>(`pages.${key}`);
 	if (enabled !== undefined) return enabled;
 
@@ -20,6 +30,12 @@ export const getAllModulesEnabled = async (): Promise<
 
 	return Object.fromEntries(
 		(Object.keys(pages) as PageKey[]).map((key) => {
+			if (key === "discographyOrder") {
+				return [
+					key,
+					!isDefaultSectionOrder(parseSectionOrder(values[sectionOrderKey])),
+				];
+			}
 			const enabled = values[`pages.${key}`];
 			if (typeof enabled === "boolean") return [key, enabled];
 			return [key, !modulesDisabledByDefault.has(key)];

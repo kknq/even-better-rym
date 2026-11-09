@@ -85,4 +85,31 @@ test("retains other module settings and defaults", async () => {
 	expect(enabled.hideReviews).toBe(false);
 	expect(enabled.hideRatings).toBe(true);
 	expect(await getModuleEnabled("hideCommentBoxes")).toBe(false);
+	expect(enabled.discographyOrder).toBe(false);
+});
+
+test("derives section ordering enablement from the order, ignoring the old switch", async () => {
+	saved.set("pages.discographyOrder", true);
+	expect(await getModuleEnabled("discographyOrder")).toBe(false);
+	expect((await getAllModulesEnabled()).discographyOrder).toBe(false);
+	saved.set("pages.discographyOrder", false);
+	saved.set("discography-order.types", [
+		"x",
+		"s",
+		"l",
+		"m",
+		"e",
+		"i",
+		"o",
+		"j",
+		"a",
+		"c",
+		"v",
+		"b",
+		"d",
+	]);
+	expect(await getModuleEnabled("discographyOrder")).toBe(true);
+	expect((await getAllModulesEnabled()).discographyOrder).toBe(true);
+	saved.delete("discography-order.types");
+	expect(await getModuleEnabled("discographyOrder")).toBe(false);
 });

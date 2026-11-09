@@ -155,6 +155,12 @@ Keeps your chosen discography sort when you show all releases in a section, and 
 
 ---
 
+### Discography Section Order
+
+Shows artist discography sections in your preferred order, for example additional releases above singles. Drag sections or use the arrows in the extension popup. A custom order enables reordering automatically; returning to RYM's default order disables it.
+
+---
+
 ### Artist Location Clear Buttons
 
 Adds a **clear location** button beside each location section when submitting or editing an artist profile.
