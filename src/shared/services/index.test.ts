@@ -44,3 +44,24 @@ test.each(
 	});
 	expect(search).toHaveBeenCalledTimes(2);
 });
+
+test.each(
+	SEARCHABLES,
+)("uses simplified Latin spelling fallback for $name", async (service) => {
+	const original = SERVICES.filter(isSearchable).find(
+		({ id }) => id === service.id,
+	);
+	if (!original) throw new Error(`Missing service: ${service.id}`);
+	const search = vi.mocked(original.search);
+	const url = `https://example.com/${service.id}/album`;
+	search.mockResolvedValueOnce(undefined).mockResolvedValueOnce(url);
+	const metadata = { artist: "Svartidauði", title: "Flesh Cathedral" };
+	await expect(service.search(metadata)).resolves.toBe(url);
+	expect(search).toHaveBeenNthCalledWith(1, metadata);
+	expect(search).toHaveBeenNthCalledWith(2, {
+		...metadata,
+		artist: "svartidaudi",
+		artistAlias: "Svartidauði",
+	});
+	expect(search).toHaveBeenCalledTimes(2);
+});

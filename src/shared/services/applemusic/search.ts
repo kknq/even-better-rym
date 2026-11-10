@@ -3,6 +3,7 @@ import {
 	getSearchArtists,
 	isReissueTitle,
 	normalizeSearchText as normalize,
+	normalizeSearchArtist,
 } from "../search-matching";
 import type { SearchFunction } from "../types";
 import type { SearchObject } from "./codec";
@@ -51,12 +52,14 @@ export const search: SearchFunction = async ({
 	const toUrl = (url: string) =>
 		appleMusicRegion ? toRegionalAppleMusicUrl(url, appleMusicRegion) : url;
 	const artists = getSearchArtists(artist, artistAlias);
-	const artistNames = new Set(artists.map(normalize));
+	const artistNames = new Set(
+		artists.map((name) => normalizeSearchArtist(name)),
+	);
 	const albumTitle = normalize(title);
 	const isMatchingAlbum = (album: SearchObject["results"][number]) => {
 		if (
 			!album.collectionViewUrl ||
-			!artistNames.has(normalize(album.artistName ?? ""))
+			!artistNames.has(normalizeSearchArtist(album.artistName ?? ""))
 		)
 			return false;
 		const collectionTitle = normalize(album.collectionName ?? "");
@@ -72,7 +75,7 @@ export const search: SearchFunction = async ({
 		results.find(
 			(album) =>
 				album.collectionViewUrl &&
-				artistNames.has(normalize(album.artistName ?? "")) &&
+				artistNames.has(normalizeSearchArtist(album.artistName ?? "")) &&
 				isReissueTitle(album.collectionName ?? "", title),
 		);
 	const visitedArtists = new Set<number>();
@@ -93,7 +96,7 @@ export const search: SearchFunction = async ({
 	});
 	for (const candidate of candidates.results) {
 		if (
-			!artistNames.has(normalize(candidate.artistName)) ||
+			!artistNames.has(normalizeSearchArtist(candidate.artistName)) ||
 			visitedArtists.has(candidate.artistId)
 		)
 			continue;

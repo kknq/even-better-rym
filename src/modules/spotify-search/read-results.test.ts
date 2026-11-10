@@ -63,6 +63,16 @@ afterEach(() => {
 });
 
 describe("readSpotifySearchPage", () => {
+	test.each([
+		["Svartidauði", "Svartidaudi"],
+		["Misthyrming", "Misþyrming"],
+	])("matches Latin artist spelling variants: %s / %s", async (artist, candidate) => {
+		setSearchPage([resultLink("Album", albumUrl, `Album2020 • ${candidate}`)]);
+		await expect(readSpotifySearchPage(artist, "Album")).resolves.toBe(
+			albumUrl,
+		);
+	});
+
 	test("matches 7Б's explicitly supplied Latin alias", async () => {
 		setSearchPage([resultLink("Рок жив!", albumUrl, "Рок жив!2018 • 7B")]);
 		await expect(
