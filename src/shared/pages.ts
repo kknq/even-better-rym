@@ -165,7 +165,7 @@ export const pageHints: Record<PageKey, string> = {
 	userPage:
 		"Adds edit buttons for favorite artists and other comments on your profile.",
 	followStatus:
-		"Shows whether users follow you on profiles, in your friends list, and beside friends' activity and online status, with a one-minute cache.",
+		"Shows whether users follow you on profiles, in your friends list, and beside friends' activity and online status. Also marks which followers you follow back.",
 	listComments:
 		"Makes list comments wider and taller, improves readability, enlarges the editor, and adds top/bottom scroll controls.",
 	voteHistoryGenres:
