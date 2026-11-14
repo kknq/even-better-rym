@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 import type { Searchable, Service } from "~/shared/services/types";
-import { parseError } from "~/shared/utils/error";
-import type { OneShot } from "~/shared/utils/one-shot";
 import {
-	complete,
 	failed,
 	initial,
 	isComplete,
@@ -14,12 +11,9 @@ import {
 } from "~/shared/utils/one-shot";
 
 import { StreamLinkIcon } from "./stream-link-icon";
+import type { StreamLinkState } from "./stream-link-state";
+import { getStreamLinkState } from "./stream-link-state";
 import type { PageDataState } from "./use-page-data";
-
-export type StreamLinkState = OneShot<Error, StreamLinkCompleteState>;
-type StreamLinkCompleteState =
-	| { _tag: "exists" | "found"; url: string }
-	| { _tag: "not-found" };
 
 export function StreamLink({
 	service,
@@ -39,23 +33,7 @@ export function StreamLink({
 			} else if (isFailed(pageData)) {
 				setState(failed(pageData.error));
 			} else if (isComplete(pageData)) {
-				const releaseData = pageData.data;
-				const existingLink = releaseData.links[service.id];
-				if (existingLink === undefined) {
-					setState(loading);
-					try {
-						const foundLink = await service.search(releaseData.metadata);
-						if (foundLink === undefined) {
-							setState(complete({ _tag: "not-found" }));
-						} else {
-							setState(complete({ _tag: "found", url: foundLink }));
-						}
-					} catch (error: unknown) {
-						setState(failed(parseError(error)));
-					}
-				} else {
-					setState(complete({ _tag: "exists", url: existingLink }));
-				}
+				setState(await getStreamLinkState(service, pageData.data));
 			}
 		})();
 	}, [pageData, service]);
