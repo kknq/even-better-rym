@@ -16,6 +16,11 @@ import {
 	loading,
 } from "~/shared/utils/one-shot";
 
+import {
+	getServicesWithoutUpvotedLink,
+	hasRegionalLink,
+	loadLinkVotes,
+} from "./link-votes";
 import { getSearchArtistMetadata } from "./metadata";
 import { getReleaseTypeFromPath } from "./release-type";
 
@@ -43,7 +48,7 @@ export const usePageData = (): PageDataState => {
 	return state;
 };
 
-type PageData = {
+export type PageData = {
 	metadata: {
 		artist: string;
 		artistAlias?: string;
@@ -52,6 +57,7 @@ type PageData = {
 		serviceRegions: StreamingPreferences["service_regions"];
 	};
 	links: Links;
+	servicesWithoutUpvotedLink: ServiceId[];
 };
 async function getPageData(): Promise<PageData> {
 	const [artist, title, linksData] = await Promise.all([
@@ -59,6 +65,10 @@ async function getPageData(): Promise<PageData> {
 		getTitle(),
 		getLinks(),
 	]);
+	const serviceRegions = linksData.serviceRegions ?? {};
+	const linkVotes = hasRegionalLink(linksData.links, serviceRegions)
+		? await loadLinkVotes()
+		: [];
 	return {
 		metadata: {
 			...artist,
@@ -67,6 +77,10 @@ async function getPageData(): Promise<PageData> {
 			serviceRegions: linksData.serviceRegions,
 		},
 		links: linksData.links,
+		servicesWithoutUpvotedLink: getServicesWithoutUpvotedLink(
+			linkVotes,
+			serviceRegions,
+		),
 	};
 }
 
