@@ -35,6 +35,23 @@ describe("stream link settings", () => {
 		await expect(getStreamLinkSettings()).resolves.toEqual({
 			useServiceColors: true,
 			colors: { ...defaultStreamLinkColors, spotify: "#123ABC" },
+			searchUnvotedLinks: true,
+		});
+	});
+
+	test("searches unvoted links unless explicitly turned off", async () => {
+		vi.mocked(storage.get).mockResolvedValueOnce({
+			searchUnvotedLinks: false,
+		});
+		await expect(getStreamLinkSettings()).resolves.toMatchObject({
+			searchUnvotedLinks: false,
+		});
+
+		vi.mocked(storage.get).mockResolvedValueOnce({
+			searchUnvotedLinks: "false",
+		});
+		await expect(getStreamLinkSettings()).resolves.toMatchObject({
+			searchUnvotedLinks: true,
 		});
 	});
 
@@ -49,6 +66,7 @@ describe("stream link settings", () => {
 		const settings = {
 			useServiceColors: false,
 			colors: { ...defaultStreamLinkColors, spotify: "#445566" },
+			searchUnvotedLinks: true,
 		};
 		vi.mocked(storage.set).mockResolvedValue(undefined);
 		await setStreamLinkSettings(settings);

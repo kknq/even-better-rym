@@ -30,6 +30,24 @@ export function StreamLinksView({
 	return (
 		<main style={styles.list}>
 			<div style={styles.card}>
+				<div style={styles.groupHeader}>Link checks</div>
+				<label style={styles.row}>
+					<span style={styles.label}>
+						Search again when RYM's link has no upvotes in your region
+					</span>
+					<input
+						type="checkbox"
+						checked={settings.searchUnvotedLinks}
+						onChange={(event) =>
+							void update({
+								...settings,
+								searchUnvotedLinks: event.currentTarget.checked,
+							})
+						}
+					/>
+				</label>
+			</div>
+			<div style={styles.card}>
 				<div style={styles.groupHeader}>Icon colors</div>
 				<label style={styles.row}>
 					<span style={styles.label}>Use service branding colors</span>

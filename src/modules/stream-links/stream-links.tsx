@@ -3,13 +3,16 @@ import { useEffect } from "preact/hooks";
 import { SEARCHABLES } from "~/shared/services";
 import type { StreamLinkSettings } from "~/shared/stream-links/settings";
 
+import { loadLinkVotes, skipLinkVotes } from "./link-votes";
 import { StreamLink } from "./stream-link";
 import { usePageData } from "./use-page-data";
 
 export function StreamLinks({
 	settings,
 }: Readonly<{ settings: StreamLinkSettings }>) {
-	const pageData = usePageData();
+	const pageData = usePageData(
+		settings.searchUnvotedLinks ? loadLinkVotes : skipLinkVotes,
+	);
 
 	useEffect(() => {
 		const style = document.createElement("style");

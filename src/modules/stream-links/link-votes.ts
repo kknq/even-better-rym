@@ -60,6 +60,9 @@ export const hasRegionalLink = (
 		({ id }) => links[id] !== undefined && serviceRegions[id] !== undefined,
 	);
 
+// Returns no votes, so RYM's own links are always kept.
+export const skipLinkVotes = (): Promise<LinkVotes[]> => Promise.resolve([]);
+
 // Fetches the votes on this release page's streaming links, or none if the
 // vote page can't be loaded.
 export const loadLinkVotes = async (): Promise<LinkVotes[]> => {

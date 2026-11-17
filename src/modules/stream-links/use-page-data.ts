@@ -16,23 +16,22 @@ import {
 	loading,
 } from "~/shared/utils/one-shot";
 
-import {
-	getServicesWithoutUpvotedLink,
-	hasRegionalLink,
-	loadLinkVotes,
-} from "./link-votes";
+import type { LinkVotes } from "./link-votes";
+import { getServicesWithoutUpvotedLink, hasRegionalLink } from "./link-votes";
 import { getSearchArtistMetadata } from "./metadata";
 import { getReleaseTypeFromPath } from "./release-type";
 
 export type PageDataState = OneShot<Error, PageData>;
 
-export const usePageData = (): PageDataState => {
+export const usePageData = (
+	loadLinkVotes: () => Promise<LinkVotes[]>,
+): PageDataState => {
 	const [state, setState] = useState<PageDataState>(initial);
 
 	const fetch = async () => {
 		setState(loading);
 
-		const nextState = await getPageData()
+		const nextState = await getPageData(loadLinkVotes)
 			.then((data) => complete(data))
 			.catch((error) => failed(error));
 
@@ -59,7 +58,9 @@ export type PageData = {
 	links: Links;
 	servicesWithoutUpvotedLink: ServiceId[];
 };
-async function getPageData(): Promise<PageData> {
+async function getPageData(
+	loadLinkVotes: () => Promise<LinkVotes[]>,
+): Promise<PageData> {
 	const [artist, title, linksData] = await Promise.all([
 		getArtist(),
 		getTitle(),

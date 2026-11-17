@@ -4,6 +4,7 @@ import * as storage from "../utils/storage";
 export type StreamLinkSettings = {
 	useServiceColors: boolean;
 	colors: Partial<Record<ServiceId, string>>;
+	searchUnvotedLinks: boolean;
 };
 
 export const defaultStreamLinkColors: Partial<Record<ServiceId, string>> = {
@@ -20,6 +21,7 @@ export const defaultStreamLinkColors: Partial<Record<ServiceId, string>> = {
 export const defaultStreamLinkSettings: StreamLinkSettings = {
 	useServiceColors: false,
 	colors: defaultStreamLinkColors,
+	searchUnvotedLinks: true,
 };
 
 export const getStreamLinkSettings = async (): Promise<StreamLinkSettings> => {
@@ -36,6 +38,7 @@ export const getStreamLinkSettings = async (): Promise<StreamLinkSettings> => {
 	return {
 		useServiceColors: settings?.useServiceColors === true,
 		colors,
+		searchUnvotedLinks: settings?.searchUnvotedLinks !== false,
 	};
 };
 
