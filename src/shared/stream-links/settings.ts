@@ -5,6 +5,7 @@ export type StreamLinkSettings = {
 	useServiceColors: boolean;
 	colors: Partial<Record<ServiceId, string>>;
 	searchUnvotedLinks: boolean;
+	hideDownvotedLinks: boolean;
 };
 
 export const defaultStreamLinkColors: Partial<Record<ServiceId, string>> = {
@@ -22,6 +23,7 @@ export const defaultStreamLinkSettings: StreamLinkSettings = {
 	useServiceColors: false,
 	colors: defaultStreamLinkColors,
 	searchUnvotedLinks: true,
+	hideDownvotedLinks: false,
 };
 
 export const getStreamLinkSettings = async (): Promise<StreamLinkSettings> => {
@@ -39,6 +41,7 @@ export const getStreamLinkSettings = async (): Promise<StreamLinkSettings> => {
 		useServiceColors: settings?.useServiceColors === true,
 		colors,
 		searchUnvotedLinks: settings?.searchUnvotedLinks !== false,
+		hideDownvotedLinks: settings?.hideDownvotedLinks === true,
 	};
 };
 

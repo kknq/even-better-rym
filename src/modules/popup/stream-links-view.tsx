@@ -46,6 +46,21 @@ export function StreamLinksView({
 						}
 					/>
 				</label>
+				<label style={styles.row}>
+					<span style={styles.label}>
+						Hide RYM's link when it's voted down in your region
+					</span>
+					<input
+						type="checkbox"
+						checked={settings.hideDownvotedLinks}
+						onChange={(event) =>
+							void update({
+								...settings,
+								hideDownvotedLinks: event.currentTarget.checked,
+							})
+						}
+					/>
+				</label>
 			</div>
 			<div style={styles.card}>
 				<div style={styles.groupHeader}>Icon colors</div>

@@ -17,7 +17,11 @@ import {
 } from "~/shared/utils/one-shot";
 
 import type { LinkVotes } from "./link-votes";
-import { getServicesWithoutUpvotedLink, hasRegionalLink } from "./link-votes";
+import {
+	getServicesWithOnlyDownvotedLinks,
+	getServicesWithoutUpvotedLink,
+	hasRegionalLink,
+} from "./link-votes";
 import { getSearchArtistMetadata } from "./metadata";
 import { getReleaseTypeFromPath } from "./release-type";
 
@@ -57,6 +61,7 @@ export type PageData = {
 	};
 	links: Links;
 	servicesWithoutUpvotedLink: ServiceId[];
+	servicesWithOnlyDownvotedLinks: ServiceId[];
 };
 async function getPageData(
 	loadLinkVotes: () => Promise<LinkVotes[]>,
@@ -79,6 +84,10 @@ async function getPageData(
 		},
 		links: linksData.links,
 		servicesWithoutUpvotedLink: getServicesWithoutUpvotedLink(
+			linkVotes,
+			serviceRegions,
+		),
+		servicesWithOnlyDownvotedLinks: getServicesWithOnlyDownvotedLinks(
 			linkVotes,
 			serviceRegions,
 		),

@@ -1,7 +1,13 @@
 import type { Searchable, Service } from "~/shared/services/types";
+import type { StreamLinkSettings } from "~/shared/stream-links/settings";
 import { parseError } from "~/shared/utils/error";
 import type { OneShot } from "~/shared/utils/one-shot";
-import { complete, failed } from "~/shared/utils/one-shot";
+import {
+	complete,
+	failed,
+	isComplete,
+	isFailed,
+} from "~/shared/utils/one-shot";
 
 import type { PageData } from "./use-page-data";
 
@@ -10,31 +16,57 @@ type StreamLinkCompleteState =
 	| { _tag: "exists" | "found"; url: string }
 	| { _tag: "not-found" };
 
-// Returns RYM's link for a service, or a search result when RYM has none or
-// none of its links is upvoted in the user's region.
+export type LinkChecks = Pick<
+	StreamLinkSettings,
+	"searchUnvotedLinks" | "hideDownvotedLinks"
+>;
+
+const notFound: StreamLinkState = complete({ _tag: "not-found" });
+
+// Returns RYM's link for a service, a search result in its place, or not
+// found, following the user's link checks.
 export async function getStreamLinkState(
 	service: Service & Searchable,
 	releaseData: PageData,
+	linkChecks: LinkChecks,
 ): Promise<StreamLinkState> {
-	const existingLink = releaseData.links[service.id];
-	const existingState =
-		existingLink === undefined
-			? undefined
-			: complete({ _tag: "exists" as const, url: existingLink });
-	const hasUpvotedLink = !releaseData.servicesWithoutUpvotedLink.includes(
-		service.id,
-	);
-	if (existingState !== undefined && hasUpvotedLink) {
-		return existingState;
+	const rymLink = releaseData.links[service.id];
+	if (rymLink === undefined) {
+		return searchStreamLink(service, releaseData.metadata);
 	}
 
+	const rymState = complete({ _tag: "exists" as const, url: rymLink });
+	const isDownvoted =
+		linkChecks.hideDownvotedLinks &&
+		releaseData.servicesWithOnlyDownvotedLinks.includes(service.id);
+	const keptState = isDownvoted ? notFound : rymState;
+	const isUnvoted =
+		linkChecks.searchUnvotedLinks &&
+		releaseData.servicesWithoutUpvotedLink.includes(service.id);
+	if (!isUnvoted) {
+		return keptState;
+	}
+
+	const searchState = await searchStreamLink(service, releaseData.metadata);
+	if (isFailed(searchState)) {
+		return rymState;
+	}
+	const isFound = isComplete(searchState) && searchState.data._tag === "found";
+	return isFound ? searchState : keptState;
+}
+
+// Searches the service for the release.
+async function searchStreamLink(
+	service: Service & Searchable,
+	metadata: PageData["metadata"],
+): Promise<StreamLinkState> {
 	try {
-		const foundLink = await service.search(releaseData.metadata);
-		if (foundLink !== undefined) {
-			return complete({ _tag: "found", url: foundLink });
+		const foundLink = await service.search(metadata);
+		if (foundLink === undefined) {
+			return notFound;
 		}
-		return existingState ?? complete({ _tag: "not-found" });
+		return complete({ _tag: "found", url: foundLink });
 	} catch (error: unknown) {
-		return existingState ?? failed(parseError(error));
+		return failed(parseError(error));
 	}
 }

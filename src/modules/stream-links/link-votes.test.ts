@@ -17,8 +17,10 @@ import { fetchInPage } from "~/shared/utils/fetch";
 
 import type { LinkVotes } from "./link-votes";
 import {
+	getServicesWithOnlyDownvotedLinks,
 	getServicesWithoutUpvotedLink,
 	hasNoUpvotedLink,
+	hasOnlyDownvotedLinks,
 	hasRegionalLink,
 	loadLinkVotes,
 	parseCountryScores,
@@ -96,6 +98,50 @@ describe("hasNoUpvotedLink", () => {
 		expect(hasNoUpvotedLink([{ url: spotify, scores: { US: 0 } }], "us")).toBe(
 			true,
 		);
+	});
+});
+
+describe("hasOnlyDownvotedLinks", () => {
+	test("is true when every link scores below zero in the region", () => {
+		expect(
+			hasOnlyDownvotedLinks(
+				[{ url: appleMusicDownvoted, scores: { US: -1 } }],
+				"us",
+			),
+		).toBe(true);
+	});
+
+	test("is false when one link has no votes in the region", () => {
+		expect(
+			hasOnlyDownvotedLinks(
+				[
+					{ url: appleMusicDownvoted, scores: { US: -1 } },
+					{ url: appleMusicUpvoted, scores: { CA: 1 } },
+				],
+				"US",
+			),
+		).toBe(false);
+	});
+
+	test("is false for a tied score", () => {
+		expect(
+			hasOnlyDownvotedLinks([{ url: spotify, scores: { US: 0 } }], "US"),
+		).toBe(false);
+	});
+});
+
+describe("getServicesWithOnlyDownvotedLinks", () => {
+	test("lists only services whose links are all voted down in the region", () => {
+		const links: LinkVotes[] = [
+			{ url: appleMusicDownvoted, scores: { CA: 1, US: -1 } },
+			{ url: spotify, scores: { UA: 1 } },
+		];
+		expect(
+			getServicesWithOnlyDownvotedLinks(links, {
+				applemusic: "US",
+				spotify: "US",
+			}),
+		).toEqual(["applemusic"]);
 	});
 });
 
