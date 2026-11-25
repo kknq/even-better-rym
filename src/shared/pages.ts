@@ -9,6 +9,7 @@ export const pages = {
 	userReception: "/release/",
 	whoSampled: "/release/",
 	wikipedia: "/release/",
+	albumIdCopy: "/release/",
 	discogsCarousel: "/release/",
 	streamLinkSubmission: "/submit_media_link",
 	userCollection: "/collection",
@@ -50,6 +51,7 @@ export const pageLabels: Record<PageKey, string> = {
 	userReception: "User Reception",
 	whoSampled: "WhoSampled Link",
 	wikipedia: "Wikipedia Search",
+	albumIdCopy: "Click Album ID to Copy",
 	discogsCarousel: "Discogs Release Image Carousel",
 	streamLinkSubmission: "Media Links Submission Helper",
 	userCollection: "Music Collection Enhancements",
@@ -95,6 +97,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 			[
 				"streamLinks",
 				"trackTime",
+				"albumIdCopy",
 				"releaseComments",
 				"releaseSubmission",
 				"imageCropper",
@@ -154,6 +157,7 @@ export const pageHints: Record<PageKey, string> = {
 		"Summarizes the release's rating distribution into a user reception meter and ranked categories.",
 	whoSampled: "Adds a direct WhoSampled album link for the current release.",
 	wikipedia: "Adds a button to search for the current release on Wikipedia.",
+	albumIdCopy: "Copies the Album ID to the clipboard when clicked.",
 	discogsCarousel:
 		"Adds an optional carousel of secondary Discogs release images to music release pages.",
 	streamLinkSubmission:
@@ -165,7 +169,7 @@ export const pageHints: Record<PageKey, string> = {
 	userPage:
 		"Adds edit buttons for favorite artists and other comments on your profile.",
 	followStatus:
-		"Shows whether users follow you on profiles, in your friends list, and beside friends' activity and online status, with a one-minute cache.",
+		"Shows whether users follow you on profiles, in your friends list, and beside friends' activity and online status. Also marks which followers you follow back.",
 	listComments:
 		"Makes list comments wider and taller, improves readability, enlarges the editor, and adds top/bottom scroll controls.",
 	voteHistoryGenres:

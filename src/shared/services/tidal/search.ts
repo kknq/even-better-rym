@@ -2,6 +2,7 @@ import { fetch } from "~/shared/utils/fetch";
 import {
 	getSearchArtists,
 	isReissueTitle,
+	normalizeSearchArtist,
 	normalizeSearchText,
 } from "../search-matching";
 import type { SearchFunction } from "../types";
@@ -39,6 +40,9 @@ export const search: SearchFunction = async ({
 	const token = await requestToken();
 	const artists = getSearchArtists(artist, artistAlias);
 	const artistNames = new Set(artists.map(normalizeSearchText));
+	const foldedArtistNames = new Set(
+		artists.map((name) => normalizeSearchArtist(name)),
+	);
 	const searchQuery = `${artist} ${title}`;
 	const response = await fetch({
 		url: "https://openapi.tidal.com/v2/searchResults",
@@ -74,29 +78,37 @@ export const search: SearchFunction = async ({
 			resource,
 		]),
 	);
+	const getArtistNames = (album: TidalResource): string[] =>
+		(album.relationships?.artists?.data ?? []).flatMap((artist) => {
+			const name = included.get(`${artist.type}:${artist.id}`)?.attributes
+				?.name;
+			return name === undefined ? [] : [name];
+		});
 	const matches = (data.data ?? [])
 		.flatMap((result) => result.relationships?.albums?.data ?? [])
 		.map((album) => included.get(`albums:${album.id}`))
 		.filter(
 			(album): album is TidalResource =>
 				album !== undefined &&
-				(album.relationships?.artists?.data ?? []).some((artist) => {
-					const name = included.get(`${artist.type}:${artist.id}`)?.attributes
-						?.name;
-					return (
-						name !== undefined && artistNames.has(normalizeSearchText(name))
-					);
-				}),
+				getArtistNames(album).some((name) =>
+					foldedArtistNames.has(normalizeSearchArtist(name)),
+				),
 		);
+	const exactArtists = matches.filter((album) =>
+		getArtistNames(album).some((name) =>
+			artistNames.has(normalizeSearchText(name)),
+		),
+	);
+	const normalizedTitle = normalizeSearchText(title);
+	const hasExactTitle = (album: TidalResource) =>
+		normalizeSearchText(album.attributes?.title ?? "") === normalizedTitle;
+	const hasReissueTitle = (album: TidalResource) =>
+		isReissueTitle(album.attributes?.title ?? "", title);
 	const album =
-		matches.find(
-			(candidate) =>
-				normalizeSearchText(candidate.attributes?.title ?? "") ===
-				normalizeSearchText(title),
-		) ??
-		matches.find((candidate) =>
-			isReissueTitle(candidate.attributes?.title ?? "", title),
-		);
+		exactArtists.find(hasExactTitle) ??
+		matches.find(hasExactTitle) ??
+		exactArtists.find(hasReissueTitle) ??
+		matches.find(hasReissueTitle);
 	if (album) {
 		return `https://tidal.com/browse/album/${album.id}`;
 	}

@@ -1,6 +1,7 @@
 import {
 	getSearchArtists,
 	isReissueTitle,
+	normalizeSearchArtist,
 	normalizeSearchText,
 } from "~/shared/services/search-matching";
 import type { SearchCategory } from "./messages";
@@ -13,8 +14,8 @@ export const readSpotifySearchPage = async (
 	artistAlias?: string,
 ): Promise<string | undefined> => {
 	const RESULTS_TIMEOUT = 7_000;
-	const artistNames = getSearchArtists(artist, artistAlias).map(
-		normalizeSearchText,
+	const artistNames = getSearchArtists(artist, artistAlias).map((name) =>
+		normalizeSearchArtist(name),
 	);
 	const searchedTitle = normalizeSearchText(title);
 	const entity = category === "albums" ? "album" : "track";
@@ -47,7 +48,7 @@ export const readSpotifySearchPage = async (
 					.filter(Boolean),
 			);
 			if (resultIds.size > 1) return false;
-			const text = normalizeSearchText(card.textContent ?? "");
+			const text = normalizeSearchArtist(card.textContent ?? "");
 			if (artistNames.some((name) => text.includes(name))) return true;
 			card = card.parentElement;
 		}

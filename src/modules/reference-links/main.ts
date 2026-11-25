@@ -8,7 +8,8 @@ import type {
 } from "~/shared/utils/messaging";
 import { sendBackgroundMessage } from "~/shared/utils/messaging";
 import {
-	appendAlbumIdControl,
+	enableAlbumIdCopy,
+	moveAlbumId,
 	reduceTitleTopSpacing,
 } from "./album-id-control";
 import whoSampledLogo from "./assets/whosampled.svg";
@@ -24,6 +25,17 @@ const getReferenceContainer = (titleElement: HTMLElement): HTMLDivElement => {
 
 	const container = document.createElement("div");
 	container.className = "ebr-reference-links";
+	const titleText = document.createElement("span");
+	titleText.className = "ebr-reference-title-text";
+	for (const node of Array.from(titleElement.childNodes)) {
+		if (
+			node instanceof HTMLElement &&
+			node.matches(".album_shortcut, .album_artist_small")
+		)
+			continue;
+		titleText.append(node);
+	}
+	titleElement.prepend(titleText);
 	titleElement.classList.add("ebr-reference-title");
 	titleElement.insertBefore(
 		container,
@@ -122,24 +134,29 @@ const appendWikipediaButton = (
 };
 
 async function main(): Promise<void> {
-	await waitForDocumentReady();
-	const titleElement = document.querySelector<HTMLElement>(".album_title");
-	const release = getReleaseTitleData();
-	if (!titleElement || !release) return;
-	const settings = await getReferenceLinkSettings();
+	try {
+		await waitForDocumentReady();
+		const titleElement = document.querySelector<HTMLElement>(".album_title");
+		const release = getReleaseTitleData();
+		if (!titleElement || !release) return;
+		const settings = await getReferenceLinkSettings();
 
-	await Promise.all([
-		runModule("whoSampled", () => {
-			appendWhoSampledLink(titleElement, release, settings.buttonColor);
-		}),
-		runModule("wikipedia", () => {
-			appendWikipediaButton(titleElement, release, settings.buttonColor);
-		}),
-	]);
+		await Promise.all([
+			runModule("whoSampled", () => {
+				appendWhoSampledLink(titleElement, release, settings.buttonColor);
+			}),
+			runModule("wikipedia", () => {
+				appendWikipediaButton(titleElement, release, settings.buttonColor);
+			}),
+		]);
 
-	if (document.querySelector(".ebr-whosampled-link, .ebr-wikipedia-link")) {
-		appendAlbumIdControl(titleElement, settings.buttonColor);
-		reduceTitleTopSpacing(titleElement);
+		if (document.querySelector(".ebr-whosampled-link, .ebr-wikipedia-link")) {
+			moveAlbumId(titleElement);
+			reduceTitleTopSpacing(titleElement);
+		}
+		await runModule("albumIdCopy", () => enableAlbumIdCopy(titleElement));
+	} finally {
+		document.documentElement.classList.add("ebr-release-header-ready");
 	}
 }
 

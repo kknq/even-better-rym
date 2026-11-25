@@ -6,7 +6,6 @@ import {
 	type ReferenceLinkSettings,
 	setReferenceLinkSettings,
 } from "~/shared/reference-links/settings";
-
 import { styles } from "./styles";
 
 export function ReferenceLinksView({
@@ -20,12 +19,7 @@ export function ReferenceLinksView({
 		void getReferenceLinkSettings().then(setSettings);
 	}, []);
 
-	const updateColor = async (
-		key: keyof ReferenceLinkSettings,
-		color: string,
-	) => {
-		if (!settings) return;
-		const next = { ...settings, [key]: color };
+	const save = async (next: ReferenceLinkSettings) => {
 		await setReferenceLinkSettings(next);
 		setSettings(next);
 		onSettingsChange();
@@ -44,7 +38,7 @@ export function ReferenceLinksView({
 						aria-label="Reference link button color"
 						value={settings.buttonColor}
 						onChange={(event) =>
-							void updateColor("buttonColor", event.currentTarget.value)
+							void save({ ...settings, buttonColor: event.currentTarget.value })
 						}
 						style={styles.colorInput}
 					/>
@@ -53,12 +47,10 @@ export function ReferenceLinksView({
 					<button
 						type="button"
 						onClick={() => {
-							void setReferenceLinkSettings(defaultReferenceLinkSettings).then(
-								() => {
-									setSettings(defaultReferenceLinkSettings);
-									onSettingsChange();
-								},
-							);
+							void save({
+								...settings,
+								buttonColor: defaultReferenceLinkSettings.buttonColor,
+							});
 						}}
 						style={styles.resetButton}
 					>

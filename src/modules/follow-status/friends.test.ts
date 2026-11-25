@@ -89,6 +89,78 @@ test("does not duplicate labels or reprocess an already enhanced list", async ()
 	await addFriendListFollowStatus();
 	expect(document.querySelectorAll(".ebr-follow-status")).toHaveLength(2);
 	expect(cacheFollowers).toHaveBeenCalledTimes(1);
+	expect(document.querySelectorAll(".ebr-follow-status-icon")).toHaveLength(2);
+	expect(document.querySelectorAll(".ebr-follow-status-legend")).toHaveLength(
+		1,
+	);
+});
+
+test("marks followers you follow back using outgoing rather than incoming relationships", async () => {
+	await main();
+	const icons = [
+		...document.querySelectorAll<HTMLSpanElement>(".ebr-follow-status-icon"),
+	];
+	expect(icons.map((icon) => icon.textContent)).toEqual(["\u2713", "\u2717"]);
+	expect(icons.map((icon) => icon.getAttribute("aria-label"))).toEqual([
+		"you follow them",
+		"you do not follow them",
+	]);
+	expect(icons[0].previousElementSibling?.textContent).toBe("fOlLoWeR");
+	expect(icons[0].style.color).toContain("--gen-bg-darkgreen");
+	expect(icons[1].previousElementSibling?.textContent).toBe("OnlyAFollower");
+	expect(icons[1].style.color).toBe("rgb(163, 79, 79)");
+	for (const icon of icons) {
+		expect(icon.getAttribute("aria-busy")).toBe("false");
+		expect(icon.title).toContain("users you follow displayed on this page");
+	}
+	expect(getFollowers).not.toHaveBeenCalled();
+});
+
+test("places a direction-specific yellow-box legend within the Followers section", async () => {
+	await main();
+	const legend = document.querySelector(".ebr-follow-status-followers-legend");
+	expect(legend?.classList.contains("ebr-follow-status-legend")).toBe(true);
+	expect(legend?.getAttribute("aria-label")).toBe("Follow status legend");
+	expect(legend?.textContent).toBe(
+		"\u2713 you follow them\u2717 you do not follow them",
+	);
+	expect(legend?.parentElement?.previousElementSibling?.textContent).toBe(
+		"Followers",
+	);
+	expect(legend?.querySelectorAll('[aria-hidden="true"]')).toHaveLength(2);
+});
+
+test("marks every follower with a cross when you follow nobody", async () => {
+	for (const card of document.querySelectorAll(".or_card_frame")) card.remove();
+	await main();
+	const icons = [...document.querySelectorAll(".ebr-follow-status-icon")];
+	expect(icons).toHaveLength(2);
+	expect(icons.every((icon) => icon.textContent === "\u2717")).toBe(true);
+	expect(getFollowers).not.toHaveBeenCalled();
+});
+
+test("does not guess outgoing relationships when the following section is absent", async () => {
+	document.querySelector(".ookiig")?.closest(".bubble_content")?.remove();
+	await main();
+	expect(document.querySelector(".ebr-follow-status-icon")).toBeNull();
+	expect(document.querySelector(".ebr-follow-status-legend")).toBeNull();
+});
+
+test("keeps outgoing icons unknown if the following list contains invalid links", async () => {
+	const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+	document
+		.querySelector(".card_link a")
+		?.setAttribute("href", "/artist/not-a-user");
+	await main();
+	expect(log).toHaveBeenCalledOnce();
+	for (const icon of document.querySelectorAll<HTMLSpanElement>(
+		".ebr-follow-status-icon",
+	)) {
+		expect(icon.textContent).toBe("?");
+		expect(icon.style.color).toBe("");
+		expect(icon.getAttribute("aria-label")).toBe("follow status unavailable");
+		expect(icon.title).toContain("Could not read the users you follow");
+	}
 });
 
 test("handles a verified empty followers list", async () => {
