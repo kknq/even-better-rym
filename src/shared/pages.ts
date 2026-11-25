@@ -27,6 +27,7 @@ export const pages = {
 	artistTopReleases: "/artist/",
 	discographyProgress: "/artist/",
 	discographySort: "/artist/",
+	discographyFilters: "/artist/",
 	discographyOrder: "/artist/",
 	timeline: "/artist/",
 	map: "/artist/",
@@ -70,6 +71,7 @@ export const pageLabels: Record<PageKey, string> = {
 	artistTopReleases: "Artist Top Main Releases",
 	discographyProgress: "Discography Progress",
 	discographySort: "Keep Discography Sorting",
+	discographyFilters: "Discography Filters",
 	discographyOrder: "Discography Section Order",
 	timeline: "Artist Timeline",
 	map: "Artist Location Map",
@@ -130,6 +132,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 				"artistTopReleases",
 				"discographyProgress",
 				"discographySort",
+				"discographyFilters",
 				"discographyOrder",
 				"timeline",
 				"map",
@@ -193,6 +196,8 @@ export const pageHints: Record<PageKey, string> = {
 		"Shows listening progress by release type and overall on artist pages. Configure which release types count toward overall coverage.",
 	discographySort:
 		"On artist pages, keeps your chosen discography sort when showing all releases in a section, and keeps expanded sections open after sorting.",
+	discographyFilters:
+		"Adds controls to hide soundtracks, remix and archival releases on artist pages.",
 	discographyOrder:
 		"On artist pages, shows discography sections in your preferred order, for example additional releases above singles.",
 	timeline:

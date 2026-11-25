@@ -1,0 +1,35 @@
+.ebr-discography-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5em 1.5em;
+	margin: 0.8em 0;
+	color: var(--mono-2, #222);
+	font-size: 1.4rem;
+}
+
+.ebr-discography-filters label {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
+	cursor: pointer;
+}
+
+.ebr-discography-filters[hidden],
+.ebr-discography-filters label[hidden] {
+	display: none;
+}
+
+#discography.ebr-hide-soundtracks .disco_release.ebr-discography-soundtracks,
+#discography.ebr-hide-soundtracks
+	.disco_release.ebr-discography-soundtracks
+	+ .disco_issues_section,
+#discography.ebr-hide-remixes .disco_release.ebr-discography-remixes,
+#discography.ebr-hide-remixes
+	.disco_release.ebr-discography-remixes
+	+ .disco_issues_section,
+#discography.ebr-hide-archival .disco_release.ebr-discography-archival,
+#discography.ebr-hide-archival
+	.disco_release.ebr-discography-archival
+	+ .disco_issues_section {
+	display: none !important;
+}
