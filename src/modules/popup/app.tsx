@@ -322,9 +322,7 @@ function FeatureList({
 											}
 											style={styles.customizeButton}
 										>
-											{key === "whoSampled" || key === "wikipedia"
-												? "Button colors"
-												: "Configure"}
+											Configure
 										</button>
 									)}
 									{key !== "discographyOrder" && (
@@ -354,16 +352,19 @@ function LoadingIndicator() {
 export function Toggle({
 	checked,
 	onChange,
+	labelledBy,
 	disabled = false,
 }: Readonly<{
 	checked: boolean;
 	onChange: () => void;
+	labelledBy?: string;
 	disabled?: boolean;
 }>) {
 	return (
 		<button
 			type="button"
 			role="switch"
+			aria-labelledby={labelledBy}
 			aria-checked={checked}
 			disabled={disabled}
 			onClick={onChange}

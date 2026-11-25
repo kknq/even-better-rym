@@ -10,12 +10,15 @@ export const getReleaseTitleData = (): ReleaseTitleData | undefined => {
 		?.textContent?.trim();
 	if (!titleElement || !artistName) return undefined;
 
-	const latinTitle = titleElement
+	const titleText =
+		titleElement.querySelector(":scope > .ebr-reference-title-text") ??
+		titleElement;
+	const latinTitle = titleText
 		.querySelector<HTMLElement>(":scope > span")
 		?.textContent?.trim();
 	const albumTitle =
 		latinTitle ??
-		Array.from(titleElement.childNodes)
+		Array.from(titleText.childNodes)
 			.filter((node) => node.nodeType === Node.TEXT_NODE)
 			.map((node) => node.textContent ?? "")
 			.join(" ")

@@ -11,6 +11,11 @@ import {
 } from "~/shared/reference-links/settings";
 import { ReferenceLinksView } from "./reference-links-view";
 
+vi.mock("webextension-polyfill", () => ({
+	default: { runtime: { getURL: (path: string) => path } },
+}));
+vi.mock("~/shared/page-settings", () => ({}));
+
 vi.mock("~/shared/reference-links/settings", () => ({
 	defaultReferenceLinkSettings: { buttonColor: "#60758a" },
 	getReferenceLinkSettings: vi.fn(),
@@ -87,10 +92,23 @@ describe("ReferenceLinksView", () => {
 		);
 		await act(() => resetButton?.click());
 		await vi.waitFor(() => {
-			expect(setReferenceLinkSettings).toHaveBeenCalledWith(
-				defaultReferenceLinkSettings,
-			);
+			expect(setReferenceLinkSettings).toHaveBeenCalledWith({
+				...defaultReferenceLinkSettings,
+			});
 		});
 		expect(onSettingsChange).toHaveBeenCalledOnce();
+	});
+
+	test("does not include the standalone Album ID toggle in color settings", async () => {
+		await act(() =>
+			render(
+				<ReferenceLinksView onSettingsChange={onSettingsChange} />,
+				container,
+			),
+		);
+		await vi.waitFor(() => {
+			expect(container.querySelector('input[type="color"]')).not.toBeNull();
+		});
+		expect(container.querySelector('[role="switch"]')).toBeNull();
 	});
 });
