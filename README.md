@@ -139,6 +139,12 @@ Shows RYM's short artist search hint as a subtitle directly below the artist nam
 
 ---
 
+### Artist Top Main Releases
+
+Adds a button on artist profiles to open their all-time chart of albums, EPs, mixtapes, and DJ mixes in a new tab.
+
+---
+
 ### Artist Timeline
 
 Adds a timeline showing group members' activity and releases. Artist pages with shows also include a map of concert locations.

@@ -139,6 +139,12 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/artist-top-releases/main.ts"],
+			css: ["src/modules/artist-top-releases/artist-top-releases.css"],
+			matches: ["*://*.rateyourmusic.com/artist/*"],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/discography-progress/main.ts"],
 			css: ["src/modules/discography-progress/discography-progress.css"],
 			matches: ["*://*.rateyourmusic.com/artist/*"],
