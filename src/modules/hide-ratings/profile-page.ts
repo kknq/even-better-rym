@@ -1,3 +1,4 @@
+import { getArtistControls } from "~/shared/visibility/artist-controls";
 import type { RatingVisibility } from "~/shared/visibility/settings";
 import { wireButton } from "./button";
 import { fireHide, fireShow } from "./events";
@@ -69,26 +70,15 @@ const observeDiscography = (): void => {
 };
 
 const insertProfileButton = (): void => {
-	const navigation = document.querySelector<HTMLElement>(
-		".section_artist_page_section_nav",
-	);
-	if (!navigation || document.getElementById("ebr-show-rating-btn-profile"))
-		return;
+	if (document.getElementById("ebr-show-rating-btn-profile")) return;
+	const control = getArtistControls();
+	if (!control) return;
 
 	const button = document.createElement("a");
 	button.id = "ebr-show-rating-btn-profile";
 	button.href = "#";
 	button.classList.add("btn", "blue_btn", "ebr-profile-rating-toggle");
 	wireButton(button);
-	const followButton = document.querySelector<HTMLElement>(
-		'[id^="follow_btn_artist_"]',
-	);
-	if (followButton) {
-		button.style.height = `${followButton.getBoundingClientRect().height}px`;
-	}
 
-	const control = document.createElement("div");
-	control.classList.add("ebr-profile-rating-control");
-	control.appendChild(button);
-	navigation.before(control);
+	control.prepend(button);
 };

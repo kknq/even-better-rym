@@ -1,0 +1,24 @@
+.ebr-profile-rating-control:has(.ebr-artist-top-releases) {
+	display: flex;
+	align-items: stretch;
+	flex-wrap: wrap;
+	gap: 0.5em;
+	margin: 0;
+	padding: 0 1.5em;
+}
+
+.btn.ebr-artist-top-releases {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+	margin: 0;
+	font-size: 0.99em;
+}
+
+.ebr-artist-top-releases-icon {
+	width: 1em;
+	height: 1em;
+	flex: none;
+	background-color: currentColor;
+	mask: url("./external-link.svg") center / contain no-repeat;
+}

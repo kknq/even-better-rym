@@ -217,12 +217,12 @@ export const injectHideStyles = (): void => {
 			stroke-linecap: round;
 			stroke-linejoin: round;
 		}
-		.ebr-profile-rating-toggle {
+		.btn.ebr-profile-rating-toggle {
 			display: inline-flex;
 			align-items: center;
 			gap: .3em;
 			margin: 0;
-			font-size: .9em;
+			font-size: .99em;
 			vertical-align: baseline;
 		}
 		.ebr-profile-rating-control {

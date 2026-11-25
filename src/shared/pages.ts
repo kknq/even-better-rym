@@ -24,6 +24,7 @@ export const pages = {
 	searchFocus: "/",
 	genreChartControls: "/genre/",
 	artistSearchHint: "/artist/",
+	artistTopReleases: "/artist/",
 	discographyProgress: "/artist/",
 	discographySort: "/artist/",
 	discographyOrder: "/artist/",
@@ -66,6 +67,7 @@ export const pageLabels: Record<PageKey, string> = {
 	searchFocus: "Focus Search",
 	genreChartControls: "Genre Chart Controls",
 	artistSearchHint: "Artist Search Hint",
+	artistTopReleases: "Artist Top Main Releases",
 	discographyProgress: "Discography Progress",
 	discographySort: "Keep Discography Sorting",
 	discographyOrder: "Discography Section Order",
@@ -125,6 +127,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 			"Artist profiles",
 			[
 				"artistSearchHint",
+				"artistTopReleases",
 				"discographyProgress",
 				"discographySort",
 				"discographyOrder",
@@ -184,6 +187,8 @@ export const pageHints: Record<PageKey, string> = {
 	genreChartControls:
 		"Adds chart controls to music genre pages and film genre pages, and links film chart genres to their film genre pages.",
 	artistSearchHint: "Shows the artist's search hint below their name",
+	artistTopReleases:
+		"Adds a link to the artist's all-time top albums, EPs, mixtapes, and DJ mixes.",
 	discographyProgress:
 		"Shows listening progress by release type and overall on artist pages. Configure which release types count toward overall coverage.",
 	discographySort:
