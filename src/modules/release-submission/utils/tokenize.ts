@@ -65,7 +65,8 @@ export const splitPhrases = (text: string): string[] => {
 	let lastSplitIndex = 0;
 	const phrases = [];
 
-	for (const [index, char] of [...text].entries()) {
+	for (let index = 0; index < text.length; index++) {
+		const char = text[index];
 		if (PUNCTUATION.has(char) || CLOSING_BRACKETS.has(char)) {
 			const lastSlice = text.slice(lastSplitIndex, index + 1);
 			if (DONT_SPLIT.some((word) => lastSlice.endsWith(word))) continue;
@@ -80,9 +81,12 @@ export const splitPhrases = (text: string): string[] => {
 					index_ === -1 ? undefined : index_ + 1,
 				),
 			);
-			phrases.push(lastSlice, " / ");
+			const slashStart = index;
+			while (text[index + 1] === "/") index++;
+			phrases.push(lastSlice, ` ${text.slice(slashStart, index + 1)} `);
 
-			lastSplitIndex = regexIndexOf(text, /\S/, index + 1);
+			const nextIndex = regexIndexOf(text, /\S/, index + 1);
+			lastSplitIndex = nextIndex === -1 ? text.length : nextIndex;
 		} else if (OPENING_BRACKETS.has(char)) {
 			phrases.push(text.slice(lastSplitIndex, index));
 			lastSplitIndex = index;
