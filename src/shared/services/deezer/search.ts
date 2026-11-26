@@ -1,5 +1,10 @@
 import { fetch } from "~/shared/utils/fetch";
 
+import {
+	getSearchArtists,
+	normalizeSearchArtist,
+	normalizeSearchText,
+} from "../search-matching";
 import type { SearchFunction } from "../types";
 
 type DeezerSearchResponse = {
@@ -14,9 +19,6 @@ type DeezerSearchResponse = {
 };
 
 const SEARCH_LIMIT = 100;
-
-const normalize = (value: string): string =>
-	value.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 
 const searchAlbums = async (
 	query: string,
@@ -39,19 +41,27 @@ const searchAlbums = async (
 	return data;
 };
 
-export const search: SearchFunction = async ({ artist, title }) => {
+export const search: SearchFunction = async ({
+	artist,
+	artistAlias,
+	title,
+}) => {
 	const response = await searchAlbums(`artist:"${artist}" album:"${title}"`);
 	const album = response.data?.[0];
 	if (album) return album.link;
 
-	const artistName = normalize(artist);
-	const albumTitle = normalize(title);
+	const artistNames = new Set(
+		getSearchArtists(artist, artistAlias).map((name) =>
+			normalizeSearchArtist(name),
+		),
+	);
+	const albumTitle = normalizeSearchText(title);
 	for (let index = 0; ; index += SEARCH_LIMIT) {
 		const results = await searchAlbums(`artist:"${artist}"`, index);
 		const match = results.data?.find(
 			(candidate) =>
-				normalize(candidate.artist.name) === artistName &&
-				normalize(candidate.title) === albumTitle,
+				artistNames.has(normalizeSearchArtist(candidate.artist.name)) &&
+				normalizeSearchText(candidate.title) === albumTitle,
 		);
 		if (match) return match.link;
 		if (!results.next) break;

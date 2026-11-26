@@ -2,7 +2,10 @@
 
 import { beforeEach, expect, test, vi } from "vitest";
 import { loadSection } from "~/shared/artist-discography";
-import { extractDiscographyMarkersFromDOM } from "./discography";
+import {
+	extractDiscographyMarkersFromDOM,
+	readFormedAndDisbanded,
+} from "./discography";
 
 vi.mock("~/shared/artist-discography", async (importOriginal) => ({
 	...(await importOriginal<typeof import("~/shared/artist-discography")>()),
@@ -24,6 +27,20 @@ beforeEach(() => {
 	document.body.innerHTML = `<div id="discography">
 		<span id="disco_header_showing_s">Showing 1 of 2</span>
 		<div id="disco_type_s">${row(1, "First", 2000)}</div></div>`;
+});
+
+test("reads year-only formed and disbanded labels from artist information", () => {
+	document.body.innerHTML = `<div class="artist_info_main">
+		<div class="info_hdr">Formed</div><div class="info_content">1990, Liverpool</div>
+		<div class="info_hdr">Disbanded</div><div class="info_content">2020</div>
+		<div class="info_hdr">Members</div><div class="info_content">Danny</div>
+	</div>`;
+	expect(readFormedAndDisbanded(document)).toEqual({
+		formedDate: null,
+		disbandedDate: null,
+		formedLabel: "1990",
+		disbandedLabel: "2020",
+	});
 });
 
 test("includes unloaded releases using the shared loader without expanding the DOM", async () => {
@@ -50,6 +67,13 @@ test("does not fetch fully loaded sections and preserves the disbanded-year cuto
 	const markers = await extractDiscographyMarkersFromDOM(2001);
 	expect(markers.album.map((marker) => marker.title)).toEqual(["First"]);
 	expect(loadSection).not.toHaveBeenCalled();
+});
+
+test("includes releases throughout the disbandment year but not later ones", async () => {
+	document.querySelector("#disco_type_s")!.innerHTML =
+		row(1, "Final year", 2020) + row(2, "Posthumous", 2021);
+	const markers = await extractDiscographyMarkersFromDOM(2020.99);
+	expect(markers.album.map((marker) => marker.title)).toEqual(["Final year"]);
 });
 
 test("surfaces loading failures instead of returning incomplete markers", async () => {

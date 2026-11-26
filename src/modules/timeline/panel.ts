@@ -1,5 +1,10 @@
 import { DiscographyRateLimitError } from "~/shared/artist-discography";
-import { currentDecimalYear, decimalYearOf } from "./date-utils";
+import {
+	currentDecimalYear,
+	decimalYearOf,
+	parseDateFromText,
+	parseEndDateFromText,
+} from "./date-utils";
 import {
 	extractDiscographyMarkersFromDOM,
 	extractShowMarkersFromDOM,
@@ -37,8 +42,12 @@ async function renderIntoPanel(
 	);
 
 	const bounds = readFormedAndDisbanded(document);
-	const formedYear = decimalYearOf(bounds.formedDate);
-	const disbandedYear = decimalYearOf(bounds.disbandedDate);
+	const formedYear = decimalYearOf(
+		bounds.formedDate ?? parseDateFromText(bounds.formedLabel ?? ""),
+	);
+	const disbandedYear = decimalYearOf(
+		bounds.disbandedDate ?? parseEndDateFromText(bounds.disbandedLabel ?? ""),
+	);
 
 	const axisStartLabel = bounds.formedDate
 		? formatFullDate(bounds.formedDate)

@@ -10,6 +10,7 @@ import type {
 	WikipediaSearchResponse,
 } from "~/shared/utils/messaging";
 import { backgroundFetch } from "./fetch";
+import { findOtherLanguageArticle } from "./wikipedia-languages";
 
 type SearchResponse = {
 	query?: {
@@ -19,7 +20,7 @@ type SearchResponse = {
 
 export const wikipediaSearch = async ({
 	id,
-	data: { artistName, albumTitle },
+	data: { artistName, albumTitle, nativeAlbumTitle, nativeArtistName },
 }: WikipediaSearchRequest): Promise<WikipediaSearchResponse> => {
 	try {
 		const response = await backgroundFetch({
@@ -47,9 +48,14 @@ export const wikipediaSearch = async ({
 			? ((JSON.parse(response.data.body) as SearchResponse).query?.search ?? [])
 			: [];
 		const result = findBestWikipediaResult(results, albumTitle);
-		if (!result) return { id, type: "wikipediaSearch", data: {} };
-
-		const url = getWikipediaArticleUrl(result.title);
+		const url = result
+			? getWikipediaArticleUrl(result.title)
+			: await findOtherLanguageArticle(
+					id,
+					nativeAlbumTitle ?? albumTitle,
+					nativeArtistName ?? artistName,
+				);
+		if (!url) return { id, type: "wikipediaSearch", data: {} };
 		await browser.tabs.create({ url });
 		return { id, type: "wikipediaSearch", data: { url } };
 	} catch (error) {

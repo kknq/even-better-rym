@@ -9,6 +9,8 @@ export const pages = {
 	userReception: "/release/",
 	whoSampled: "/release/",
 	wikipedia: "/release/",
+	discogsSearch: "/release/",
+	albumIdCopy: "/release/",
 	discogsCarousel: "/release/",
 	streamLinkSubmission: "/submit_media_link",
 	userCollection: "/collection",
@@ -23,8 +25,10 @@ export const pages = {
 	searchFocus: "/",
 	genreChartControls: "/genre/",
 	artistSearchHint: "/artist/",
+	artistTopReleases: "/artist/",
 	discographyProgress: "/artist/",
 	discographySort: "/artist/",
+	discographyFilters: "/artist/",
 	discographyOrder: "/artist/",
 	timeline: "/artist/",
 	map: "/artist/",
@@ -50,6 +54,8 @@ export const pageLabels: Record<PageKey, string> = {
 	userReception: "User Reception",
 	whoSampled: "WhoSampled Link",
 	wikipedia: "Wikipedia Search",
+	discogsSearch: "Discogs Search",
+	albumIdCopy: "Click Album ID to Copy",
 	discogsCarousel: "Discogs Release Image Carousel",
 	streamLinkSubmission: "Media Links Submission Helper",
 	userCollection: "Music Collection Enhancements",
@@ -64,8 +70,10 @@ export const pageLabels: Record<PageKey, string> = {
 	searchFocus: "Focus Search",
 	genreChartControls: "Genre Chart Controls",
 	artistSearchHint: "Artist Search Hint",
+	artistTopReleases: "Artist Top Main Releases",
 	discographyProgress: "Discography Progress",
 	discographySort: "Keep Discography Sorting",
+	discographyFilters: "Discography Filters",
 	discographyOrder: "Discography Section Order",
 	timeline: "Artist Timeline",
 	map: "Artist Location Map",
@@ -91,20 +99,21 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 			],
 		],
 		[
-			"Release and submission tools",
+			"Release Page",
 			[
 				"streamLinks",
 				"trackTime",
+				"albumIdCopy",
 				"releaseComments",
-				"releaseSubmission",
-				"imageCropper",
-				"coverArt",
 				"discogsCarousel",
-				"streamLinkSubmission",
+				"userReception",
 			],
 		],
-		["Release insights", ["userReception"]],
-		["External reference links", ["whoSampled", "wikipedia"]],
+		[
+			"Release Submission Tools",
+			["imageCropper", "coverArt", "releaseSubmission", "streamLinkSubmission"],
+		],
+		["External reference links", ["whoSampled", "wikipedia", "discogsSearch"]],
 		[
 			"Library and user profiles",
 			[
@@ -122,8 +131,10 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 			"Artist profiles",
 			[
 				"artistSearchHint",
+				"artistTopReleases",
 				"discographyProgress",
 				"discographySort",
+				"discographyFilters",
 				"discographyOrder",
 				"timeline",
 				"map",
@@ -153,7 +164,11 @@ export const pageHints: Record<PageKey, string> = {
 	userReception:
 		"Summarizes the release's rating distribution into a user reception meter and ranked categories.",
 	whoSampled: "Adds a direct WhoSampled album link for the current release.",
-	wikipedia: "Adds a button to search for the current release on Wikipedia.",
+	wikipedia:
+		"Searches Wikipedia for the release, trying English first and other languages if no match is found.",
+	discogsSearch:
+		"Opens the matching issue on Discogs, or its master page if the issue is not found.",
+	albumIdCopy: "Copies the Album ID to the clipboard when clicked.",
 	discogsCarousel:
 		"Adds an optional carousel of secondary Discogs release images to music release pages.",
 	streamLinkSubmission:
@@ -165,7 +180,7 @@ export const pageHints: Record<PageKey, string> = {
 	userPage:
 		"Adds edit buttons for favorite artists and other comments on your profile.",
 	followStatus:
-		"Shows whether users follow you on profiles, in your friends list, and beside friends' activity and online status, with a one-minute cache.",
+		"Shows whether users follow you on profiles, in your friends list, and beside friends' activity and online status. Also marks which followers you follow back.",
 	listComments:
 		"Makes list comments wider and taller, improves readability, enlarges the editor, and adds top/bottom scroll controls.",
 	voteHistoryGenres:
@@ -180,10 +195,14 @@ export const pageHints: Record<PageKey, string> = {
 	genreChartControls:
 		"Adds chart controls to music genre pages and film genre pages, and links film chart genres to their film genre pages.",
 	artistSearchHint: "Shows the artist's search hint below their name",
+	artistTopReleases:
+		"Adds a link to the artist's all-time top albums, EPs, mixtapes, and DJ mixes.",
 	discographyProgress:
 		"Shows listening progress by release type and overall on artist pages. Configure which release types count toward overall coverage.",
 	discographySort:
 		"On artist pages, keeps your chosen discography sort when showing all releases in a section, and keeps expanded sections open after sorting.",
+	discographyFilters:
+		"Adds controls to hide soundtracks, remix and archival releases on artist pages.",
 	discographyOrder:
 		"On artist pages, shows discography sections in your preferred order, for example additional releases above singles.",
 	timeline:

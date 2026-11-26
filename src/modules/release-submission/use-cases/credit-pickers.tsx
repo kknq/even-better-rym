@@ -3,12 +3,10 @@ import { GUEST_ROLE, getGuestArtists } from "../utils/guest-credits";
 import {
 	creditKey,
 	getFeaturedArtists,
-	getNonFeaturedTrackArtists,
 	getSuggestedCredits,
-	getTrackCredits,
 	getUnverifiedCreditSuggestions,
 	isSpecialCreditRole,
-	sortCreditsByTrackCoverage,
+	sortCreditsByFirstAppearance,
 } from "../utils/suggested-credits";
 import { isVariousArtistsRelease } from "../utils/track-artist-links";
 import { CreditPicker } from "./credit-picker";
@@ -52,21 +50,13 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 	}, []);
 	const guests = isVariousArtistsRelease(releaseArtists)
 		? []
-		: sortCreditsByTrackCoverage(
-				getGuestArtists(loadedTracks, releaseArtists),
-				loadedTracks,
-				getNonFeaturedTrackArtists,
-			);
+		: getGuestArtists(loadedTracks, releaseArtists);
 	const suggestions = [
-		...sortCreditsByTrackCoverage(
+		...sortCreditsByFirstAppearance(
 			getSuggestedCredits(loadedTracks, releaseCredits).filter(
 				(credit) => !isReissue || isSpecialCreditRole(credit.role),
 			),
 			loadedTracks,
-			(track) =>
-				[...getTrackCredits(track), ...releaseCredits]
-					.filter((credit) => credit.role.trim())
-					.map((credit) => credit.name),
 		),
 		...getUnverifiedCreditSuggestions(session.data.unverifiedCredits ?? []),
 	];

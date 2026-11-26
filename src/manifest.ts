@@ -37,6 +37,7 @@ const hostsArray = [
 	"https://*.metal-archives.com/*",
 	"https://metal-archives.com/*",
 	"https://en.wikipedia.org/*",
+	"https://www.wikidata.org/*",
 ];
 
 const spotifyPageErrors = {
@@ -139,6 +140,12 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/artist-top-releases/main.ts"],
+			css: ["src/modules/artist-top-releases/artist-top-releases.css"],
+			matches: ["*://*.rateyourmusic.com/artist/*"],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/discography-progress/main.ts"],
 			css: ["src/modules/discography-progress/discography-progress.css"],
 			matches: ["*://*.rateyourmusic.com/artist/*"],
@@ -146,6 +153,12 @@ const sharedManifest = {
 		},
 		{
 			js: ["src/modules/discography-sort/main.ts"],
+			matches: ["*://*.rateyourmusic.com/artist/*"],
+			run_at: "document_start",
+		},
+		{
+			js: ["src/modules/discography-filters/main.ts"],
+			css: ["src/modules/discography-filters/discography-filters.css"],
 			matches: ["*://*.rateyourmusic.com/artist/*"],
 			run_at: "document_start",
 		},

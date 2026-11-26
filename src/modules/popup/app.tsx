@@ -306,6 +306,7 @@ function FeatureList({
 										key === "hideVotes" ||
 										key === "whoSampled" ||
 										key === "wikipedia" ||
+										key === "discogsSearch" ||
 										key === "streamLinks" ||
 										key === "discographyProgress" ||
 										key === "discographyOrder" ||
@@ -315,16 +316,16 @@ function FeatureList({
 											type="button"
 											onClick={() =>
 												onChangeView(
-													key === "whoSampled" || key === "wikipedia"
+													key === "whoSampled" ||
+														key === "wikipedia" ||
+														key === "discogsSearch"
 														? "referenceLinks"
 														: key,
 												)
 											}
 											style={styles.customizeButton}
 										>
-											{key === "whoSampled" || key === "wikipedia"
-												? "Button colors"
-												: "Configure"}
+											Configure
 										</button>
 									)}
 									{key !== "discographyOrder" && (
@@ -354,16 +355,19 @@ function LoadingIndicator() {
 export function Toggle({
 	checked,
 	onChange,
+	labelledBy,
 	disabled = false,
 }: Readonly<{
 	checked: boolean;
 	onChange: () => void;
+	labelledBy?: string;
 	disabled?: boolean;
 }>) {
 	return (
 		<button
 			type="button"
 			role="switch"
+			aria-labelledby={labelledBy}
 			aria-checked={checked}
 			disabled={disabled}
 			onClick={onChange}

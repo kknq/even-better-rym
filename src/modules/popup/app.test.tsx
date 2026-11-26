@@ -237,10 +237,24 @@ describe("App", () => {
 		});
 	});
 
+	test("offers Album ID copying as its own release tool", async () => {
+		await showApp();
+		await act(() => findButton("Release Page").click());
+		const row = featureRow("albumIdCopy");
+		expect(row.textContent).toContain("Click Album ID to Copy");
+		const toggle = row.querySelector<HTMLButtonElement>('[role="switch"]')!;
+		expect(toggle.getAttribute("aria-checked")).toBe("true");
+		await act(() => toggle.click());
+		await vi.waitFor(() => {
+			expect(toggle.getAttribute("aria-checked")).toBe("false");
+		});
+		expect(setModuleEnabled).toHaveBeenCalledWith("albumIdCopy", false);
+	});
+
 	test.each([
 		["Charts", "chartShortcuts", "Chart Shortcuts", "Shortcut settings"],
 		[
-			"Release and submission tools",
+			"Release Page",
 			"streamLinks",
 			"Suggested Streaming Links",
 			"Streaming link settings",
@@ -248,6 +262,12 @@ describe("App", () => {
 		[
 			"External reference links",
 			"whoSampled",
+			"External Reference Links",
+			"Reference link settings",
+		],
+		[
+			"External reference links",
+			"discogsSearch",
 			"External Reference Links",
 			"Reference link settings",
 		],

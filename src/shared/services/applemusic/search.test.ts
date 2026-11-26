@@ -39,6 +39,14 @@ describe("Apple Music search", () => {
 		vi.mocked(fetch).mockReset();
 	});
 
+	test.each([
+		["Svartidauði", "Svartidaudi"],
+		["Misthyrming", "Misþyrming"],
+	])("matches Latin artist spelling variants: %s / %s", async (artist, candidate) => {
+		respond({ results: [{ ...album, artistName: candidate }] });
+		await expect(search({ ...metadata, artist })).resolves.toContain("/balls/");
+	});
+
 	test("finds 7Б using RYM's alias and Apple's reissue title", async () => {
 		respond({
 			results: [

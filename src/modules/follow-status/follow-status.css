@@ -43,3 +43,7 @@
 .ebr-follow-status-legend > span > span {
 	font-weight: bold;
 }
+
+.ebr-follow-status-followers-legend {
+	margin: 0 0 0.75em;
+}
