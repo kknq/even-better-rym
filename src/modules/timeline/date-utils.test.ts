@@ -7,6 +7,7 @@ import {
 	parseDateFromText,
 	parseDateLabelFromText,
 	parseDecimalYearFromDateString,
+	parseEndDateFromText,
 	parseFullDateFromText,
 	yearOf,
 } from "./date-utils";
@@ -36,6 +37,15 @@ describe("date text parsing", () => {
 		expect(parseDateLabelFromText("March 2020")).toBe("Mar 2020");
 		expect(parseDateLabelFromText("Released in 2020")).toBe("2020");
 		expect(parseDateLabelFromText("unknown")).toBeNull();
+	});
+
+	test("uses the end of partial periods for timeline end dates", () => {
+		expect(parseEndDateFromText("2020")).toEqual(new Date(2020, 11, 31));
+		expect(parseEndDateFromText("February 2020")).toEqual(
+			new Date(2020, 1, 29),
+		);
+		expect(parseEndDateFromText("5 March 2020")).toEqual(new Date(2020, 2, 5));
+		expect(parseEndDateFromText("unknown")).toBeNull();
 	});
 
 	test("converts parsed dates to decimal years and rejects invalid dates", () => {

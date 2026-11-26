@@ -49,6 +49,16 @@ export function parseDateFromText(text: string): Date | null {
 	return new Date(parts.year, 0, 1);
 }
 
+export function parseEndDateFromText(text: string): Date | null {
+	const parts = parseDatePartsFromText(text);
+	if (!parts) return null;
+	if (parts.day && parts.month) {
+		return new Date(parts.year, parts.month - 1, parts.day);
+	}
+	if (parts.month) return new Date(parts.year, parts.month, 0);
+	return new Date(parts.year, 11, 31);
+}
+
 export function parseDecimalYearFromDateString(text: string): number | null {
 	const date = parseDateFromText(text);
 
