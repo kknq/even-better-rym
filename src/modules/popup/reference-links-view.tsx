@@ -32,7 +32,9 @@ export function ReferenceLinksView({
 			<div style={styles.card}>
 				<div style={styles.groupHeader}>Button color</div>
 				<label style={styles.row}>
-					<span style={styles.label}>WhoSampled and Wikipedia buttons</span>
+					<span style={styles.label}>
+						WhoSampled, Wikipedia and Discogs buttons
+					</span>
 					<input
 						type="color"
 						aria-label="Reference link button color"

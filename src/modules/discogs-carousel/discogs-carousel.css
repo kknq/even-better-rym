@@ -66,7 +66,16 @@
 }
 
 .ebr-discogs-carousel-status {
+	display: block;
 	text-align: center;
 	margin: 0.5em 0;
 	font-size: 0.9em;
+}
+.ebr-discogs-cover-placeholder {
+	position: relative;
+	width: 100%;
+}
+
+.ebr-discogs-cover-placeholder:has(.ebr-discogs-carousel) {
+	aspect-ratio: 1;
 }

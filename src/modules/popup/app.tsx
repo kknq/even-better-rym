@@ -306,6 +306,7 @@ function FeatureList({
 										key === "hideVotes" ||
 										key === "whoSampled" ||
 										key === "wikipedia" ||
+										key === "discogsSearch" ||
 										key === "streamLinks" ||
 										key === "discographyProgress" ||
 										key === "discographyOrder" ||
@@ -315,7 +316,9 @@ function FeatureList({
 											type="button"
 											onClick={() =>
 												onChangeView(
-													key === "whoSampled" || key === "wikipedia"
+													key === "whoSampled" ||
+														key === "wikipedia" ||
+														key === "discogsSearch"
 														? "referenceLinks"
 														: key,
 												)

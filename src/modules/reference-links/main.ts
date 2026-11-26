@@ -14,6 +14,7 @@ import {
 } from "./album-id-control";
 import whoSampledLogo from "./assets/whosampled.svg";
 import wikipediaLogo from "./assets/wikipedia.svg";
+import { createDiscogsButton } from "./discogs-button";
 import { toSlug } from "./helpers";
 import "./reference-links.css";
 
@@ -110,6 +111,8 @@ const appendWikipediaButton = (
 				data: {
 					artistName: release.artistName,
 					albumTitle: release.albumTitle,
+					nativeAlbumTitle: release.nativeAlbumTitle,
+					nativeArtistName: release.nativeArtistName,
 				},
 			},
 		)
@@ -148,9 +151,14 @@ async function main(): Promise<void> {
 			runModule("wikipedia", () => {
 				appendWikipediaButton(titleElement, release, settings.buttonColor);
 			}),
+			runModule("discogsSearch", () => {
+				const container = getReferenceContainer(titleElement);
+				if (!container.querySelector(".ebr-discogs-link"))
+					container.append(createDiscogsButton(release, settings.buttonColor));
+			}),
 		]);
 
-		if (document.querySelector(".ebr-whosampled-link, .ebr-wikipedia-link")) {
+		if (document.querySelector(".ebr-reference-link")) {
 			moveAlbumId(titleElement);
 			reduceTitleTopSpacing(titleElement);
 		}
@@ -160,4 +168,5 @@ async function main(): Promise<void> {
 	}
 }
 
-void main();
+// Content scripts are bundled as classic scripts; top-level await is unsupported.
+void main(); // NOSONAR

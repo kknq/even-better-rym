@@ -9,6 +9,7 @@ export const pages = {
 	userReception: "/release/",
 	whoSampled: "/release/",
 	wikipedia: "/release/",
+	discogsSearch: "/release/",
 	albumIdCopy: "/release/",
 	discogsCarousel: "/release/",
 	streamLinkSubmission: "/submit_media_link",
@@ -53,6 +54,7 @@ export const pageLabels: Record<PageKey, string> = {
 	userReception: "User Reception",
 	whoSampled: "WhoSampled Link",
 	wikipedia: "Wikipedia Search",
+	discogsSearch: "Discogs Search",
 	albumIdCopy: "Click Album ID to Copy",
 	discogsCarousel: "Discogs Release Image Carousel",
 	streamLinkSubmission: "Media Links Submission Helper",
@@ -97,21 +99,21 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 			],
 		],
 		[
-			"Release and submission tools",
+			"Release Page",
 			[
 				"streamLinks",
 				"trackTime",
 				"albumIdCopy",
 				"releaseComments",
-				"releaseSubmission",
-				"imageCropper",
-				"coverArt",
 				"discogsCarousel",
-				"streamLinkSubmission",
+				"userReception",
 			],
 		],
-		["Release insights", ["userReception"]],
-		["External reference links", ["whoSampled", "wikipedia"]],
+		[
+			"Release Submission Tools",
+			["imageCropper", "coverArt", "releaseSubmission", "streamLinkSubmission"],
+		],
+		["External reference links", ["whoSampled", "wikipedia", "discogsSearch"]],
 		[
 			"Library and user profiles",
 			[
@@ -162,7 +164,10 @@ export const pageHints: Record<PageKey, string> = {
 	userReception:
 		"Summarizes the release's rating distribution into a user reception meter and ranked categories.",
 	whoSampled: "Adds a direct WhoSampled album link for the current release.",
-	wikipedia: "Adds a button to search for the current release on Wikipedia.",
+	wikipedia:
+		"Searches Wikipedia for the release, trying English first and other languages if no match is found.",
+	discogsSearch:
+		"Opens the matching issue on Discogs, or its master page if the issue is not found.",
 	albumIdCopy: "Copies the Album ID to the clipboard when clicked.",
 	discogsCarousel:
 		"Adds an optional carousel of secondary Discogs release images to music release pages.",

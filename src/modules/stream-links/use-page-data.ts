@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-
+import { getSearchArtistMetadata } from "~/shared/search-artist";
 import { SEARCHABLES } from "~/shared/services";
 import type { ReleaseType, ServiceId } from "~/shared/services/types";
 import {
@@ -16,7 +16,6 @@ import {
 	loading,
 } from "~/shared/utils/one-shot";
 
-import { getSearchArtistMetadata } from "./metadata";
 import { getReleaseTypeFromPath } from "./release-type";
 
 export type PageDataState = OneShot<Error, PageData>;

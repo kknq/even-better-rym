@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
@@ -85,11 +86,47 @@ describe("moveAlbumId", () => {
 		);
 	});
 
-	test("does not move the ID without a sticky ad sidebar", () => {
+	test("places the ID below the color bar without a sticky ad sidebar", () => {
 		document.querySelector(".album_info_outer")?.remove();
 		moveAlbumId(titleElement);
-		expect(albumId.parentElement).toBe(titleElement);
+		expect(albumId.parentElement).toBe(
+			document.querySelector(".color_bar")?.nextElementSibling,
+		);
+		expect(
+			albumId.parentElement?.classList.contains("ebr-album-id-inline"),
+		).toBe(true);
 		expect(document.querySelector(".ebr-album-id-sidebar")).toBeNull();
+	});
+
+	test("keeps the fallback ID out of the release info's layout flow", () => {
+		const style = document.createElement("style");
+		style.textContent = readFileSync(
+			"src/modules/reference-links/reference-links.css",
+			"utf8",
+		);
+		document.head.append(style);
+		try {
+			document.querySelector(".album_info_outer td:nth-child(2)")?.remove();
+			moveAlbumId(titleElement);
+			const container = albumId.parentElement!;
+			const containerStyle = window.getComputedStyle(container);
+			expect(containerStyle.height).toBe("0px");
+			expect(containerStyle.marginTop).toBe("0px");
+			expect(containerStyle.marginBottom).toBe("0px");
+			expect(window.getComputedStyle(albumId).position).toBe("absolute");
+			expect(container.nextElementSibling).toBe(
+				document.querySelector(".show-for-small:not(.album_artist_small)"),
+			);
+		} finally {
+			style.remove();
+		}
+	});
+
+	test("falls back below the title when there is no color bar or sidebar", () => {
+		document.querySelector(".album_info_outer")?.remove();
+		document.querySelector(".color_bar")?.remove();
+		moveAlbumId(titleElement);
+		expect(albumId.parentElement).toBe(titleElement.nextElementSibling);
 	});
 
 	test("copies from the original label and displays temporary confirmation", async () => {
@@ -213,10 +250,12 @@ describe("moveAlbumId", () => {
 		expect(albumId.value).toBe("[Album17191098]");
 	});
 
-	test("leaves the native label unchanged if the ad sidebar is absent", () => {
+	test("preserves the native label in the fallback container if the ad sidebar is absent", () => {
 		document.querySelector(".album_info_outer")?.remove();
 		moveAlbumId(titleElement);
-		expect(albumId.parentElement).toBe(titleElement);
+		expect(albumId.parentElement).toBe(
+			document.querySelector(".color_bar")?.nextElementSibling,
+		);
 	});
 });
 

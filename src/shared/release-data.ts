@@ -16,13 +16,14 @@ const getYear = (element: Element): number | undefined => {
 const readIssue = (element: Element): ReleaseIssue | undefined => {
 	const labelElement = element.querySelector<HTMLElement>(".issue_label");
 	const labelText = labelElement?.getAttribute("title") ?? "";
-	const separator = labelText.lastIndexOf("/");
+	const separator = labelText.indexOf(" / ");
 	const catalogNumber =
-		separator < 0 ? "" : labelText.slice(separator + 1).trim();
-	if (!catalogNumber || catalogNumber.toLowerCase() === "n/a") return undefined;
+		separator < 0 ? "" : labelText.slice(separator + 3).trim();
+	if (!element.querySelector(".issue_formats")) return undefined;
+	const artistElement = document.querySelector<HTMLAnchorElement>("a.artist");
 
 	return {
-		catalogNumber,
+		catalogNumber: catalogNumber.toLowerCase() === "n/a" ? "" : catalogNumber,
 		country:
 			element.querySelector<HTMLElement>(".ui_flag")?.getAttribute("title") ??
 			"",
@@ -30,9 +31,12 @@ const readIssue = (element: Element): ReleaseIssue | undefined => {
 			element
 				.querySelector<HTMLElement>(".issue_formats")
 				?.getAttribute("title") ?? "",
-		label: separator < 0 ? "" : labelText.slice(0, separator).trim(),
-		artist:
-			document.querySelector<HTMLAnchorElement>("a.artist")?.text.trim() ?? "",
+		label:
+			separator < 0 ? labelText.trim() : labelText.slice(0, separator).trim(),
+		artist: getSearchArtistMetadata(
+			artistElement?.textContent ?? "",
+			artistElement?.querySelector(".subtext")?.textContent ?? null,
+		).artist,
 		title:
 			document
 				.querySelector<HTMLMetaElement>('meta[itemprop="name"]')
@@ -63,3 +67,5 @@ export const findReleaseIssue = (): ReleaseIssue | undefined => {
 	);
 	return readIssue(current ?? primary ?? issues[0] ?? document.body);
 };
+
+import { getSearchArtistMetadata } from "./search-artist";

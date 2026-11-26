@@ -6,6 +6,7 @@ import {
 	runModule,
 	setModuleEnabled,
 } from "./page-settings";
+import { featureGroups } from "./pages";
 import * as storage from "./utils/storage";
 
 const saved = vi.hoisted(() => new Map<string, unknown>());
@@ -21,6 +22,39 @@ vi.mock("./utils/storage", () => ({
 beforeEach(() => {
 	saved.clear();
 	vi.clearAllMocks();
+});
+
+test("preserves saved release switches when reorganizing popup groups", async () => {
+	const groups = featureGroups.filter(([label]) =>
+		["Release Page", "Release Submission Tools"].includes(label),
+	);
+	const keys = groups
+		.flatMap(([, features]) => [...features])
+		.filter((key) => key !== "albumIdCopy");
+	for (const [index, key] of keys.entries()) {
+		saved.set(`pages.${key}`, index % 2 === 0);
+	}
+	const original = new Map(saved);
+	const enabled = await getAllModulesEnabled();
+	expect(enabled.albumIdCopy).toBe(true);
+	expect(saved.has("pages.albumIdCopy")).toBe(false);
+	for (const [index, key] of keys.entries()) {
+		expect(enabled[key]).toBe(index % 2 === 0);
+		expect(await getModuleEnabled(key)).toBe(index % 2 === 0);
+	}
+	expect(saved).toEqual(original);
+	expect(storage.set).not.toHaveBeenCalled();
+	expect(
+		groups.find(([label]) => label === "Release Submission Tools")?.[1],
+	).toEqual([
+		"imageCropper",
+		"coverArt",
+		"releaseSubmission",
+		"streamLinkSubmission",
+	]);
+	expect(groups.find(([label]) => label === "Release Page")?.[1]).toContain(
+		"userReception",
+	);
 });
 
 test("enables profile edits and follow status by default", async () => {

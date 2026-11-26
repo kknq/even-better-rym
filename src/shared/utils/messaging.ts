@@ -1,6 +1,8 @@
 import { nanoid } from "nanoid";
 import browser from "webextension-polyfill";
 import type { SearchDiagnostic } from "~/modules/spotify-search/messages";
+import type { ReleaseIssue } from "~/shared/release-data";
+import type { ReleaseTitleData } from "~/shared/release-title";
 import type {
 	TidalCreditsInput,
 	TidalCreditsResult,
@@ -83,12 +85,26 @@ export type WikipediaSearchRequest = {
 	data: {
 		artistName: string;
 		albumTitle: string;
+		nativeAlbumTitle?: string;
+		nativeArtistName?: string;
 	};
 };
 
 export type WikipediaSearchResponse = {
 	id: string;
 	type: "wikipediaSearch";
+	data: { url?: string; error?: string };
+};
+
+export type DiscogsSearchRequest = {
+	id: string;
+	type: "discogsSearch";
+	data: { release: ReleaseTitleData; issue?: ReleaseIssue };
+};
+
+export type DiscogsSearchResponse = {
+	id: string;
+	type: "discogsSearch";
 	data: { url?: string; error?: string };
 };
 
@@ -143,14 +159,16 @@ export type BackgroundRequest =
 	| ScriptRequest
 	| SpotifySearchRequest
 	| TidalCreditsRequest
-	| WikipediaSearchRequest;
+	| WikipediaSearchRequest
+	| DiscogsSearchRequest;
 export type BackgroundResponse =
 	| FetchResponse
 	| DownloadResponse
 	| ScriptResponse
 	| SpotifySearchResponse
 	| TidalCreditsResponse
-	| WikipediaSearchResponse;
+	| WikipediaSearchResponse
+	| DiscogsSearchResponse;
 
 export const isBackgroundRequest = (o: unknown): o is BackgroundRequest =>
 	typeof o === "object" && o !== null && "id" in o && "type" in o;

@@ -69,6 +69,19 @@
 	max-width: 100%;
 }
 
+.ebr-album-id-container.ebr-album-id-inline {
+	position: relative;
+	height: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.ebr-album-id-inline > .album_shortcut {
+	position: absolute;
+	top: 15px;
+	right: 0;
+}
+
 .ebr-album-id-sticky-ad {
 	top: 6em !important;
 }
@@ -119,6 +132,14 @@
 
 .ebr-wikipedia-logo {
 	filter: invert(1);
+}
+
+.ebr-discogs-logo,
+.ebr-discogs-logo svg {
+	display: block;
+	width: 1.1rem;
+	height: 1.1rem;
+	flex: none;
 }
 
 .album_title > .album_shortcut {

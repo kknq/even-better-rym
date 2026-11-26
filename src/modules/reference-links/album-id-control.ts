@@ -7,8 +7,7 @@ export const moveAlbumId = (titleElement: HTMLElement): void => {
 			":scope > .album_info_outer",
 		)?.rows[0]?.cells[1];
 	const stickyAd = sidebarCell?.querySelector<HTMLElement>(":scope > div");
-	if (!albumShortcut || !sidebarCell || !stickyAd) return;
-	if (stickyAd.style.position !== "sticky") return;
+	if (!albumShortcut) return;
 	const albumId = albumShortcut.value.trim();
 	if (!albumId) return;
 
@@ -18,9 +17,17 @@ export const moveAlbumId = (titleElement: HTMLElement): void => {
 	albumShortcut.style.fontSize = originalFontSize;
 	albumShortcut.hidden = false;
 	container.append(albumShortcut);
-	sidebarCell.classList.add("ebr-album-id-sidebar");
-	stickyAd.classList.add("ebr-album-id-sticky-ad");
-	stickyAd.before(container);
+	if (sidebarCell && stickyAd?.style.position === "sticky") {
+		sidebarCell.classList.add("ebr-album-id-sidebar");
+		stickyAd.classList.add("ebr-album-id-sticky-ad");
+		stickyAd.before(container);
+	} else {
+		container.classList.add("ebr-album-id-inline");
+		const colorBar = titleElement.parentElement?.querySelector(
+			":scope > .color_bar",
+		);
+		(colorBar ?? titleElement).after(container);
+	}
 };
 
 export const enableAlbumIdCopy = (titleElement: HTMLElement): void => {
