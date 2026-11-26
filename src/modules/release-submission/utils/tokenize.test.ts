@@ -17,6 +17,7 @@ describe("split phrases", () => {
 			["I'm Just a Singer ", "(In a Rock 'n' Roll Band)"],
 		],
 		["What (Howdy) Yay (Yo)", ["What ", "(Howdy)", " Yay ", "(Yo)"]],
+		["Aries//Pisces///2022", ["Aries", " // ", "Pisces", " /// ", "2022"]],
 	] as const;
 
 	test.each(tests)("correctly splits %p", (input, output) =>
