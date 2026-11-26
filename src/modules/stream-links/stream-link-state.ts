@@ -1,13 +1,7 @@
 import type { Searchable, Service } from "~/shared/services/types";
-import type { StreamLinkSettings } from "~/shared/stream-links/settings";
 import { parseError } from "~/shared/utils/error";
 import type { OneShot } from "~/shared/utils/one-shot";
-import {
-	complete,
-	failed,
-	isComplete,
-	isFailed,
-} from "~/shared/utils/one-shot";
+import { complete, failed, isFailed } from "~/shared/utils/one-shot";
 
 import type { PageData } from "./use-page-data";
 
@@ -16,19 +10,13 @@ type StreamLinkCompleteState =
 	| { _tag: "exists" | "found"; url: string }
 	| { _tag: "not-found" };
 
-export type LinkChecks = Pick<
-	StreamLinkSettings,
-	"searchUnvotedLinks" | "hideDownvotedLinks"
->;
-
 const notFound: StreamLinkState = complete({ _tag: "not-found" });
 
-// Returns RYM's link for a service, a search result in its place, or not
-// found, following the user's link checks.
+// Returns RYM's link for a service, or a search result in its place when RYM
+// has no link or its links are voted down in the user's region.
 export async function getStreamLinkState(
 	service: Service & Searchable,
 	releaseData: PageData,
-	linkChecks: LinkChecks,
 ): Promise<StreamLinkState> {
 	const rymLink = releaseData.links[service.id];
 	if (rymLink === undefined) {
@@ -36,23 +24,15 @@ export async function getStreamLinkState(
 	}
 
 	const rymState = complete({ _tag: "exists" as const, url: rymLink });
-	const isDownvoted =
-		linkChecks.hideDownvotedLinks &&
-		releaseData.servicesWithOnlyDownvotedLinks.includes(service.id);
-	const keptState = isDownvoted ? notFound : rymState;
-	const isUnvoted =
-		linkChecks.searchUnvotedLinks &&
-		releaseData.servicesWithoutUpvotedLink.includes(service.id);
-	if (!isUnvoted) {
-		return keptState;
+	const isDownvoted = releaseData.servicesWithOnlyDownvotedLinks.includes(
+		service.id,
+	);
+	if (!isDownvoted) {
+		return rymState;
 	}
 
 	const searchState = await searchStreamLink(service, releaseData.metadata);
-	if (isFailed(searchState)) {
-		return rymState;
-	}
-	const isFound = isComplete(searchState) && searchState.data._tag === "found";
-	return isFound ? searchState : keptState;
+	return isFailed(searchState) ? rymState : searchState;
 }
 
 // Searches the service for the release.

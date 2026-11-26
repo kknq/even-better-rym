@@ -29,15 +29,6 @@ export const parseLinkVotes = (html: string): LinkVotes[] => {
 	});
 };
 
-// Checks whether none of the links scores above zero in the given region.
-export const hasNoUpvotedLink = (
-	links: LinkVotes[],
-	region: string,
-): boolean => {
-	const country = region.toUpperCase();
-	return links.every((link) => (link.scores[country] ?? 0) <= 0);
-};
-
 // Checks whether every link scores below zero in the given region.
 export const hasOnlyDownvotedLinks = (
 	links: LinkVotes[],
@@ -47,33 +38,20 @@ export const hasOnlyDownvotedLinks = (
 	return links.every((link) => (link.scores[country] ?? 0) < 0);
 };
 
-// Returns the services that have links and whose links all pass the check in
-// the user's region for that service.
-const getServicesWhereLinks = (
+// Returns the services whose links all score below zero in the user's region
+// for that service.
+export const getServicesWithOnlyDownvotedLinks = (
 	links: LinkVotes[],
 	serviceRegions: Record<string, string>,
-	check: (serviceLinks: LinkVotes[], region: string) => boolean,
 ): ServiceId[] =>
 	SEARCHABLES.filter((service) => {
 		const region = serviceRegions[service.id];
 		if (region === undefined) return false;
 		const serviceLinks = links.filter((link) => service.regex.test(link.url));
-		return serviceLinks.length > 0 && check(serviceLinks, region);
+		return (
+			serviceLinks.length > 0 && hasOnlyDownvotedLinks(serviceLinks, region)
+		);
 	}).map((service) => service.id);
-
-// Returns the services whose links all score zero or below in the user's region.
-export const getServicesWithoutUpvotedLink = (
-	links: LinkVotes[],
-	serviceRegions: Record<string, string>,
-): ServiceId[] =>
-	getServicesWhereLinks(links, serviceRegions, hasNoUpvotedLink);
-
-// Returns the services whose links all score below zero in the user's region.
-export const getServicesWithOnlyDownvotedLinks = (
-	links: LinkVotes[],
-	serviceRegions: Record<string, string>,
-): ServiceId[] =>
-	getServicesWhereLinks(links, serviceRegions, hasOnlyDownvotedLinks);
 
 // Checks whether any service has both a RYM link and a region to judge its
 // votes in.

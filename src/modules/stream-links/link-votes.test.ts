@@ -18,8 +18,6 @@ import { fetchInPage } from "~/shared/utils/fetch";
 import type { LinkVotes } from "./link-votes";
 import {
 	getServicesWithOnlyDownvotedLinks,
-	getServicesWithoutUpvotedLink,
-	hasNoUpvotedLink,
 	hasOnlyDownvotedLinks,
 	hasRegionalLink,
 	loadLinkVotes,
@@ -75,32 +73,6 @@ describe("parseLinkVotes", () => {
 	});
 });
 
-describe("hasNoUpvotedLink", () => {
-	test("is false when one link scores above zero in the region", () => {
-		expect(
-			hasNoUpvotedLink(
-				[
-					{ url: appleMusicDownvoted, scores: { US: -1 } },
-					{ url: appleMusicUpvoted, scores: { US: 1 } },
-				],
-				"US",
-			),
-		).toBe(false);
-	});
-
-	test("treats a region with no votes as zero", () => {
-		expect(hasNoUpvotedLink([{ url: spotify, scores: { UA: 3 } }], "US")).toBe(
-			true,
-		);
-	});
-
-	test("treats a tied score as zero", () => {
-		expect(hasNoUpvotedLink([{ url: spotify, scores: { US: 0 } }], "us")).toBe(
-			true,
-		);
-	});
-});
-
 describe("hasOnlyDownvotedLinks", () => {
 	test("is true when every link scores below zero in the region", () => {
 		expect(
@@ -131,11 +103,13 @@ describe("hasOnlyDownvotedLinks", () => {
 });
 
 describe("getServicesWithOnlyDownvotedLinks", () => {
+	const links: LinkVotes[] = [
+		{ url: appleMusicDownvoted, scores: { CA: 1, US: -1 } },
+		{ url: spotify, scores: { UA: 1 } },
+		{ url: tidal, scores: { US: -2 } },
+	];
+
 	test("lists only services whose links are all voted down in the region", () => {
-		const links: LinkVotes[] = [
-			{ url: appleMusicDownvoted, scores: { CA: 1, US: -1 } },
-			{ url: spotify, scores: { UA: 1 } },
-		];
 		expect(
 			getServicesWithOnlyDownvotedLinks(links, {
 				applemusic: "US",
@@ -143,31 +117,15 @@ describe("getServicesWithOnlyDownvotedLinks", () => {
 			}),
 		).toEqual(["applemusic"]);
 	});
-});
-
-describe("getServicesWithoutUpvotedLink", () => {
-	const links: LinkVotes[] = [
-		{ url: appleMusicDownvoted, scores: { CA: 1, US: -1 } },
-		{ url: appleMusicUpvoted, scores: { US: 1 } },
-		{ url: spotify, scores: { UA: 1 } },
-		{ url: tidal, scores: { SE: 1 } },
-	];
-
-	test("lists services with only zero or negative links in the region", () => {
-		expect(
-			getServicesWithoutUpvotedLink(links, {
-				applemusic: "US",
-				spotify: "US",
-			}),
-		).toEqual(["spotify"]);
-	});
 
 	test("skips services with no region set", () => {
-		expect(getServicesWithoutUpvotedLink(links, {})).toEqual([]);
+		expect(getServicesWithOnlyDownvotedLinks(links, {})).toEqual([]);
 	});
 
 	test("skips services with no links, such as when the fetch failed", () => {
-		expect(getServicesWithoutUpvotedLink([], { youtube: "US" })).toEqual([]);
+		expect(getServicesWithOnlyDownvotedLinks([], { youtube: "US" })).toEqual(
+			[],
+		);
 	});
 });
 

@@ -33,30 +33,15 @@ export function StreamLinksView({
 				<div style={styles.groupHeader}>Link checks</div>
 				<label style={styles.row}>
 					<span style={styles.label}>
-						Search again when RYM's link has no upvotes in your region
+						Search again when RYM's link is voted down in your region
 					</span>
 					<input
 						type="checkbox"
-						checked={settings.searchUnvotedLinks}
+						checked={settings.searchDownvotedLinks}
 						onChange={(event) =>
 							void update({
 								...settings,
-								searchUnvotedLinks: event.currentTarget.checked,
-							})
-						}
-					/>
-				</label>
-				<label style={styles.row}>
-					<span style={styles.label}>
-						Hide RYM's link when it's voted down in your region
-					</span>
-					<input
-						type="checkbox"
-						checked={settings.hideDownvotedLinks}
-						onChange={(event) =>
-							void update({
-								...settings,
-								hideDownvotedLinks: event.currentTarget.checked,
+								searchDownvotedLinks: event.currentTarget.checked,
 							})
 						}
 					/>

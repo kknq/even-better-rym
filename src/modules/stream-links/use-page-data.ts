@@ -19,7 +19,6 @@ import {
 import type { LinkVotes } from "./link-votes";
 import {
 	getServicesWithOnlyDownvotedLinks,
-	getServicesWithoutUpvotedLink,
 	hasRegionalLink,
 } from "./link-votes";
 import { getSearchArtistMetadata } from "./metadata";
@@ -60,7 +59,6 @@ export type PageData = {
 		serviceRegions: StreamingPreferences["service_regions"];
 	};
 	links: Links;
-	servicesWithoutUpvotedLink: ServiceId[];
 	servicesWithOnlyDownvotedLinks: ServiceId[];
 };
 async function getPageData(
@@ -83,10 +81,6 @@ async function getPageData(
 			serviceRegions: linksData.serviceRegions,
 		},
 		links: linksData.links,
-		servicesWithoutUpvotedLink: getServicesWithoutUpvotedLink(
-			linkVotes,
-			serviceRegions,
-		),
 		servicesWithOnlyDownvotedLinks: getServicesWithOnlyDownvotedLinks(
 			linkVotes,
 			serviceRegions,

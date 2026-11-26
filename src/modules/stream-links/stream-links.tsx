@@ -11,9 +11,7 @@ export function StreamLinks({
 	settings,
 }: Readonly<{ settings: StreamLinkSettings }>) {
 	const pageData = usePageData(
-		settings.searchUnvotedLinks || settings.hideDownvotedLinks
-			? loadLinkVotes
-			: skipLinkVotes,
+		settings.searchDownvotedLinks ? loadLinkVotes : skipLinkVotes,
 	);
 
 	useEffect(() => {
@@ -45,7 +43,6 @@ export function StreamLinks({
 					key={service.id}
 					service={service}
 					pageData={pageData}
-					linkChecks={settings}
 					color={
 						settings.useServiceColors ? settings.colors[service.id] : undefined
 					}

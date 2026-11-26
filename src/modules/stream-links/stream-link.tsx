@@ -11,19 +11,17 @@ import {
 } from "~/shared/utils/one-shot";
 
 import { StreamLinkIcon } from "./stream-link-icon";
-import type { LinkChecks, StreamLinkState } from "./stream-link-state";
+import type { StreamLinkState } from "./stream-link-state";
 import { getStreamLinkState } from "./stream-link-state";
 import type { PageDataState } from "./use-page-data";
 
 export function StreamLink({
 	service,
 	pageData,
-	linkChecks,
 	color,
 }: Readonly<{
 	service: Service & Searchable;
 	pageData: PageDataState;
-	linkChecks: LinkChecks;
 	color?: string;
 }>) {
 	const [state, setState] = useState<StreamLinkState>(initial);
@@ -35,10 +33,10 @@ export function StreamLink({
 			} else if (isFailed(pageData)) {
 				setState(failed(pageData.error));
 			} else if (isComplete(pageData)) {
-				setState(await getStreamLinkState(service, pageData.data, linkChecks));
+				setState(await getStreamLinkState(service, pageData.data));
 			}
 		})();
-	}, [pageData, service, linkChecks]);
+	}, [pageData, service]);
 
 	const renderIcon = useCallback(
 		() => <StreamLinkIcon service={service} state={state} color={color} />,

@@ -35,40 +35,23 @@ describe("stream link settings", () => {
 		await expect(getStreamLinkSettings()).resolves.toEqual({
 			useServiceColors: true,
 			colors: { ...defaultStreamLinkColors, spotify: "#123ABC" },
-			searchUnvotedLinks: true,
-			hideDownvotedLinks: false,
+			searchDownvotedLinks: true,
 		});
 	});
 
-	test("searches unvoted links unless explicitly turned off", async () => {
+	test("searches downvoted links unless explicitly turned off", async () => {
 		vi.mocked(storage.get).mockResolvedValueOnce({
-			searchUnvotedLinks: false,
+			searchDownvotedLinks: false,
 		});
 		await expect(getStreamLinkSettings()).resolves.toMatchObject({
-			searchUnvotedLinks: false,
+			searchDownvotedLinks: false,
 		});
 
 		vi.mocked(storage.get).mockResolvedValueOnce({
-			searchUnvotedLinks: "false",
+			searchDownvotedLinks: "false",
 		});
 		await expect(getStreamLinkSettings()).resolves.toMatchObject({
-			searchUnvotedLinks: true,
-		});
-	});
-
-	test("hides downvoted links only when explicitly turned on", async () => {
-		vi.mocked(storage.get).mockResolvedValueOnce({
-			hideDownvotedLinks: true,
-		});
-		await expect(getStreamLinkSettings()).resolves.toMatchObject({
-			hideDownvotedLinks: true,
-		});
-
-		vi.mocked(storage.get).mockResolvedValueOnce({
-			hideDownvotedLinks: "true",
-		});
-		await expect(getStreamLinkSettings()).resolves.toMatchObject({
-			hideDownvotedLinks: false,
+			searchDownvotedLinks: true,
 		});
 	});
 
@@ -83,8 +66,7 @@ describe("stream link settings", () => {
 		const settings = {
 			useServiceColors: false,
 			colors: { ...defaultStreamLinkColors, spotify: "#445566" },
-			searchUnvotedLinks: true,
-			hideDownvotedLinks: false,
+			searchDownvotedLinks: true,
 		};
 		vi.mocked(storage.set).mockResolvedValue(undefined);
 		await setStreamLinkSettings(settings);
