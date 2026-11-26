@@ -232,7 +232,7 @@ const trackRows = () => [
 	),
 ];
 
-test("sorts both credit tables by artist coverage then name without reordering source data or same-artist roles", async () => {
+test("orders suggested and guest credits by appearance without reordering source data", async () => {
 	const data: ResolveData = {
 		artists: ["Main"],
 		tracks: [
@@ -271,10 +271,10 @@ test("sorts both credit tables by artist coverage then name without reordering s
 		),
 	];
 	expect(guests.map((row) => row.cells[0]?.textContent)).toEqual([
-		"Alpha",
-		"beta",
-		"éclair",
 		"Zulu",
+		"éclair",
+		"beta",
+		"Alpha",
 	]);
 	expect(
 		rows().map((row) => [
@@ -310,11 +310,105 @@ test("sorts both credit tables by artist coverage then name without reordering s
 	await vi.waitFor(() =>
 		expect(addCreditLine).toHaveBeenLastCalledWith({
 			id: undefined,
-			name: "Alpha",
+			name: "Zulu",
 			role: "guest",
 			tracks: "1",
 		}),
 	);
+	expect(JSON.stringify(data)).toBe(original);
+});
+
+test("orders guests by first eligible track appearance rather than frequency or other roles", async () => {
+	await setup({
+		artists: ["Main"],
+		tracks: [
+			{ header: true, artists: ["Header"] },
+			{
+				position: "1",
+				artists: ["Main", "Zulu", "Alpha"],
+				credits: [
+					{ name: "Alpha", role: "featured" },
+					{ name: "Beta", role: "producer" },
+				],
+			},
+			{
+				position: "2",
+				artists: ["Main", "Alpha", "Beta"],
+			},
+			{
+				position: "3",
+				artists: ["Main", "Beta", "Alpha"],
+			},
+		],
+	});
+	const guests = () => [
+		...document.querySelectorAll<HTMLTableRowElement>(
+			"#ebr-guest-credit-picker tbody tr",
+		),
+	];
+	await vi.waitFor(() => expect(guests()).toHaveLength(3));
+	expect(guests().map((row) => row.cells[0]?.textContent)).toEqual([
+		"Zulu",
+		"Alpha",
+		"Beta",
+	]);
+	await act(() =>
+		guests()[1]
+			?.querySelector<HTMLInputElement>('input[value="Credit in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenLastCalledWith({
+			id: undefined,
+			name: "Alpha",
+			role: "guest",
+			tracks: "2, 3",
+		}),
+	);
+});
+
+test("shows track credits by first appearance even when later artists have album-wide credits", async () => {
+	const data: ResolveData = {
+		releaseCredits: [
+			{ name: "Release only", role: "mastering" },
+			{ name: "Later", role: "producer" },
+		],
+		unverifiedCredits: [{ name: "Unverified", role: "???" }],
+		tracks: [
+			{
+				position: "1",
+				credits: [
+					{ name: "Zulu", role: "vocals" },
+					{ name: "Alpha", role: "mixing" },
+				],
+			},
+			{
+				position: "2",
+				credits: [
+					{ name: "Later", role: "vocals" },
+					{ name: "Alpha", role: "mixing" },
+				],
+			},
+			{ position: "3", credits: [{ name: "Alpha", role: "mixing" }] },
+		],
+	};
+	const original = JSON.stringify(data);
+	await setup(data);
+	await vi.waitFor(() => expect(rows()).toHaveLength(6));
+	expect(
+		rows().map((row) => [
+			row.cells[0]?.querySelector("input")?.value,
+			row.cells[1]?.querySelector("input")?.value,
+			row.cells[2]?.querySelector("input")?.value,
+		]),
+	).toEqual([
+		["Zulu", "vocals", "1"],
+		["Alpha", "mixing", ""],
+		["Later", "producer", ""],
+		["Later", "vocals", "2"],
+		["Release only", "mastering", ""],
+		["Unverified", "???", "???"],
+	]);
 	expect(JSON.stringify(data)).toBe(original);
 });
 
@@ -381,9 +475,9 @@ test("deduplicates WLR's loaded featured credits against guests using one shared
 			row.cells[2]?.querySelector("input")?.value,
 		]),
 	).toEqual([
-		["Future", "featured", "10"],
 		["Kanye West", "featured", "2"],
 		["Kid Cudi", "featured", "6"],
+		["Future", "featured", "10"],
 	]);
 	expect(loadCreditSuggestions).toHaveBeenCalledOnce();
 	expect(addCreditLine).not.toHaveBeenCalled();
@@ -803,29 +897,29 @@ test("reuses release-artist links on matching suggestions without adding credits
 	});
 	await vi.waitFor(() => expect(rows()).toHaveLength(3));
 	expect(rows()[0]?.cells[3]?.textContent).toContain("[Artist1639184]");
-	expect(rows()[2]?.cells[3]?.textContent).toContain("[Artist2111224]");
+	expect(rows()[1]?.cells[3]?.textContent).toContain("[Artist2111224]");
 	expect(rows()[0]?.cells[3]?.textContent).toContain("not credited");
 	expect(addCreditLine).not.toHaveBeenCalled();
 	expect(
-		rows()[1]?.querySelector<HTMLInputElement>(
+		rows()[2]?.querySelector<HTMLInputElement>(
 			'input[value="Credit with artist link"]',
 		)?.disabled,
 	).toBe(false);
 	await act(() =>
-		rows()[1]
+		rows()[2]
 			?.querySelector<HTMLInputElement>(
 				'input[value="Credit with artist link"]',
 			)
 			?.click(),
 	);
 	expect(
-		rows()[1]
+		rows()[2]
 			?.querySelector('[role="alert"] button')
 			?.getAttribute("aria-label"),
 	).toBe('Link Other to a RYM artist first, or use "Credit in plain text".');
 	expect(addCreditLine).not.toHaveBeenCalled();
 	await act(() =>
-		rows()[1]
+		rows()[2]
 			?.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
 			?.click(),
 	);
@@ -840,7 +934,7 @@ test("reuses release-artist links on matching suggestions without adding credits
 			tracks: "",
 		}),
 	);
-	expect(rows()[1]?.querySelector('[role="alert"]')).toBeNull();
+	expect(rows()[2]?.querySelector('[role="alert"]')).toBeNull();
 	await editDetail(1, "producer, mixing");
 	await editDetail(2, "2, 4");
 	expect(addCreditLine).toHaveBeenCalledOnce();
@@ -860,7 +954,7 @@ test("reuses release-artist links on matching suggestions without adding credits
 		}),
 	);
 	await act(() =>
-		rows()[2]
+		rows()[1]
 			?.querySelector<HTMLInputElement>(
 				'input[value="Credit with artist link"]',
 			)

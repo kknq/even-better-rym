@@ -6,9 +6,63 @@ import {
 	getNonFeaturedTrackArtists,
 	getSuggestedCredits,
 	getUnverifiedCreditSuggestions,
-	sortCreditsByTrackCoverage,
+	sortCreditsByFirstAppearance,
 	stripFeaturedArtistTags,
 } from "./suggested-credits";
+
+test("orders artist blocks by first track credit appearance, independent of roles and coverage", () => {
+	const tracks: Track[] = [
+		{ header: true, credits: [{ name: "Header", role: "producer" }] },
+		{
+			position: "1",
+			title: "First (feat. Feature)",
+			credits: [
+				{ name: "Zulu", role: "vocals" },
+				{ name: "Alpha", role: "producer" },
+				{ name: "Zulu", role: "lyrics" },
+			],
+		},
+		{
+			position: "2",
+			credits: [
+				{ name: "Later", role: "vocals" },
+				{ name: "Alpha", role: "producer" },
+			],
+		},
+		{ position: "3", credits: [{ name: "Alpha", role: "producer" }] },
+	];
+	const releaseCredits = [
+		{ name: "Release only", role: "engineer" },
+		{ name: "Later", role: "mixing" },
+		{ name: "Another release only", role: "mastering" },
+	];
+	const credits = getSuggestedCredits(tracks, releaseCredits);
+	const original = JSON.stringify({ tracks, credits, releaseCredits });
+	const sorted = sortCreditsByFirstAppearance(credits, tracks);
+	expect(
+		sorted.map(({ name, role, positions }) => [name, role, positions]),
+	).toEqual([
+		["Zulu", "vocals, lyrics", ["1"]],
+		["Alpha", "producer", []],
+		["Feature", "featured", ["1"]],
+		["Later", "mixing", []],
+		["Later", "vocals", ["2"]],
+		["Release only", "engineer", []],
+		["Another release only", "mastering", []],
+	]);
+	expect(JSON.stringify({ tracks, credits, releaseCredits })).toBe(original);
+	expect(
+		sortCreditsByFirstAppearance(credits, []).map(({ name }) => name),
+	).toEqual([
+		"Release only",
+		"Later",
+		"Later",
+		"Another release only",
+		"Zulu",
+		"Alpha",
+		"Feature",
+	]);
+});
 
 test("merges release-wide roles with identical full-track coverage without losing restricted roles", () => {
 	const tracks: Track[] = [
@@ -56,100 +110,6 @@ test("merges release-wide roles with identical full-track coverage without losin
 	]);
 });
 
-test("ranks name blocks by distinct songs across roles, including whole-release and repeated positions", () => {
-	const tracks: Track[] = [
-		{ header: true, credits: [{ name: "Header only", role: "producer" }] },
-		{
-			position: "1",
-			credits: [
-				{ name: "Alpha", role: "producer" },
-				{ name: "Alpha", role: "mixing" },
-				{ name: "Zulu", role: "vocals" },
-				{ name: "Whole release", role: "mastering" },
-			],
-		},
-		{
-			position: "1",
-			credits: [
-				{ name: "Zulu", role: "producer" },
-				{ name: "Whole release", role: "mastering" },
-			],
-		},
-		{
-			position: "2",
-			credits: [{ name: "Whole release", role: "mastering" }],
-		},
-	];
-	const credits = getSuggestedCredits(tracks);
-	const original = JSON.stringify({ tracks, credits });
-	const sorted = sortCreditsByTrackCoverage(credits, tracks);
-	expect(sorted.map(({ name, role }) => [name, role])).toEqual([
-		["Whole release", "mastering"],
-		["Zulu", "vocals"],
-		["Zulu", "producer"],
-		["Alpha", "producer, mixing"],
-	]);
-	expect(sorted[0]?.positions).toEqual([]);
-	expect(JSON.stringify({ tracks, credits })).toBe(original);
-	expect(
-		sortCreditsByTrackCoverage(
-			[{ name: "Header only" }, { name: "Alpha" }],
-			tracks,
-		).map(({ name }) => name),
-	).toEqual(["Alpha", "Header only"]);
-});
-
-test("counts role credits and title features once per song and keeps exact names in stable alphabetical blocks", () => {
-	const credits = [
-		{ name: "Zulu", role: "guest" },
-		{ name: "éclair", role: "vocals" },
-		{ name: "beta", role: "mixing" },
-		{ name: "Alpha", role: "producer" },
-		{ name: "Éclair", role: "producer" },
-		{ name: "éclair", role: "producer" },
-	];
-	const tracks: Track[] = [
-		{
-			artists: ["Zulu", "Zulu", "Alpha", "beta", "éclair", "Éclair"],
-			credits: [
-				{ name: "Zulu", role: "producer" },
-				{ name: "Zulu", role: "mixing" },
-				{ name: "Alpha", role: "producer" },
-				{ name: "beta", role: "mixing" },
-				{ name: "éclair", role: "vocals" },
-				{ name: "Éclair", role: "producer" },
-			],
-		},
-		{ title: "Song (feat. Zulu)" },
-	];
-	const original = JSON.stringify({ tracks, credits });
-	expect(sortCreditsByTrackCoverage(credits, tracks)).toEqual([
-		credits[0],
-		credits[3],
-		credits[2],
-		credits[1],
-		credits[5],
-		credits[4],
-	]);
-	expect(JSON.stringify({ tracks, credits })).toBe(original);
-});
-
-test("ranks Roark's whole-album credits ahead of Carti's subset role despite whole-album artist attribution", () => {
-	const tracks: Track[] = Array.from({ length: 24 }, (_, index) => ({
-		position: String(index + 1),
-		artists: ["Playboi Carti"],
-		credits: [
-			{ name: "Roark Bailey", role: "mixing" },
-			...(index < 12 ? [{ name: "Playboi Carti", role: "rapvocalist" }] : []),
-		],
-	}));
-	expect(
-		sortCreditsByTrackCoverage(getSuggestedCredits(tracks), tracks).map(
-			({ name }) => name,
-		),
-	).toEqual(["Roark Bailey", "Playboi Carti"]);
-});
-
 test("keeps unverified credits distinct, marks them for review, and preserves their source order", () => {
 	const credits = getUnverifiedCreditSuggestions([
 		{ name: "Release Person", role: "producer" },
@@ -181,24 +141,6 @@ test("keeps unverified credits distinct, marks them for review, and preserves th
 			unverified: true,
 		},
 	]);
-});
-
-test("guest ranking counts only eligible guest appearances, not other roles or featured appearances", () => {
-	const tracks: Track[] = [
-		{ artists: ["Alpha", "Zulu"] },
-		{
-			artists: ["Alpha", "Zulu"],
-			credits: [{ name: "Alpha", role: "featured" }],
-		},
-		{ credits: [{ name: "Alpha", role: "producer" }] },
-	];
-	expect(
-		sortCreditsByTrackCoverage(
-			[{ name: "Alpha" }, { name: "Zulu" }],
-			tracks,
-			getNonFeaturedTrackArtists,
-		),
-	).toEqual([{ name: "Zulu" }, { name: "Alpha" }]);
 });
 
 test("track-title artists exclude title and metadata features but retain unrelated roles", () => {
