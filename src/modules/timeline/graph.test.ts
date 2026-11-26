@@ -1,12 +1,41 @@
 // @vitest-environment jsdom
 
 import { describe, expect, test } from "vitest";
-
+import { decimalYearOf } from "./date-utils";
 import { buildGraph } from "./graph";
 import { parseMembersFromText } from "./members";
 import type { Member } from "./types";
 
 describe("buildGraph", () => {
+	test("scales a disbanded band's members and releases to its last year", () => {
+		const container = document.createElement("div");
+		const parsed = parseMembersFromText("Danny (guitar, 1990-2002, 2003-20)");
+		buildGraph(container, parsed.members, {
+			formedYear: 1990,
+			disbandedYear: decimalYearOf(new Date(2020, 11, 31)),
+			axisEndLabel: "2020",
+			markers: {
+				album: [{ year: 2020.5, title: "Final", type: "album" }],
+				live: [],
+				ep: [],
+				single: [],
+				additional: [],
+				show: [],
+			},
+		});
+		const bars = container.querySelectorAll<HTMLElement>(".rymmt-bar");
+		expect(Number.parseFloat(bars[1].style.left)).toBeCloseTo(
+			(13 / 31) * 100,
+			0,
+		);
+		expect(
+			container.querySelector(".rymmt-mgroup")?.getAttribute("title"),
+		).toBe("Final (LP)");
+		expect(container.querySelector(".rymmt-axis-track")?.textContent).toContain(
+			"2020",
+		);
+	});
+
 	test("explains estimated dates in the legend rather than bar tooltips", () => {
 		const container = document.createElement("div");
 		const parsed = parseMembersFromText(
