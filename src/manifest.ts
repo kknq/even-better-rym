@@ -37,6 +37,7 @@ const hostsArray = [
 	"https://*.metal-archives.com/*",
 	"https://metal-archives.com/*",
 	"https://en.wikipedia.org/*",
+	"https://www.wikidata.org/*",
 ];
 
 const spotifyPageErrors = {

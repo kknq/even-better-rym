@@ -5,6 +5,18 @@ import { describe, expect, test } from "vitest";
 import { insertStreamLinks } from "./placement";
 
 describe("insertStreamLinks", () => {
+	test("keeps suggested links below the Discogs cover when there is no RYM artwork", () => {
+		const container = document.createElement("div");
+		container.innerHTML =
+			'<div class="ebr-discogs-cover-placeholder"></div><div>Existing links</div>';
+		const app = document.createElement("div");
+		insertStreamLinks(container, app);
+		expect(container.firstElementChild?.className).toBe(
+			"ebr-discogs-cover-placeholder",
+		);
+		expect(container.children[1]).toBe(app);
+	});
+
 	test("places stream links below a video preview", () => {
 		const container = document.createElement("div");
 		container.innerHTML = `

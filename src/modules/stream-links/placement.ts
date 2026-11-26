@@ -3,6 +3,10 @@ export const insertStreamLinks = (container: HTMLElement, app: HTMLElement) => {
 	if (previewLink) {
 		previewLink.after(app);
 	} else {
-		container.prepend(app);
+		const discogsCover = container.querySelector(
+			":scope > .ebr-discogs-cover-placeholder",
+		);
+		if (discogsCover) discogsCover.after(app);
+		else container.prepend(app);
 	}
 };

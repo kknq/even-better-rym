@@ -2,7 +2,7 @@ import { createPortal } from "preact/compat";
 import { useState } from "preact/hooks";
 
 type Props = {
-	initialImage: string;
+	initialImage?: string;
 	loadImages: () => Promise<HTMLImageElement[]>;
 	controlsTarget: HTMLElement;
 };
@@ -28,10 +28,14 @@ export function DiscogsCarousel({
 			.then((nextImages) => {
 				setSecondaryImages(nextImages);
 				if (nextImages.length === 0) {
-					setMessage("No secondary Discogs images found.");
+					setMessage(
+						initialImage
+							? "No secondary Discogs images found."
+							: "No Discogs images found.",
+					);
 					return;
 				}
-				setIndex(1);
+				setIndex(initialImage ? 1 : 0);
 				setIsOpen(true);
 			})
 			.catch((error: unknown) => {
@@ -45,7 +49,10 @@ export function DiscogsCarousel({
 	};
 
 	const images = secondaryImages
-		? [initialImage, ...secondaryImages.map((image) => image.src)]
+		? [
+				...(initialImage ? [initialImage] : []),
+				...secondaryImages.map((image) => image.src),
+			]
 		: undefined;
 	const canOpen = Boolean(secondaryImages?.length);
 
@@ -117,9 +124,7 @@ export function DiscogsCarousel({
 						</div>
 					)}
 					{message && (
-						<div className="ebr-discogs-carousel-status" role="status">
-							{message}
-						</div>
+						<output className="ebr-discogs-carousel-status">{message}</output>
 					)}
 				</>,
 				controlsTarget,
@@ -128,11 +133,6 @@ export function DiscogsCarousel({
 				<section
 					className="ebr-discogs-carousel"
 					aria-label="Discogs release images"
-					onClick={(event) => {
-						event.preventDefault();
-						event.stopPropagation();
-					}}
-					onKeyDown={(event) => event.stopPropagation()}
 				>
 					<div className="ebr-discogs-carousel-viewport">
 						<img
