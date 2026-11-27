@@ -55,7 +55,7 @@ afterEach(() => {
 	vi.clearAllMocks();
 });
 
-async function setup(data: ResolveData, credits = true) {
+async function setup(data: ResolveData, credits = true, tracks = true) {
 	document.body.innerHTML =
 		'<input id="parent_id" value="0"><ul id="creditsx"></ul>';
 	await act(async () => {
@@ -65,11 +65,134 @@ async function setup(data: ResolveData, credits = true) {
 		document.dispatchEvent(new CustomEvent("importEvent", { detail: {} }));
 		document.dispatchEvent(
 			new CustomEvent("importCompleteEvent", {
-				detail: { data, options: { fillFields: { tracks: true, credits } } },
+				detail: { data, options: { fillFields: { tracks, credits } } },
 			}),
 		);
 	});
 }
+
+test("loads and offers track and guest credits without importing the tracklist", async () => {
+	let finish:
+		| ((result: Awaited<ReturnType<typeof loadCreditSuggestions>>) => void)
+		| undefined;
+	vi.mocked(loadCreditSuggestions).mockImplementation(
+		() =>
+			new Promise((resolve) => {
+				finish = resolve;
+			}),
+	);
+	const tracks = [
+		{ position: "1", title: "First", artists: ["Main", "Guest"] },
+		{ position: "2", title: "Second", artists: ["Main"], creditsUrl: "song" },
+	];
+	await setup({ artists: ["Main"], tracks }, true, false);
+	await mountTrackPicker("1|Existing one|\n2|Existing two|");
+	expect(loadCreditSuggestions).toHaveBeenCalledOnce();
+	expect(document.querySelector("#ebr-artist-link-picker")).toBeNull();
+	expect(
+		document.querySelector("#ebr-suggested-credit-picker output")?.textContent,
+	).toContain("Loading song credits");
+	const guest = document.querySelector("#ebr-guest-credit-picker");
+	expect(guest?.textContent).toContain("Check that they match the");
+	const warning = guest?.querySelector<HTMLElement>(
+		".ebr-credit-track-warning",
+	);
+	expect(warning?.style.background).toBe("rgb(255, 240, 240)");
+	expect(warning?.style.color).toBe("rgb(138, 28, 28)");
+	const guestTable = guest?.querySelector("table");
+	expect(guestTable).toBeTruthy();
+	expect(guestTable && warning?.compareDocumentPosition(guestTable)).toBe(
+		Node.DOCUMENT_POSITION_FOLLOWING,
+	);
+	expect(
+		guest?.querySelector<HTMLInputElement>(
+			'input[value="Credit in plain text"]',
+		)?.disabled,
+	).toBe(true);
+	await act(() =>
+		finish?.({
+			tracks: [
+				tracks[0],
+				{
+					...tracks[1],
+					credits: [{ name: "Producer", role: "producer" }],
+				},
+			],
+			failedPositions: [],
+		}),
+	);
+	await vi.waitFor(() => expect(rows()).toHaveLength(1));
+	expect(
+		document.querySelector("#ebr-suggested-credit-picker")?.textContent,
+	).toContain("Check that they match the");
+	const suggested = document.querySelector("#ebr-suggested-credit-picker");
+	const suggestedWarning = suggested?.querySelector<HTMLElement>(
+		".ebr-credit-track-warning",
+	);
+	expect(suggestedWarning?.style.background).toBe("rgb(255, 240, 240)");
+	expect(suggestedWarning?.style.border).toContain("rgb(229, 160, 160)");
+	expect(suggestedWarning?.compareDocumentPosition(rows()[0])).toBe(
+		Node.DOCUMENT_POSITION_FOLLOWING,
+	);
+	expect(rows()[0]?.cells[2]?.querySelector("input")?.value).toBe("2");
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Credit in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenCalledWith({
+			id: undefined,
+			name: "Producer",
+			role: "producer",
+			tracks: "2",
+		}),
+	);
+	await act(() =>
+		guest
+			?.querySelector<HTMLInputElement>('input[value="Credit in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenCalledWith({
+			id: undefined,
+			name: "Guest",
+			role: "guest",
+			tracks: "1",
+		}),
+	);
+	expect(
+		document.querySelector<HTMLTextAreaElement>("#track_advanced")?.value,
+	).toBe("1|Existing one|\n2|Existing two|");
+});
+
+test("offers release-wide and unverified credits when only credits are enabled", async () => {
+	await setup(
+		{
+			releaseCredits: [{ name: "Engineer", role: "engineer" }],
+			unverifiedCredits: [{ name: "Unknown" }],
+		},
+		true,
+		false,
+	);
+	expect(loadCreditSuggestions).not.toHaveBeenCalled();
+	expect(rows()).toHaveLength(2);
+	expect(rows()[0]?.cells[0]?.querySelector("input")?.value).toBe("Engineer");
+	expect(rows()[0]?.cells[2]?.querySelector("input")?.value).toBe("");
+	expect(rows()[1]?.cells[0]?.querySelector("input")?.value).toBe("Unknown");
+	expect(rows()[1]?.cells[2]?.querySelector("input")?.value).toBe("???");
+});
+
+test("does not load or offer credits when both credits and tracks are disabled", async () => {
+	await setup(
+		{ tracks: [{ creditsUrl: "song", artists: ["Guest"] }] },
+		false,
+		false,
+	);
+	expect(loadCreditSuggestions).not.toHaveBeenCalled();
+	expect(document.querySelector("#ebr-suggested-credit-picker")).toBeNull();
+	expect(document.querySelector("#ebr-guest-credit-picker")).toBeNull();
+});
 
 function rows() {
 	return [
@@ -88,6 +211,7 @@ test("shows album-wide credits with blank Tracks and accepts them without scope 
 		tracks: [{ position: "1" }, { position: "2" }],
 	});
 	await vi.waitFor(() => expect(rows()).toHaveLength(2));
+	expect(document.querySelector(".ebr-credit-track-warning")).toBeNull();
 	for (const row of rows()) {
 		expect(row.cells[2]?.querySelector("input")?.value).toBe("");
 		await act(() =>

@@ -113,6 +113,7 @@ type PickerPanelProps = {
 	id?: string;
 	title: string;
 	hint: string;
+	notice?: ComponentChildren;
 	footer?: ComponentChildren;
 	headers?: string[];
 	children: ComponentChildren;
@@ -124,6 +125,7 @@ export function PickerPanel({
 	id,
 	title,
 	hint,
+	notice,
 	footer,
 	headers,
 	children,
@@ -141,6 +143,7 @@ export function PickerPanel({
 		>
 			<div style={{ fontWeight: 700 }}>{title}</div>
 			<div style={{ color: "var(--mono-6)", margin: "2px 0 6px" }}>{hint}</div>
+			{notice}
 			<div style={{ overflowX: "auto" }}>
 				<table style={{ borderCollapse: "collapse" }}>
 					{headers !== undefined && (
