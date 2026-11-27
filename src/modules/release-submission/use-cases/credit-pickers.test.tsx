@@ -1651,6 +1651,103 @@ test("only offers RYM's allowed special credits on a non-primary issue", async (
 	expect(rows()[0]?.cells[1]?.querySelector("input")?.value).toBe("featured");
 });
 
+test("requires unverified reissue credits to use an allowed role and preserves editable suggestions", async () => {
+	await setup({
+		unverifiedCredits: [{ name: "Person", role: "producer" }],
+	});
+	await act(() => {
+		const parent = document.querySelector<HTMLInputElement>("#parent_id");
+		if (!parent) throw new Error("Missing parent input");
+		parent.value = "123";
+		parent.dispatchEvent(new Event("change", { bubbles: true }));
+	});
+	expect(rows()).toHaveLength(1);
+	await editDetail(2, "1");
+	expect(
+		rows()[0]?.querySelector<HTMLInputElement>(
+			'input[value="Credit in plain text"]',
+		)?.disabled,
+	).toBe(true);
+	expect(addCreditLine).not.toHaveBeenCalled();
+	expect(
+		rows()[0]?.querySelector(
+			'[aria-label="Reissue credits must use featured, guest, or remixer."]',
+		),
+	).not.toBeNull();
+	await editDetail(1, "featured");
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Credit in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenCalledWith({
+			id: undefined,
+			name: "Person",
+			role: "featured",
+			tracks: "1",
+		}),
+	);
+	await editDetail(1, "producer");
+	expect(updateCreditDetails).not.toHaveBeenCalled();
+	await editDetail(1, "guest");
+	await vi.waitFor(() =>
+		expect(updateCreditDetails).toHaveBeenCalledWith("1", "guest", "1"),
+	);
+});
+
+test.each([
+	"Anonymous",
+	"unknown artist",
+])("only offers plain-text credit for %s", async (name) => {
+	await setup({ releaseCredits: [{ name, role: "vocals" }] });
+	expect(
+		rows()[0]?.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
+			?.disabled,
+	).toBe(true);
+	expect(
+		rows()[0]?.querySelector<HTMLInputElement>(
+			'input[value="Credit with artist link"]',
+		)?.disabled,
+	).toBe(true);
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Credit in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenCalledWith({
+			id: undefined,
+			name,
+			role: "vocals",
+			tracks: "",
+		}),
+	);
+});
+
+test("converts an existing linked credit to plain text when renamed Anonymous", async () => {
+	await setup({ releaseCredits: [{ name: "Person", role: "vocals" }] });
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Find on RYM"]')
+			?.click(),
+	);
+	await act(() =>
+		vi.mocked(watchArtistResultClicks).mock.calls.at(-1)?.[0]("12"),
+	);
+	await vi.waitFor(() => expect(addCreditLine).toHaveBeenCalledOnce());
+	await editDetail(0, "Anonymous");
+	await vi.waitFor(() =>
+		expect(updateCreditDetails).toHaveBeenCalledWith(
+			"1",
+			"vocals",
+			"",
+			"Anonymous",
+		),
+	);
+	expect(rows()[0]?.cells[3]?.textContent).toBe("credited in plain text");
+});
+
 async function editDetail(column: number, value: string) {
 	const input = rows()[0]?.cells[column]?.querySelector("input");
 	if (!input) throw new Error("Missing credit detail input");

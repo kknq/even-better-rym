@@ -27,7 +27,10 @@ import {
 	startArtistSearch,
 	watchArtistResultClicks,
 } from "../utils/shortcut-popup";
-import type { CreditSuggestion } from "../utils/suggested-credits";
+import {
+	type CreditSuggestion,
+	isSpecialCreditRole,
+} from "../utils/suggested-credits";
 import { formatImportedText } from "../utils/text-formatting";
 import {
 	type ArtistAssociation,
@@ -53,6 +56,7 @@ type CreditPickerProps = {
 	notice?: ComponentChildren;
 	warning?: ComponentChildren;
 	loading?: boolean;
+	isReissue?: boolean;
 };
 
 type CreditDetails = { name: string; role: string; tracks: string };
@@ -62,7 +66,11 @@ type CreditEditContext = {
 	drafts: LatestState<Map<string, CreditDetails>>;
 	associations: ReadonlyMap<string, ArtistAssociation>;
 	isActive: { current: boolean };
+	isReissue: { current: boolean };
 };
+
+const isPlainTextOnly = (name: string): boolean =>
+	/^(?:anonymous|unknown artist)$/i.test(name.trim());
 
 const getInitialCreditDetails = (credit: CreditSuggestion): CreditDetails => ({
 	name: formatImportedText(credit.name),
@@ -196,7 +204,10 @@ const getCreditError = (
 	invalidDetails: boolean,
 	unlinkedAttemptKey: string | undefined,
 	knownId: string | undefined,
+	invalidReissueRole: boolean,
 ): string | undefined => {
+	if (invalidReissueRole)
+		return "Reissue credits must use featured, guest, or remixer.";
 	if (showDetails && invalidDetails) {
 		if (!name) return "Enter an artist name.";
 		if (credit.unverified)
@@ -225,12 +236,13 @@ const updateExistingCredit = async (
 		);
 		return;
 	}
-	const artistId =
+	const previousArtistId =
 		previous.kind === "linked" ? parseArtistTokenId(previous.token) : undefined;
-	if (previous.kind === "linked" && artistId === undefined)
+	if (previous.kind === "linked" && previousArtistId === undefined)
 		throw new Error("Could not identify the linked credit artist");
 	const name = details.name.trim();
 	if (name === getCreditedChoiceName(previous, credit)) return;
+	const artistId = isPlainTextOnly(name) ? undefined : previousArtistId;
 	const artist =
 		artistId === undefined ? name : buildArtistToken(artistId, name);
 	await updateCreditDetails(
@@ -299,6 +311,9 @@ const applyCreditEdit = async (
 		context.drafts.latest.current.get(credit.key) ??
 		getInitialCreditDetails(credit);
 	if (!skip && hasUnresolvedDetails(credit, details)) return;
+	if (!skip && context.isReissue.current && !isSpecialCreditRole(details.role))
+		return;
+	if (!skip && artistId !== undefined && isPlainTextOnly(details.name)) return;
 	if (updateOnly && previous && previous.kind !== "skipped") {
 		await updateExistingCredit(context, credit, previous, details, updateOnly);
 		return;
@@ -375,6 +390,7 @@ export function CreditPicker({
 	notice,
 	warning,
 	loading = false,
+	isReissue = false,
 }: Readonly<CreditPickerProps>) {
 	const [activeKey, setActiveKey] = useState<string | undefined>();
 	const [unlinkedAttemptKey, setUnlinkedAttemptKey] = useState<
@@ -386,6 +402,8 @@ export function CreditPicker({
 	const choiceState = useLatestState(() => new Map<string, CreditChoice>());
 	const { state: choices, latest } = choiceState;
 	const isActive = useRef(true);
+	const isReissueRef = useRef(isReissue);
+	isReissueRef.current = isReissue;
 	useEffect(() => {
 		const cancel = () => {
 			isActive.current = false;
@@ -407,7 +425,13 @@ export function CreditPicker({
 	) => {
 		void enqueueCreditEdit(() =>
 			applyCreditEdit(
-				{ choices: choiceState, drafts, associations, isActive },
+				{
+					choices: choiceState,
+					drafts,
+					associations,
+					isActive,
+					isReissue: isReissueRef,
+				},
 				credit,
 				artistId,
 				skip,
@@ -477,13 +501,15 @@ export function CreditPicker({
 				const details =
 					drafts.state.get(credit.key) ?? getInitialCreditDetails(credit);
 				const name = details.name.trim();
+				const plainTextOnly = isPlainTextOnly(name);
 				const association =
 					associations.get(normalizeArtistName(name)) ??
 					associations.get(normalizeArtistName(credit.name));
-				const knownId =
+				const linkedId =
 					choice?.kind === "linked"
 						? parseArtistTokenId(choice.token)
 						: association?.artistId;
+				const knownId = plainTextOnly ? undefined : linkedId;
 				const knownToken = getKnownArtistToken(
 					choice,
 					knownId,
@@ -497,7 +523,10 @@ export function CreditPicker({
 					knownToken,
 					showDetails,
 				);
-				const invalidDetails = hasUnresolvedDetails(credit, details);
+				const invalidReissueRole =
+					isReissue && !isSpecialCreditRole(details.role);
+				const invalidDetails =
+					hasUnresolvedDetails(credit, details) || invalidReissueRole;
 				const error = getCreditError(
 					credit,
 					name,
@@ -505,6 +534,7 @@ export function CreditPicker({
 					invalidDetails,
 					unlinkedAttemptKey,
 					knownId,
+					invalidReissueRole,
 				);
 				const editField = (field: keyof CreditDetails, value: string) => {
 					setUnlinkedAttemptKey(undefined);
@@ -564,10 +594,14 @@ export function CreditPicker({
 						}
 					>
 						<SearchButton
-							disabled={loading || invalidDetails}
+							disabled={loading || invalidDetails || plainTextOnly}
 							active={credit.key === activeKey}
 							hasLink={knownId !== undefined}
-							title="Search RYM for this artist, then click a result to credit them"
+							title={
+								plainTextOnly
+									? "Anonymous and Unknown Artist must be credited in plain text"
+									: "Search RYM for this artist, then click a result to credit them"
+							}
 							onSearch={() => {
 								setUnlinkedAttemptKey(undefined);
 								setActiveKey(credit.key);
@@ -577,7 +611,7 @@ export function CreditPicker({
 						/>
 						<PickerButton
 							value="Credit with artist link"
-							disabled={loading || invalidDetails}
+							disabled={loading || invalidDetails || plainTextOnly}
 							title={
 								knownId === undefined
 									? "Find this artist on RYM first, then try this again"
