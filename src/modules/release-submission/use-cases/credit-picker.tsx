@@ -50,6 +50,7 @@ type CreditPickerProps = {
 	credits: CreditSuggestion[];
 	showDetails?: boolean;
 	notice?: ComponentChildren;
+	warning?: ComponentChildren;
 	loading?: boolean;
 };
 
@@ -371,6 +372,7 @@ export function CreditPicker({
 	credits,
 	showDetails = false,
 	notice,
+	warning,
 	loading = false,
 }: Readonly<CreditPickerProps>) {
 	const [activeKey, setActiveKey] = useState<string | undefined>();
@@ -461,6 +463,7 @@ export function CreditPicker({
 			id={id}
 			title={title}
 			hint={hint}
+			notice={warning}
 			footer={notice}
 			headers={
 				showDetails

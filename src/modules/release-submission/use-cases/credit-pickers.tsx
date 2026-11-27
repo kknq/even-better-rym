@@ -15,11 +15,7 @@ import { useImportTracks } from "./use-import-tracks";
 
 export function CreditPickers() {
 	const { count, session } = useImportTracks();
-	if (
-		!session?.options.fillFields.credits ||
-		!session.options.fillFields.tracks
-	)
-		return null;
+	if (!session?.options.fillFields.credits) return null;
 	return <CreditPanels key={count} session={session} />;
 }
 
@@ -27,6 +23,27 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 	const { tracks: loadedTracks, loading, progress, error } = session;
 	const releaseArtists = session.data.artists ?? [];
 	const releaseCredits = session.data.releaseCredits ?? [];
+	const trackNotice = !session.options.fillFields.tracks && (
+		<div
+			className="ebr-credit-track-warning"
+			style={{
+				width: "fit-content",
+				maxWidth: "100%",
+				boxSizing: "border-box",
+				margin: "0 0 6px",
+				padding: "3px 8px",
+				color: "#8a1c1c",
+				background: "#fff0f0",
+				border: "1px solid #e5a0a0",
+				borderRadius: "3px",
+				fontSize: "0.9em",
+				overflowWrap: "anywhere",
+			}}
+		>
+			Track positions come from the imported release. Check that they match the
+			existing tracklist before adding credits.
+		</div>
+	);
 	const showSuggestions =
 		(session.data.tracks ?? []).some(
 			(track) =>
@@ -74,6 +91,7 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 						role: GUEST_ROLE,
 					}))}
 					loading={loading}
+					warning={trackNotice}
 				/>
 			)}
 			{showSuggestions && (
@@ -85,6 +103,7 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 					credits={suggestions}
 					showDetails
 					loading={loading}
+					warning={trackNotice}
 					notice={
 						<div>
 							{isReissue && (

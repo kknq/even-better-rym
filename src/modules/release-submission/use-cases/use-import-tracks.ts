@@ -42,10 +42,10 @@ function complete(
 			(Boolean(track.creditsUrl) || getTrackCredits(track).length > 0),
 	);
 	const loading =
-		options.fillFields.tracks &&
 		hasSuggestions &&
 		(Boolean(options.fillFields.credits) ||
-			(hasDifferingTrackArtists(tracks, data.artists ?? []) &&
+			(options.fillFields.tracks &&
+				hasDifferingTrackArtists(tracks, data.artists ?? []) &&
 				tracks.some((track) => !track.header && Boolean(track.creditsUrl))));
 	publish({
 		count: snapshot.count + 1,
