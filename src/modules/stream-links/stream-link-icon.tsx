@@ -5,7 +5,7 @@ import { Loader } from "~/shared/components/loader";
 import type { Searchable, Service } from "~/shared/services/types";
 import { isComplete, isFailed, isLoading } from "~/shared/utils/one-shot";
 
-import type { StreamLinkState } from "./stream-link";
+import type { StreamLinkState } from "./stream-link-state";
 
 export function StreamLinkIcon({
 	service,

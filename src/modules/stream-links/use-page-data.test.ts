@@ -6,6 +6,7 @@ vi.mock("~/shared/utils/dom", () => ({
 	waitForDocumentReady: vi.fn(),
 	waitForElement: vi.fn(),
 }));
+vi.mock("~/shared/utils/fetch", () => ({ fetchInPage: vi.fn() }));
 
 import { getFullLink } from "./use-page-data";
 

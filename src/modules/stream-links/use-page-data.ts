@@ -16,17 +16,24 @@ import {
 	loading,
 } from "~/shared/utils/one-shot";
 
+import type { LinkVotes } from "./link-votes";
+import {
+	getServicesWithOnlyDownvotedLinks,
+	hasRegionalLink,
+} from "./link-votes";
 import { getReleaseTypeFromPath } from "./release-type";
 
 export type PageDataState = OneShot<Error, PageData>;
 
-export const usePageData = (): PageDataState => {
+export const usePageData = (
+	loadLinkVotes: () => Promise<LinkVotes[]>,
+): PageDataState => {
 	const [state, setState] = useState<PageDataState>(initial);
 
 	const fetch = async () => {
 		setState(loading);
 
-		const nextState = await getPageData()
+		const nextState = await getPageData(loadLinkVotes)
 			.then((data) => complete(data))
 			.catch((error) => failed(error));
 
@@ -42,7 +49,7 @@ export const usePageData = (): PageDataState => {
 	return state;
 };
 
-type PageData = {
+export type PageData = {
 	metadata: {
 		artist: string;
 		artistAlias?: string;
@@ -51,13 +58,20 @@ type PageData = {
 		serviceRegions: StreamingPreferences["service_regions"];
 	};
 	links: Links;
+	servicesWithOnlyDownvotedLinks: ServiceId[];
 };
-async function getPageData(): Promise<PageData> {
+async function getPageData(
+	loadLinkVotes: () => Promise<LinkVotes[]>,
+): Promise<PageData> {
 	const [artist, title, linksData] = await Promise.all([
 		getArtist(),
 		getTitle(),
 		getLinks(),
 	]);
+	const serviceRegions = linksData.serviceRegions ?? {};
+	const linkVotes = hasRegionalLink(linksData.links, serviceRegions)
+		? await loadLinkVotes()
+		: [];
 	return {
 		metadata: {
 			...artist,
@@ -66,6 +80,10 @@ async function getPageData(): Promise<PageData> {
 			serviceRegions: linksData.serviceRegions,
 		},
 		links: linksData.links,
+		servicesWithOnlyDownvotedLinks: getServicesWithOnlyDownvotedLinks(
+			linkVotes,
+			serviceRegions,
+		),
 	};
 }
 
