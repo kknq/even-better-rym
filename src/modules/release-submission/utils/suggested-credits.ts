@@ -52,9 +52,30 @@ export const getTrackCredits = (track: Track): TrackCredit[] => [
 	})),
 ];
 
+function getPrioritizedCreditNames(
+	tracks: Track[],
+	releaseArtists: string[],
+): string[] {
+	const firstTrack = tracks.find((track) => !track.header);
+	const firstTrackCredits = firstTrack ? getTrackCredits(firstTrack) : [];
+	return releaseArtists.flatMap((artist) => {
+		if (!artist.trim()) return [];
+		const artistName = normalizeArtistName(artist.trim());
+		return firstTrackCredits
+			.filter(
+				(credit) =>
+					credit.name.trim() &&
+					credit.role.trim() &&
+					normalizeArtistName(credit.name.trim()) === artistName,
+			)
+			.map((credit) => credit.name.trim());
+	});
+}
+
 export function sortCreditsByFirstAppearance<T extends { name: string }>(
 	credits: T[],
 	tracks: Track[],
+	releaseArtists: string[] = [],
 ): T[] {
 	const blocks = new Map<string, T[]>();
 	for (const credit of credits) {
@@ -63,15 +84,19 @@ export function sortCreditsByFirstAppearance<T extends { name: string }>(
 		blocks.set(credit.name, block);
 	}
 	const ordered: T[] = [];
+	const appendBlock = (name: string) => {
+		const block = blocks.get(name);
+		if (!block) return;
+		ordered.push(...block);
+		blocks.delete(name);
+	};
+	for (const name of getPrioritizedCreditNames(tracks, releaseArtists))
+		appendBlock(name);
 	for (const track of tracks) {
 		if (track.header) continue;
 		for (const credit of getTrackCredits(track)) {
 			if (!credit.role.trim()) continue;
-			const name = credit.name.trim();
-			const block = blocks.get(name);
-			if (!block) continue;
-			ordered.push(...block);
-			blocks.delete(name);
+			appendBlock(credit.name.trim());
 		}
 	}
 	for (const block of blocks.values()) ordered.push(...block);

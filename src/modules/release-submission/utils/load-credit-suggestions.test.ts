@@ -87,6 +87,51 @@ test("shares a failed Tidal reader initialization and reports every affected tra
 		expect(createTidalCreditsResolver).toHaveBeenCalledOnce();
 		expect(resolveTidalCredits).not.toHaveBeenCalled();
 		expect(result.failedPositions).toEqual(["1", "2"]);
+		expect(warn).toHaveBeenCalledOnce();
+	} finally {
+		warn.mockRestore();
+	}
+});
+
+test("reports a shared album failure once while retaining all affected positions", async () => {
+	const error = new Error("Invisible Tidal credits page did not respond");
+	resolveTidalCredits.mockRejectedValue(error);
+	const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+	try {
+		const result = await loadCreditSuggestions(
+			[
+				{ position: "1", creditsUrl: "https://tidal.com/album/123/track/101" },
+				{ position: "2", creditsUrl: "https://tidal.com/album/123/track/102" },
+				{ position: "3", creditsUrl: "https://tidal.com/album/123/track/103" },
+			],
+			{ isActive: () => true, onProgress: vi.fn() },
+		);
+		expect(result.failedPositions).toEqual(["1", "2", "3"]);
+		expect(warn).toHaveBeenCalledOnce();
+		expect(warn).toHaveBeenCalledWith(
+			"EvenBetterRYM: could not load song credits",
+			"https://tidal.com/album/123/track/101",
+			error,
+		);
+	} finally {
+		warn.mockRestore();
+	}
+});
+
+test("reports separate song failures even when their messages match", async () => {
+	vi.mocked(resolveSongCredits).mockImplementation(() =>
+		Promise.reject(new Error("Unavailable")),
+	);
+	const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+	try {
+		const result = await loadCreditSuggestions(
+			[
+				{ position: "1", creditsUrl: appleSong(1) },
+				{ position: "2", creditsUrl: appleSong(2) },
+			],
+			{ isActive: () => true, onProgress: vi.fn() },
+		);
+		expect(result.failedPositions).toEqual(["1", "2"]);
 		expect(warn).toHaveBeenCalledTimes(2);
 	} finally {
 		warn.mockRestore();
@@ -133,6 +178,48 @@ test("limits concurrent requests and does not start more after cancellation", as
 	finish?.();
 	await pending;
 	expect(resolveSongCredits).toHaveBeenCalledTimes(3);
+});
+
+test("starts the next request as each worker finishes without exceeding concurrency", async () => {
+	const finish: (() => void)[] = [];
+	let active = 0;
+	let peak = 0;
+	vi.mocked(resolveSongCredits).mockImplementation(
+		() =>
+			new Promise((resolve) => {
+				active += 1;
+				peak = Math.max(peak, active);
+				finish.push(() => {
+					active -= 1;
+					resolve([]);
+				});
+			}),
+	);
+	const onProgress = vi.fn();
+	const pending = loadCreditSuggestions(
+		Array.from({ length: 5 }, (_, index) => ({
+			creditsUrl: appleSong(index + 1),
+		})),
+		{ isActive: () => true, onProgress },
+	);
+	expect(resolveSongCredits).toHaveBeenCalledTimes(3);
+	finish[1]?.();
+	await vi.waitFor(() => expect(resolveSongCredits).toHaveBeenCalledTimes(4));
+	finish[0]?.();
+	await vi.waitFor(() => expect(resolveSongCredits).toHaveBeenCalledTimes(5));
+	finish[2]?.();
+	finish[3]?.();
+	finish[4]?.();
+	await pending;
+	expect(peak).toBe(3);
+	expect(onProgress.mock.calls).toEqual([
+		[0, 5],
+		[1, 5],
+		[2, 5],
+		[3, 5],
+		[4, 5],
+		[5, 5],
+	]);
 });
 
 test("keeps usable metadata and identifies failed tracks explicitly", async () => {

@@ -536,6 +536,27 @@ test("shows track credits by first appearance even when later artists have album
 	expect(JSON.stringify(data)).toBe(original);
 });
 
+test("shows the main artist first only when credited on the first track", async () => {
+	await setup({
+		artists: ["Main"],
+		tracks: [
+			{ header: true, title: "Disc 1" },
+			{
+				position: "1",
+				credits: [
+					{ name: "Producer", role: "producer" },
+					{ name: "Main", role: "vocals" },
+				],
+			},
+			{ position: "2", credits: [{ name: "Main", role: "lyrics" }] },
+		],
+	});
+	await vi.waitFor(() => expect(rows()).toHaveLength(3));
+	expect(
+		rows().map((row) => row.cells[0]?.querySelector("input")?.value),
+	).toEqual(["Main", "Main", "Producer"]);
+});
+
 test("deduplicates WLR's loaded featured credits against guests using one shared enrichment", async () => {
 	let finish:
 		| ((result: Awaited<ReturnType<typeof loadCreditSuggestions>>) => void)

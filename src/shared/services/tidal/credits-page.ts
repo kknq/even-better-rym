@@ -59,6 +59,52 @@ export function isTidalCreditsResult(
 	);
 }
 
+function readCreditGroups(
+	body: Element | null,
+): TrackCredit[] | { error: string } {
+	const credits: TrackCredit[] = [];
+	const cells = body?.querySelectorAll('[class*="_creditsCell_"]') ?? [];
+	if (body && cells.length === 0)
+		return { error: "Could not parse Tidal credit groups" };
+
+	for (const cell of cells) {
+		const label = cell.querySelector("[data-uppercase]");
+		const role = label?.textContent?.trim();
+		const people = label?.nextElementSibling?.querySelectorAll(
+			'[data-test="grid-item-detail-text-title-artist"]',
+		);
+		if (!role || !people?.length)
+			return { error: "Could not parse Tidal credit names or roles" };
+		for (const person of people) {
+			const name = person.textContent?.trim();
+			if (!name) return { error: "Could not parse Tidal credit name" };
+			credits.push({ name, role });
+		}
+	}
+	return credits;
+}
+
+function readTracks(trackIds: string[]): TidalCreditsResult | undefined {
+	const blocks = document.querySelectorAll('main [class*="_credits_"]');
+	const tracks = new Map<string, TidalTrackCredits>();
+	for (const block of blocks) {
+		const id =
+			block.querySelector<HTMLElement>("[data-test-id]")?.dataset.testId;
+		if (!id) continue;
+		if (tracks.has(id))
+			return { error: "Tidal returned duplicate track credits" };
+		const credits = readCreditGroups(
+			block.querySelector('[class*="_mediaCredits_"]'),
+		);
+		if (!Array.isArray(credits)) return credits;
+		tracks.set(id, { id, credits });
+	}
+	if (!trackIds.every((id) => tracks.has(id))) return undefined;
+	if (tracks.size !== trackIds.length)
+		return { error: "Tidal credits do not match the imported tracklist" };
+	return { tracks: [...tracks.values()] };
+}
+
 export function readTidalCreditsPage(
 	albumId: string,
 	trackIds: string[],
@@ -77,54 +123,8 @@ export function readTidalCreditsPage(
 				finish({ error: "Tidal credits page redirected to an unexpected URL" });
 				return;
 			}
-			const blocks = document.querySelectorAll('main [class*="_credits_"]');
-			const tracks = new Map<string, TidalTrackCredits>();
-			for (const block of blocks) {
-				const id = block
-					.querySelector("[data-test-id]")
-					?.getAttribute("data-test-id");
-				const body = block.querySelector('[class*="_mediaCredits_"]');
-				if (!id) continue;
-				if (tracks.has(id)) {
-					finish({ error: "Tidal returned duplicate track credits" });
-					return;
-				}
-				const credits: TrackCredit[] = [];
-				const cells = body?.querySelectorAll('[class*="_creditsCell_"]') ?? [];
-				if (body && cells.length === 0) {
-					finish({ error: "Could not parse Tidal credit groups" });
-					return;
-				}
-				for (const cell of cells) {
-					const label = cell.querySelector("[data-uppercase]");
-					const role = label?.textContent?.trim();
-					const people = label?.nextElementSibling?.querySelectorAll(
-						'[data-test="grid-item-detail-text-title-artist"]',
-					);
-					if (!role || !people?.length) {
-						finish({ error: "Could not parse Tidal credit names or roles" });
-						return;
-					}
-					for (const person of people) {
-						const name = person.textContent?.trim();
-						if (!name) {
-							finish({ error: "Could not parse Tidal credit name" });
-							return;
-						}
-						credits.push({ name, role });
-					}
-				}
-				tracks.set(id, { id, credits });
-			}
-			if (trackIds.every((id) => tracks.has(id))) {
-				if (tracks.size !== trackIds.length) {
-					finish({
-						error: "Tidal credits do not match the imported tracklist",
-					});
-					return;
-				}
-				finish({ tracks: [...tracks.values()] });
-			}
+			const result = readTracks(trackIds);
+			if (result) finish(result);
 		};
 		const observer = new MutationObserver(read);
 		const timeout = setTimeout(

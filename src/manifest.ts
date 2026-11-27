@@ -328,6 +328,7 @@ const ManifestV3 = {
 	permissions: [
 		...sharedManifest.permissions,
 		"offscreen",
+		"browsingData",
 		"webRequest",
 		"declarativeNetRequestWithHostAccess",
 	] satisfies chrome.runtime.ManifestPermissions[],

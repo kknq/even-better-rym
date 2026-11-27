@@ -3,6 +3,7 @@ import browser from "webextension-polyfill";
 import { isSearchResult } from "~/modules/spotify-search/messages";
 import { isTidalCreditsResult } from "~/shared/services/tidal/credits-page";
 import { readHiddenPage } from "./hidden-page";
+import { tidalCredits } from "./tidal-credits";
 
 vi.mock("webextension-polyfill", () => ({
 	default: {
@@ -142,6 +143,102 @@ test("serializes Tidal and Spotify jobs through the same offscreen queue", async
 	});
 });
 
+test("prepares the Chromium job inside the queue before creating the frame", async () => {
+	const prepare = vi.fn().mockResolvedValue(undefined);
+	await expect(
+		readHiddenPage({ ...job(), prepareOffscreen: prepare }),
+	).resolves.toEqual(result);
+	expect(prepare).toHaveBeenCalledOnce();
+	expect(prepare.mock.invocationCallOrder[0]).toBeLessThan(
+		chromeMock.declarativeNetRequest.updateSessionRules.mock
+			.invocationCallOrder[0],
+	);
+	expect(prepare.mock.invocationCallOrder[0]).toBeLessThan(
+		chromeMock.offscreen.createDocument.mock.invocationCallOrder[0],
+	);
+});
+
+test("prepares each Tidal job only after the previous job finishes", async () => {
+	let finish: ((value: unknown) => void) | undefined;
+	vi.mocked(browser.runtime.sendMessage)
+		.mockImplementationOnce(
+			() =>
+				new Promise((resolve) => {
+					finish = resolve;
+				}),
+		)
+		.mockResolvedValueOnce(result);
+	const prepare = vi.fn().mockResolvedValue(undefined);
+	const first = readHiddenPage({ ...job(), prepareOffscreen: prepare });
+	const second = readHiddenPage({ ...job(), prepareOffscreen: prepare });
+	await vi.waitFor(() =>
+		expect(browser.runtime.sendMessage).toHaveBeenCalledTimes(1),
+	);
+	expect(prepare).toHaveBeenCalledTimes(1);
+	finish?.(result);
+	await expect(first).resolves.toEqual(result);
+	await expect(second).resolves.toEqual(result);
+	expect(prepare).toHaveBeenCalledTimes(2);
+	expect(prepare.mock.invocationCallOrder[1]).toBeGreaterThan(
+		chromeMock.offscreen.closeDocument.mock.invocationCallOrder[0],
+	);
+});
+
+test("surfaces preparation failures without opening the frame", async () => {
+	await expect(
+		readHiddenPage({
+			...job(),
+			prepareOffscreen: vi.fn().mockRejectedValue(new Error("Removal denied")),
+		}),
+	).rejects.toThrow("Removal denied");
+	expect(chromeMock.offscreen.createDocument).not.toHaveBeenCalled();
+	expect(
+		chromeMock.declarativeNetRequest.updateSessionRules,
+	).not.toHaveBeenCalled();
+	await expect(readHiddenPage(job())).resolves.toEqual(result);
+});
+
+test.each([
+	"unavailable",
+	"rejected",
+] as const)("continues the Tidal import when worker removal is %s", async (failure) => {
+	const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+	const removalError = new Error("Removal denied");
+	const remove = vi.fn().mockRejectedValue(removalError);
+	vi.stubGlobal("chrome", {
+		...chromeMock,
+		browsingData: failure === "unavailable" ? undefined : { remove },
+	});
+	try {
+		await expect(
+			tidalCredits({
+				id: "request",
+				type: "tidalCredits",
+				data: { albumId: "123", trackIds: ["101"] },
+			}),
+		).resolves.toEqual({ id: "request", type: "tidalCredits", data: result });
+		expect(browser.runtime.sendMessage).toHaveBeenCalledOnce();
+		expect(chromeMock.offscreen.createDocument).toHaveBeenCalledOnce();
+		if (failure === "rejected") {
+			expect(remove).toHaveBeenCalledExactlyOnceWith(
+				{ origins: ["https://tidal.com"] },
+				{ serviceWorkers: true },
+			);
+			expect(warn).toHaveBeenCalledWith(
+				expect.stringContaining("could not remove Tidal service workers"),
+				removalError,
+			);
+		} else {
+			expect(remove).not.toHaveBeenCalled();
+			expect(warn).toHaveBeenCalledWith(
+				expect.stringContaining("service worker removal is unavailable"),
+			);
+		}
+	} finally {
+		warn.mockRestore();
+	}
+});
+
 test("cleans up failed jobs and lets the next job run", async () => {
 	vi.mocked(browser.runtime.sendMessage).mockRejectedValueOnce(
 		new Error("Frame failed"),
@@ -189,7 +286,11 @@ test("uses the MV2 background document and removes the header listener afterward
 		name: "Test",
 		version: "1",
 	});
-	await expect(readHiddenPage(job())).resolves.toEqual(result);
+	const prepare = vi.fn().mockResolvedValue(undefined);
+	await expect(
+		readHiddenPage({ ...job(), prepareOffscreen: prepare }),
+	).resolves.toEqual(result);
+	expect(prepare).not.toHaveBeenCalled();
 	expect(backgroundRead).toHaveBeenCalledOnce();
 	expect(chromeMock.offscreen.createDocument).not.toHaveBeenCalled();
 	expect(browser.tabs.create).not.toHaveBeenCalled();

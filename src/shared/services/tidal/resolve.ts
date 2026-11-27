@@ -58,10 +58,44 @@ function duration(value: string | undefined): string | undefined {
 	);
 }
 
+async function readTrackPages(
+	id: string,
+	request: (url: string, include?: string) => Promise<Document>,
+	addIncluded: (data: Document) => void,
+): Promise<Identifier[]> {
+	const items: Identifier[] = [];
+	const visited = new Set<string>();
+	const readPage = async (next: string): Promise<void> => {
+		const pageUrl = new URL(
+			next.startsWith("/albums/") ? `/v2${next}` : next,
+			"https://openapi.tidal.com/v2/",
+		);
+		if (
+			pageUrl.origin !== "https://openapi.tidal.com" ||
+			pageUrl.pathname !== `/v2/albums/${id}/relationships/items` ||
+			visited.has(pageUrl.href)
+		) {
+			throw new Error("Invalid Tidal track pagination");
+		}
+		visited.add(pageUrl.href);
+		const page = await request(pageUrl.href, "items.artists");
+		if (!Array.isArray(page.data)) {
+			throw new TypeError("Could not parse Tidal album tracklist");
+		}
+		items.push(...page.data);
+		addIncluded(page);
+		if (page.links?.next) await readPage(page.links.next);
+	};
+	await readPage(
+		`https://openapi.tidal.com/v2/albums/${id}/relationships/items`,
+	);
+	return items;
+}
+
 export const resolve: ResolveFunction = async (url) => {
 	const match = TIDAL_ALBUM_REGEX.exec(url);
 	if (!match) throw new Error("Unsupported Tidal album URL");
-	const id = match[1];
+	const id = match[1] ?? match[2];
 	const { access_token } = await requestToken();
 	const request = async (url: string, include?: string) => {
 		const data = JSON.parse(
@@ -117,31 +151,7 @@ export const resolve: ResolveFunction = async (url) => {
 	const artists = getArtists(album);
 	if (artists.length === 0)
 		throw new Error("Could not find Tidal album artists");
-	const items: Identifier[] = [];
-	let next: string | undefined =
-		`https://openapi.tidal.com/v2/albums/${id}/relationships/items`;
-	const visited = new Set<string>();
-	while (next) {
-		const pageUrl = new URL(
-			next.startsWith("/albums/") ? `/v2${next}` : next,
-			"https://openapi.tidal.com/v2/",
-		);
-		if (
-			pageUrl.origin !== "https://openapi.tidal.com" ||
-			pageUrl.pathname !== `/v2/albums/${id}/relationships/items` ||
-			visited.has(pageUrl.href)
-		) {
-			throw new Error("Invalid Tidal track pagination");
-		}
-		visited.add(pageUrl.href);
-		const page = await request(pageUrl.href, "items.artists");
-		if (!Array.isArray(page.data)) {
-			throw new Error("Could not parse Tidal album tracklist");
-		}
-		items.push(...page.data);
-		addIncluded(page);
-		next = page.links?.next;
-	}
+	const items = await readTrackPages(id, request, addIncluded);
 	if (
 		items.length === 0 ||
 		(album.attributes.numberOfItems !== undefined &&
