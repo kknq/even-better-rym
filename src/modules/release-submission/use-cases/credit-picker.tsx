@@ -28,6 +28,7 @@ import {
 	watchArtistResultClicks,
 } from "../utils/shortcut-popup";
 import type { CreditSuggestion } from "../utils/suggested-credits";
+import { formatImportedText } from "../utils/text-formatting";
 import {
 	type ArtistAssociation,
 	getCreditedArtistName,
@@ -64,8 +65,8 @@ type CreditEditContext = {
 };
 
 const getInitialCreditDetails = (credit: CreditSuggestion): CreditDetails => ({
-	name: credit.name,
-	role: credit.role,
+	name: formatImportedText(credit.name),
+	role: formatImportedText(credit.role),
 	tracks: credit.unverified ? "???" : formatCreditTracks(credit.positions),
 });
 
@@ -539,7 +540,7 @@ export function CreditPicker({
 									}}
 								/>
 							) : (
-								credit.name
+								details.name
 							)
 						}
 						status={status}

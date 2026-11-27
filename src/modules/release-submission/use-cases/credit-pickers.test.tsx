@@ -183,6 +183,31 @@ test("offers release-wide and unverified credits when only credits are enabled",
 	expect(rows()[1]?.cells[2]?.querySelector("input")?.value).toBe("???");
 });
 
+test("formats imported credit names and roles before crediting", async () => {
+	await setup({
+		releaseCredits: [{ name: "Ａｒｔｉｓｔ ‘name’", role: "mixing — {live}" }],
+	});
+	expect(rows()[0]?.cells[0]?.querySelector("input")?.value).toBe(
+		"Artist 'name'",
+	);
+	expect(rows()[0]?.cells[1]?.querySelector("input")?.value).toBe(
+		"mixing - (live)",
+	);
+	await act(() =>
+		rows()[0]
+			?.querySelector<HTMLInputElement>('input[value="Credit in plain text"]')
+			?.click(),
+	);
+	await vi.waitFor(() =>
+		expect(addCreditLine).toHaveBeenCalledWith({
+			id: undefined,
+			name: "Artist 'name'",
+			role: "mixing - (live)",
+			tracks: "",
+		}),
+	);
+});
+
 test("does not load or offer credits when both credits and tracks are disabled", async () => {
 	await setup(
 		{ tracks: [{ creditsUrl: "song", artists: ["Guest"] }] },

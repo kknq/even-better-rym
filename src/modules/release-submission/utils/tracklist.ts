@@ -5,6 +5,7 @@ import { markBonusTrack } from "./bonus-track";
 import type { CapitalizationType } from "./capitalization";
 import { capitalize } from "./capitalization";
 import { stripFeaturedArtistTags } from "./suggested-credits";
+import { formatImportedText } from "./text-formatting";
 import { getTrackPosition } from "./track-position";
 
 // Odd-indexed parts are bracketed spans, including any nested opening brackets.
@@ -73,6 +74,7 @@ export function formatTracks(
 
 			let title = track.title ?? "";
 			if (!track.header) title = stripFeaturedArtistTags(title);
+			title = formatImportedText(title);
 
 			title =
 				title.toLowerCase() === "untitled"

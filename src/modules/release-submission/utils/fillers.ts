@@ -19,6 +19,7 @@ import {
 } from "./filed-under";
 import { goInfobox } from "./page-functions";
 import { editAdvancedTracklist } from "./simple-tracklist";
+import { formatImportedText } from "./text-formatting";
 import { formatTracks, getTrackDurations } from "./tracklist";
 
 export async function fillArtists(
@@ -86,7 +87,7 @@ function fillDay(day: number) {
 
 export function fillTitle(title: string, capitalization: CapitalizationType) {
 	forceQuerySelector<HTMLInputElement>(document)("#title").value = capitalize(
-		title,
+		formatImportedText(title),
 		capitalization,
 	);
 }

@@ -60,6 +60,18 @@ describe("formatTracks", () => {
 		).toBe("1|[b]Section (feat. Guest)[/b]|");
 	});
 
+	test("formats imported titles before capitalization and tracklist serialization", () => {
+		expect(
+			formatTracks(
+				[
+					{ title: "ｓｏｎｇ | “live” – {mix} [bonus track]" },
+					{ title: "ｓｉｄｅ <one>", header: true },
+				],
+				"as-is",
+			),
+		).toBe('1|song / "live" - (mix) [bonus track]|\n2|[b]side (one)[/b]|');
+	});
+
 	test("uses imported track durations by default", () => {
 		expect(formatTracks(tracks, "as-is")).toBe(
 			"1|first track|3:10\n2|second track|4:20",
