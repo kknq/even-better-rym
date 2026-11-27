@@ -1,5 +1,6 @@
 import { fetch } from "~/shared/utils/fetch";
 import {
+	getAlbumSearchQuery,
 	getSearchArtists,
 	isReissueTitle,
 	normalizeSearchArtist,
@@ -43,7 +44,7 @@ export const search: SearchFunction = async ({
 	const foldedArtistNames = new Set(
 		artists.map((name) => normalizeSearchArtist(name)),
 	);
-	const searchQuery = `${artist} ${title}`;
+	const searchQuery = getAlbumSearchQuery(artist, title);
 	const response = await fetch({
 		url: "https://openapi.tidal.com/v2/searchResults",
 		method: "GET",

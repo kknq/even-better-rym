@@ -1,11 +1,29 @@
 import { expect, test, vi } from "vitest";
 
 import {
+	getAlbumSearchQuery,
 	normalizeSearchArtist,
 	normalizeSearchText,
 	withArtistAlias,
 } from "./search-matching";
 import type { SearchFunction } from "./types";
+
+test.each([
+	"Various Artists",
+	"VARIOUS ARTISTS",
+	" various  artists ",
+])("searches by title alone for %s", (artist) => {
+	expect(getAlbumSearchQuery(artist, "Heart of Gold")).toBe("Heart of Gold");
+});
+
+test("retains the artist for named artists and similarly named groups", () => {
+	expect(getAlbumSearchQuery("Neil Young", "Harvest")).toBe(
+		"Neil Young Harvest",
+	);
+	expect(getAlbumSearchQuery("Various Artists Tribute", "Album")).toBe(
+		"Various Artists Tribute Album",
+	);
+});
 
 test.each([
 	["Svartidauði", "Svartidaudi"],

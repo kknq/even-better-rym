@@ -44,6 +44,24 @@ test("passes the artist alias to the reader without duplicating shared search re
 	expect(vi.getTimerCount()).toBe(0);
 });
 
+test("searches the tribute by title alone while retaining Various Artists for validation", async () => {
+	const data = {
+		artist: "Various Artists",
+		title: "Heart of Gold: The Songs of Neil Young, Vol. 3 - Into the Black",
+	};
+	const pending = searchHiddenSpotify(data);
+	expect(document.querySelector("iframe")?.src).toBe(
+		`https://open.spotify.com/search/${encodeURIComponent(data.title)}/albums`,
+	);
+	expect(
+		respond({
+			status: "found",
+			url: "https://open.spotify.com/album/3O2u3NEZGQYcN7MeZ9YWdk",
+		}).data,
+	).toEqual(data);
+	await expect(pending).resolves.toMatchObject({ status: "found" });
+});
+
 test.each([
 	{
 		artist: "72%",

@@ -3,6 +3,11 @@ import type { SearchFunction } from "./types";
 export const normalizeSearchText = (value: string): string =>
 	value.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 
+export const getAlbumSearchQuery = (artist: string, title: string): string =>
+	normalizeSearchText(artist) === "various artists"
+		? title
+		: `${artist} ${title}`;
+
 const latinLetters: Readonly<Record<string, string>> = {
 	æ: "ae",
 	ð: "d",

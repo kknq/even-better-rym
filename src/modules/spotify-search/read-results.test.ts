@@ -63,6 +63,40 @@ afterEach(() => {
 });
 
 describe("readSpotifySearchPage", () => {
+	test("finds the matching tribute compilation rather than another volume or artist", async () => {
+		const title =
+			"Heart of Gold: The Songs of Neil Young, Vol. 3 - Into the Black";
+		const url = "https://open.spotify.com/album/3O2u3NEZGQYcN7MeZ9YWdk";
+		setSearchPage([
+			resultLink(
+				"Heart of Gold: The Songs of Neil Young, Vol. 2 - Out of the Blue",
+				albumUrl,
+				"2026 • Various Artists",
+			),
+			resultLink(title, albumUrl, `${title}2026 • Neil Young`),
+			resultLink(title, url, `${title}2026 • Various Artists`),
+		]);
+		await expect(readSpotifySearchPage("Various Artists", title)).resolves.toBe(
+			url,
+		);
+	});
+
+	test("does not accept a different tribute volume for Various Artists", async () => {
+		setSearchPage([
+			resultLink(
+				"Heart of Gold: The Songs of Neil Young, Vol. 2 - Out of the Blue",
+				albumUrl,
+				"2026 • Various Artists",
+			),
+		]);
+		const pending = readSpotifySearchPage(
+			"Various Artists",
+			"Heart of Gold: The Songs of Neil Young, Vol. 3 - Into the Black",
+		);
+		await vi.advanceTimersByTimeAsync(7_000);
+		await expect(pending).resolves.toBeUndefined();
+	});
+
 	test.each([
 		["Svartidauði", "Svartidaudi"],
 		["Misthyrming", "Misþyrming"],

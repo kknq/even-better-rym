@@ -1,3 +1,5 @@
+import { getAlbumSearchQuery } from "~/shared/services/search-matching";
+
 import {
 	type FrameRequest,
 	isSearchResult,
@@ -19,10 +21,9 @@ const searchFrame = (
 		frame.setAttribute("sandbox", "allow-scripts allow-same-origin");
 		frame.style.cssText = "width:1280px;height:900px;border:0";
 		// Escape "%" twice for initial navigation, before Spotify rewrites the URL.
-		const query = encodeURIComponent(`${data.artist} ${data.title}`).replaceAll(
-			"%25",
-			"%2525",
-		);
+		const query = encodeURIComponent(
+			getAlbumSearchQuery(data.artist, data.title),
+		).replaceAll("%25", "%2525");
 		frame.src = `https://open.spotify.com/search/${query}/${category}`;
 		const finish = (result: SearchResult) => {
 			clearTimeout(timeout);

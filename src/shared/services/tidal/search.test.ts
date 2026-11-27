@@ -40,6 +40,54 @@ describe("Tidal search", () => {
 		});
 	});
 
+	test("finds the Various Artists tribute using its title alone in the preferred region", async () => {
+		const title =
+			"Heart of Gold: The Songs of Neil Young, Vol. 3 - Into the Black";
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{
+					id: "562003441",
+					title:
+						"Heart of Gold: The Songs of Neil Young, Vol. 2 - Out of the Blue",
+					artist: "Various Artists",
+				},
+				{ id: "wrong-artist", title, artist: "Neil Young" },
+				{ id: "562003728", title, artist: "Various Artists" },
+			]),
+		);
+		await expect(
+			search({
+				artist: "Various Artists",
+				title,
+				serviceRegions: { tidal: "PL" },
+			}),
+		).resolves.toBe("https://tidal.com/browse/album/562003728");
+		expect(vi.mocked(fetch).mock.calls[0][0].urlParameters).toMatchObject({
+			"filter[query]": title,
+			countryCode: "PL",
+		});
+	});
+
+	test("does not substitute another tribute volume for a Various Artists release", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{
+					id: "562003441",
+					title:
+						"Heart of Gold: The Songs of Neil Young, Vol. 2 - Out of the Blue",
+					artist: "Various Artists",
+				},
+			]),
+		);
+		await expect(
+			search({
+				artist: "Various Artists",
+				title:
+					"Heart of Gold: The Songs of Neil Young, Vol. 3 - Into the Black",
+			}),
+		).resolves.toBeUndefined();
+	});
+
 	test("uses the query endpoint and reads albums from the result collection", async () => {
 		vi.mocked(fetch).mockResolvedValue(
 			result([
