@@ -74,6 +74,7 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 				(credit) => !isReissue || isSpecialCreditRole(credit.role),
 			),
 			loadedTracks,
+			releaseArtists,
 		),
 		...getUnverifiedCreditSuggestions(session.data.unverifiedCredits ?? []),
 	];

@@ -73,27 +73,48 @@ test("accepts Northwind's rendered track blocks without credit bodies as genuine
 });
 
 test.each([
-	cell("", person("Name")),
-	cell("Composer", ""),
-	cell("Composer", person("")),
-	"<div>Changed credit markup</div>",
-])("reports malformed credit markup instead of silently returning no credits (%#)", async (markup) => {
-	document.querySelector("main")!.innerHTML = block("101", markup);
-	await expect(readTidalCreditsPage("123", ["101"])).resolves.toHaveProperty(
-		"error",
-		expect.stringContaining("Could not parse Tidal"),
-	);
+	"https://tidal.com/album/123/credits",
+	"https://tidal.com/album/123/credits?test=1",
+])("reads the expected album from credits URL %s", async (url) => {
+	vi.stubGlobal("location", new URL(url));
+	document.querySelector("main")!.innerHTML = block("101");
+	await expect(readTidalCreditsPage("123", ["101"])).resolves.toEqual({
+		tracks: [{ id: "101", credits: [] }],
+	});
 });
 
 test.each([
-	block("101") + block("101"),
-	block("101") + block("102"),
-])("rejects duplicate or mismatched track coverage (%#)", async (markup) => {
+	[cell("", person("Name")), "Could not parse Tidal credit names or roles"],
+	[cell("Composer", ""), "Could not parse Tidal credit names or roles"],
+	[cell("Composer", person("")), "Could not parse Tidal credit name"],
+	["<div>Changed credit markup</div>", "Could not parse Tidal credit groups"],
+])("reports malformed credit markup instead of silently returning no credits (%#)", async (markup, error) => {
+	document.querySelector("main")!.innerHTML = block("101", markup);
+	await expect(readTidalCreditsPage("123", ["101"])).resolves.toEqual({
+		error,
+	});
+});
+
+test.each([
+	[block("101") + block("101"), "Tidal returned duplicate track credits"],
+	[
+		block("101") + block("102"),
+		"Tidal credits do not match the imported tracklist",
+	],
+])("rejects duplicate or mismatched track coverage (%#)", async (markup, error) => {
 	document.querySelector("main")!.innerHTML = markup;
-	await expect(readTidalCreditsPage("123", ["101"])).resolves.toHaveProperty(
-		"error",
-		expect.any(String),
-	);
+	await expect(readTidalCreditsPage("123", ["101"])).resolves.toEqual({
+		error,
+	});
+});
+
+test("ignores credit blocks without a track ID", async () => {
+	document.querySelector("main")!.innerHTML =
+		'<div class="_credits_hash"><div class="_mediaCredits_hash">Incomplete</div></div>' +
+		block("101");
+	await expect(readTidalCreditsPage("123", ["101"])).resolves.toEqual({
+		tracks: [{ id: "101", credits: [] }],
+	});
 });
 
 test("reports a partial page or changed selectors after a bounded wait", async () => {

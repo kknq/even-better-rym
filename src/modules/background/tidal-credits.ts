@@ -22,6 +22,25 @@ export async function tidalCredits({
 			message: { type: "ebr-tidal-offscreen", data },
 			readBackground: () => readHiddenTidalCredits(data),
 			isResult: isTidalCreditsResult,
+			prepareOffscreen: async () => {
+				if (!chrome.browsingData?.remove) {
+					console.warn(
+						"EvenBetterRYM: Tidal service worker removal is unavailable; continuing with credits import",
+					);
+					return;
+				}
+				try {
+					await chrome.browsingData.remove(
+						{ origins: ["https://tidal.com"] },
+						{ serviceWorkers: true },
+					);
+				} catch (error) {
+					console.warn(
+						"EvenBetterRYM: could not remove Tidal service workers; continuing with credits import",
+						error,
+					);
+				}
+			},
 		});
 		return { id, type: "tidalCredits", data: result };
 	} catch (error) {

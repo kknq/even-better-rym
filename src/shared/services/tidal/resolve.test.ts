@@ -107,6 +107,10 @@ describe("Tidal imports", () => {
 		"https://tidal.com/browse/us/album/123",
 		"https://tidal.com/album/123/credits",
 		"https://tidal.com/album/123/credits/?test=1",
+		"https://tidal.com/album/whole-lotta-red/123",
+		"https://tidal.com/album/whole-lotta-red/123/",
+		"https://tidal.com/browse/us/album/whole-lotta-red/123",
+		"https://tidal.com/album/%E5%8A%A3/123",
 	])("recognizes album URL %s", (url) => {
 		expect(Tidal.regex.test(url)).toBe(true);
 	});
@@ -117,6 +121,10 @@ describe("Tidal imports", () => {
 		"https://tidal.com/browse/album/123abc",
 		"https://tidal.com.evil.example/album/123",
 		"https://tidal.com/album/123/credits/other",
+		"https://tidal.com/album/whole-lotta-red/123/track/101",
+		"https://tidal.com/album/whole-lotta-red/123/credits",
+		"https://tidal.com/album/name/123abc",
+		"https://tidal.com/album/name/other/123",
 	])("rejects non-album URL %s", async (url) => {
 		expect(Tidal.regex.test(url)).toBe(false);
 		await expect(resolve(url)).rejects.toThrow("Unsupported Tidal album URL");
@@ -195,10 +203,11 @@ describe("Tidal imports", () => {
 		expect(result.tracks).toHaveLength(2);
 	});
 
-	test("accepts a pasted credits-page link while keeping the canonical album URL", async () => {
-		await expect(
-			resolve("https://tidal.com/album/123/credits"),
-		).resolves.toMatchObject({
+	test.each([
+		"https://tidal.com/album/123/credits",
+		"https://tidal.com/album/whole-lotta-red/123",
+	])("resolves %s while keeping the canonical album URL", async (input) => {
+		await expect(resolve(input)).resolves.toMatchObject({
 			url,
 			tracks: [
 				{ creditsUrl: "https://tidal.com/album/123/track/101" },

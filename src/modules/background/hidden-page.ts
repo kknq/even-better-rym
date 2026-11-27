@@ -9,6 +9,7 @@ type HiddenPageJob<T> = {
 	message: { type: string; data: unknown };
 	readBackground: () => Promise<T>;
 	isResult: (value: unknown) => value is T;
+	prepareOffscreen?: () => Promise<void>;
 	observe?: () => () => void;
 };
 
@@ -16,6 +17,7 @@ async function readOffscreen<T>(job: HiddenPageJob<T>): Promise<T> {
 	if (typeof chrome === "undefined" || !chrome.offscreen)
 		throw new Error(`This browser does not support invisible ${job.name}`);
 
+	await job.prepareOffscreen?.();
 	// Scope framing exceptions to extension-owned frames, never ordinary tabs.
 	await chrome.declarativeNetRequest.updateSessionRules({
 		removeRuleIds: [FRAME_RULE_ID],

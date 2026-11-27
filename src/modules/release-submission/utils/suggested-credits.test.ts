@@ -64,6 +64,65 @@ test("orders artist blocks by first track credit appearance, independent of role
 	]);
 });
 
+test("prioritizes release artists credited on the first non-header track, keeping their roles together", () => {
+	const tracks: Track[] = [
+		{ header: true, credits: [{ name: "Later Main", role: "vocals" }] },
+		{
+			credits: [
+				{ name: "Producer", role: "producer" },
+				{ name: "  SECOND MAIN ", role: "vocals" },
+				{ name: "Main Artist", role: "lyrics" },
+				{ name: "main artist", role: "featured" },
+				{ name: "Main Artist", role: "vocals" },
+			],
+		},
+		{
+			credits: [
+				{ name: "Later Main", role: "vocals" },
+				{ name: "Main Artist", role: "mixing" },
+			],
+		},
+	];
+	const credits = getSuggestedCredits(tracks, [
+		{ name: "Release only", role: "mastering" },
+		{ name: "Main Artist", role: "producer" },
+	]);
+	const sorted = sortCreditsByFirstAppearance(credits, tracks, [
+		"main artist",
+		"Second Main",
+		"Later Main",
+		"Release only",
+	]);
+	expect(sorted.map(({ name }) => name)).toEqual([
+		"Main Artist",
+		"Main Artist",
+		"Main Artist",
+		"main artist",
+		"SECOND MAIN",
+		"Producer",
+		"Later Main",
+		"Release only",
+	]);
+});
+
+test("does not prioritize a release artist without a valid first-track credit", () => {
+	const tracks: Track[] = [
+		{
+			credits: [
+				{ name: "Main", role: "" },
+				{ name: "Producer", role: "mixing" },
+			],
+		},
+		{ credits: [{ name: "Main", role: "vocals" }] },
+	];
+	const credits = getSuggestedCredits(tracks);
+	expect(
+		sortCreditsByFirstAppearance(credits, tracks, ["Main"]).map(
+			({ name }) => name,
+		),
+	).toEqual(["Producer", "Main"]);
+});
+
 test("merges release-wide roles with identical full-track coverage without losing restricted roles", () => {
 	const tracks: Track[] = [
 		{ header: true },
