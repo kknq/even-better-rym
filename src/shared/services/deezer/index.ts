@@ -15,6 +15,6 @@ export const Deezer: Service & Searchable & Resolvable = {
 	icon: DeezerIcon,
 	foundIcon: DeezerFoundIcon,
 	notFoundIcon: DeezerNotFoundIcon,
-	search: withCache("deezer-search", search),
+	search: withCache("deezer-search-v2", search),
 	resolve: withCache("deezer-resolve-v2", resolve),
 };

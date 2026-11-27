@@ -6,6 +6,7 @@ import {
 	normalizeSearchText,
 } from "../search-matching";
 import type { SearchFunction } from "../types";
+import { DEEZER_ALBUM_REGEX } from "./regex";
 
 type DeezerSearchResponse = {
 	data?: {
@@ -45,10 +46,20 @@ export const search: SearchFunction = async ({
 	artist,
 	artistAlias,
 	title,
+	serviceRegions,
 }) => {
+	const region = serviceRegions?.deezer;
+	const toUrl = (link: string) => {
+		if (!region) return link;
+		const match = DEEZER_ALBUM_REGEX.exec(link);
+		if (!match) throw new Error("Unsupported Deezer album URL");
+		const url = new URL(link);
+		url.pathname = `/${region.toLowerCase()}/album/${match[1]}`;
+		return url.toString();
+	};
 	const response = await searchAlbums(`artist:"${artist}" album:"${title}"`);
 	const album = response.data?.[0];
-	if (album) return album.link;
+	if (album) return toUrl(album.link);
 
 	const artistNames = new Set(
 		getSearchArtists(artist, artistAlias).map((name) =>
@@ -63,11 +74,13 @@ export const search: SearchFunction = async ({
 				artistNames.has(normalizeSearchArtist(candidate.artist.name)) &&
 				normalizeSearchText(candidate.title) === albumTitle,
 		);
-		if (match) return match.link;
+		if (match) return toUrl(match.link);
 		if (!results.next) break;
 	}
 
 	const localized = await searchAlbums(`"${artist}" "${title}"`);
-	if (localized.total === 1) return localized.data?.[0]?.link;
+	const localizedAlbum = localized.data?.[0];
+	if (localized.total === 1 && localizedAlbum)
+		return toUrl(localizedAlbum.link);
 	return undefined;
 };
