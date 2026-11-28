@@ -148,7 +148,7 @@ const searchTitle: SearchFunction = async ({
 		return (
 			normalizedTitle.length > 0 &&
 			candidate.startsWith(normalizedTitle) &&
-			/^\s+\((?:original (?:(?:motion picture|video game) )?)?soundtrack\)$/.test(
+			/^\s+\((?:official |original (?:(?:motion picture|video game) )?)?soundtrack\)$/.test(
 				candidate.slice(normalizedTitle.length),
 			)
 		);

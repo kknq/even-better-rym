@@ -481,6 +481,7 @@ describe("Tidal search", () => {
 		"Original Motion Picture Soundtrack",
 		"Original Video Game Soundtrack",
 		"Original Soundtrack",
+		"Official Soundtrack",
 		"Soundtrack",
 	])("finds The Dog and the Fountain with the %s suffix", async (suffix) => {
 		vi.mocked(fetch).mockResolvedValue(
@@ -530,6 +531,45 @@ describe("Tidal search", () => {
 		});
 	});
 
+	test("finds HEALTH's Arena War official soundtrack in the preferred region", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{
+					id: "wrong",
+					title: "Grand Theft Auto Online: Arena War (Official Soundtrack)",
+					artist: "Another Artist",
+				},
+				{
+					id: "104719576",
+					title: "Grand Theft Auto Online: Arena War (Official Soundtrack)",
+					artist: "HEALTH",
+				},
+			]),
+		);
+		await expect(
+			search({
+				artist: "HEALTH",
+				title: "Grand Theft Auto Online: Arena War",
+				serviceRegions: { tidal: "PL" },
+			}),
+		).resolves.toBe("https://tidal.com/browse/album/104719576");
+		expect(vi.mocked(fetch).mock.calls[0][0].urlParameters?.countryCode).toBe(
+			"PL",
+		);
+	});
+
+	test("prefers the exact title over an official soundtrack", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{ id: "1", title: "Album (Official Soundtrack)", artist: "Artist" },
+				{ id: "2", title: "Album", artist: "Artist" },
+			]),
+		);
+		await expect(search({ artist: "Artist", title: "Album" })).resolves.toBe(
+			"https://tidal.com/browse/album/2",
+		);
+	});
+
 	test("prefers an exact title even when the soundtrack has the exact artist spelling", async () => {
 		vi.mocked(fetch).mockResolvedValue(
 			result([
@@ -548,6 +588,8 @@ describe("Tidal search", () => {
 		{ title: "Album (Original Soundtrack) Deluxe", artist: "Artist" },
 		{ title: "Album (Original Soundtrack, Vol. 2)", artist: "Artist" },
 		{ title: "Album (Unofficial Soundtrack)", artist: "Artist" },
+		{ title: "Album (Official Soundtrack) Live", artist: "Artist" },
+		{ title: "Album (Official Soundtrack)", artist: "Another Artist" },
 	])("rejects unrelated soundtrack matches: %j", async (album) => {
 		vi.mocked(fetch).mockResolvedValue(result([{ id: "1", ...album }]));
 		await expect(
