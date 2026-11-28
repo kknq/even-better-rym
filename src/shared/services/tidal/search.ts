@@ -1,9 +1,15 @@
 import { fetch } from "~/shared/utils/fetch";
 import {
+	getAlbumSearchQuery,
 	getSearchArtists,
+	isEpTitle,
+	isExpandedTitle,
 	isReissueTitle,
+	isSoundtrackTitle,
 	normalizeSearchArtist,
 	normalizeSearchText,
+	normalizeSearchTitle,
+	withSearchTitleVariants,
 } from "../search-matching";
 import type { SearchFunction } from "../types";
 import { requestToken } from "./auth";
@@ -31,10 +37,11 @@ type TidalSearchResponse = {
 	errors?: { detail?: string; title?: string }[];
 };
 
-export const search: SearchFunction = async ({
+const searchTitle: SearchFunction = async ({
 	artist,
 	artistAlias,
 	title,
+	releaseType,
 	serviceRegions,
 }) => {
 	const token = await requestToken();
@@ -43,7 +50,7 @@ export const search: SearchFunction = async ({
 	const foldedArtistNames = new Set(
 		artists.map((name) => normalizeSearchArtist(name)),
 	);
-	const searchQuery = `${artist} ${title}`;
+	const searchQuery = getAlbumSearchQuery(artist, title);
 	const response = await fetch({
 		url: "https://openapi.tidal.com/v2/searchResults",
 		method: "GET",
@@ -84,33 +91,98 @@ export const search: SearchFunction = async ({
 				?.name;
 			return name === undefined ? [] : [name];
 		});
-	const matches = (data.data ?? [])
+	const collaborations = artists
+		.map((name) =>
+			name.split(/\s+&\s+/).map((part) => normalizeSearchArtist(part)),
+		)
+		.filter(
+			(names) =>
+				names.length > 1 &&
+				names.every(Boolean) &&
+				new Set(names).size === names.length,
+		);
+	const hasMatchingCollaboration = (album: TidalResource) => {
+		const names = new Set(
+			getArtistNames(album).map((name) => normalizeSearchArtist(name)),
+		);
+		return collaborations.some((collaborators) => {
+			if (names.size !== collaborators.length) return false;
+			const unmatched = new Set(names);
+			const remaining = collaborators.filter((name) => !unmatched.delete(name));
+			if (remaining.length === collaborators.length) return false;
+			return remaining.every((name) => {
+				const candidates = [...unmatched].filter((candidate) =>
+					candidate.endsWith(` ${name}`),
+				);
+				if (candidates.length !== 1) return false;
+				unmatched.delete(candidates[0]);
+				return true;
+			});
+		});
+	};
+	const hasMatchingCollaborator = (album: TidalResource) => {
+		const names = new Set(
+			getArtistNames(album).map((name) => normalizeSearchArtist(name)),
+		);
+		return collaborations.some((collaborators) =>
+			collaborators.some((name) => names.has(name)),
+		);
+	};
+	const albums = (data.data ?? [])
 		.flatMap((result) => result.relationships?.albums?.data ?? [])
 		.map((album) => included.get(`albums:${album.id}`))
-		.filter(
-			(album): album is TidalResource =>
-				album !== undefined &&
-				getArtistNames(album).some((name) =>
-					foldedArtistNames.has(normalizeSearchArtist(name)),
-				),
-		);
+		.filter((album): album is TidalResource => album !== undefined);
+	const matches = albums.filter((album) =>
+		getArtistNames(album).some((name) =>
+			foldedArtistNames.has(normalizeSearchArtist(name)),
+		),
+	);
 	const exactArtists = matches.filter((album) =>
 		getArtistNames(album).some((name) =>
 			artistNames.has(normalizeSearchText(name)),
 		),
 	);
-	const normalizedTitle = normalizeSearchText(title);
+	const normalizedTitle = normalizeSearchTitle(title);
 	const hasExactTitle = (album: TidalResource) =>
-		normalizeSearchText(album.attributes?.title ?? "") === normalizedTitle;
+		normalizeSearchTitle(album.attributes?.title ?? "") === normalizedTitle;
 	const hasReissueTitle = (album: TidalResource) =>
 		isReissueTitle(album.attributes?.title ?? "", title);
+	const hasSoundtrackTitle = (album: TidalResource) =>
+		isSoundtrackTitle(album.attributes?.title ?? "", title);
+
 	const album =
 		exactArtists.find(hasExactTitle) ??
 		matches.find(hasExactTitle) ??
+		exactArtists.find((candidate) =>
+			isEpTitle(candidate.attributes?.title ?? "", title, releaseType),
+		) ??
+		matches.find((candidate) =>
+			isEpTitle(candidate.attributes?.title ?? "", title, releaseType),
+		) ??
 		exactArtists.find(hasReissueTitle) ??
-		matches.find(hasReissueTitle);
+		matches.find(hasReissueTitle) ??
+		exactArtists.find(hasSoundtrackTitle) ??
+		matches.find(hasSoundtrackTitle) ??
+		albums.find(
+			(candidate) =>
+				hasExactTitle(candidate) && hasMatchingCollaboration(candidate),
+		) ??
+		albums.find(
+			(candidate) =>
+				normalizedTitle.length > 0 &&
+				hasExactTitle(candidate) &&
+				hasMatchingCollaborator(candidate),
+		) ??
+		exactArtists.find((candidate) =>
+			isExpandedTitle(candidate.attributes?.title ?? "", title),
+		) ??
+		matches.find((candidate) =>
+			isExpandedTitle(candidate.attributes?.title ?? "", title),
+		);
 	if (album) {
 		return `https://tidal.com/browse/album/${album.id}`;
 	}
 	return undefined;
 };
+
+export const search = withSearchTitleVariants(searchTitle);

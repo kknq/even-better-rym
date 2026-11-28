@@ -1,10 +1,11 @@
 import { fetch } from "~/shared/utils/fetch";
 
+import { withSearchTitleVariants } from "../search-matching";
 import type { SearchFunction } from "../types";
 import { requestToken } from "./auth";
 import type { SearchObject } from "./codecs";
 
-export const search: SearchFunction = async ({ artist, title }) => {
+const searchTitle: SearchFunction = async ({ artist, title }) => {
 	const token = await requestToken();
 	if (!token) throw new Error("Could not find client id");
 
@@ -19,3 +20,5 @@ export const search: SearchFunction = async ({ artist, title }) => {
 		(object) => object.kind === "track" || object.kind === "playlist",
 	)?.permalink_url;
 };
+
+export const search = withSearchTitleVariants(searchTitle);

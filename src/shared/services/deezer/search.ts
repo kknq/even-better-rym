@@ -2,10 +2,15 @@ import { fetch } from "~/shared/utils/fetch";
 
 import {
 	getSearchArtists,
+	getSearchTitleVariants,
+	isEpTitle,
+	isExpandedTitle,
 	normalizeSearchArtist,
 	normalizeSearchText,
+	normalizeSearchTitle,
 } from "../search-matching";
 import type { SearchFunction } from "../types";
+import { DEEZER_ALBUM_REGEX } from "./regex";
 
 type DeezerSearchResponse = {
 	data?: {
@@ -45,29 +50,77 @@ export const search: SearchFunction = async ({
 	artist,
 	artistAlias,
 	title,
+	releaseType,
+	serviceRegions,
 }) => {
-	const response = await searchAlbums(`artist:"${artist}" album:"${title}"`);
-	const album = response.data?.[0];
-	if (album) return album.link;
-
+	const region = serviceRegions?.deezer;
+	const toUrl = (link: string) => {
+		if (!region) return link;
+		const match = DEEZER_ALBUM_REGEX.exec(link);
+		if (!match) throw new Error("Unsupported Deezer album URL");
+		const url = new URL(link);
+		url.pathname = `/${region.toLowerCase()}/album/${match[1]}`;
+		return url.toString();
+	};
+	const albumTitle = normalizeSearchTitle(title);
 	const artistNames = new Set(
 		getSearchArtists(artist, artistAlias).map((name) =>
 			normalizeSearchArtist(name),
 		),
 	);
-	const albumTitle = normalizeSearchText(title);
+	const isMatchingArtist = (
+		candidate: NonNullable<DeezerSearchResponse["data"]>[number],
+	) =>
+		normalizeSearchText(artist) === "various artists" ||
+		artistNames.has(normalizeSearchArtist(candidate.artist.name));
+	const findAlbum = (results: DeezerSearchResponse) => {
+		const albums = results.data?.filter(isMatchingArtist) ?? [];
+		return (
+			albums.find(
+				(candidate) => normalizeSearchTitle(candidate.title) === albumTitle,
+			) ??
+			albums.find((candidate) =>
+				isEpTitle(candidate.title, title, releaseType),
+			) ??
+			albums.find((candidate) => isExpandedTitle(candidate.title, title))
+		);
+	};
+	const response = await searchAlbums(`artist:"${artist}" album:"${title}"`);
+	const album = findAlbum(response);
+	if (album) return toUrl(album.link);
+	for (const variant of getSearchTitleVariants(title, releaseType).slice(1)) {
+		const results = await searchAlbums(`"${artist}" "${variant}"`);
+		const match = findAlbum(results);
+		if (match) return toUrl(match.link);
+	}
+	let expandedAlbum:
+		| NonNullable<DeezerSearchResponse["data"]>[number]
+		| undefined;
+	let epAlbum: NonNullable<DeezerSearchResponse["data"]>[number] | undefined;
 	for (let index = 0; ; index += SEARCH_LIMIT) {
 		const results = await searchAlbums(`artist:"${artist}"`, index);
 		const match = results.data?.find(
 			(candidate) =>
 				artistNames.has(normalizeSearchArtist(candidate.artist.name)) &&
-				normalizeSearchText(candidate.title) === albumTitle,
+				normalizeSearchTitle(candidate.title) === albumTitle,
 		);
-		if (match) return match.link;
+		if (match) return toUrl(match.link);
+		epAlbum ??= results.data?.find(
+			(candidate) =>
+				isMatchingArtist(candidate) &&
+				isEpTitle(candidate.title, title, releaseType),
+		);
+		expandedAlbum ??= results.data?.find(
+			(candidate) =>
+				isMatchingArtist(candidate) && isExpandedTitle(candidate.title, title),
+		);
 		if (!results.next) break;
 	}
 
 	const localized = await searchAlbums(`"${artist}" "${title}"`);
-	if (localized.total === 1) return localized.data?.[0]?.link;
+	const localizedAlbum = findAlbum(localized);
+	if (localizedAlbum) return toUrl(localizedAlbum.link);
+	if (epAlbum) return toUrl(epAlbum.link);
+	if (expandedAlbum) return toUrl(expandedAlbum.link);
 	return undefined;
 };

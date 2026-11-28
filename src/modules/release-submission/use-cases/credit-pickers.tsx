@@ -85,13 +85,14 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 					key="guest"
 					id="ebr-guest-credit-picker"
 					title="Guest credits"
-					hint={`Credit artists who appear on only some tracks as "${GUEST_ROLE}" on those tracks. Already-featured appearances are excluded.`}
+					hint={`Review these suggested "${GUEST_ROLE}" credits: use them only when the source clearly indicates a guest collaboration. Already-featured appearances are excluded.`}
 					credits={guests.map((guest) => ({
 						...guest,
 						key: creditKey(guest.name, GUEST_ROLE),
 						role: GUEST_ROLE,
 					}))}
 					loading={loading}
+					isReissue={isReissue}
 					warning={trackNotice}
 				/>
 			)}
@@ -100,17 +101,19 @@ function CreditPanels({ session }: Readonly<{ session: TrackSession }>) {
 					key="suggested"
 					id="ebr-suggested-credit-picker"
 					title="Suggested credits"
-					hint="Edit artist names and roles before adding. Name corrections preserve chosen RYM links and update the credited name. Blank Tracks means the whole release. Ordinary roles for the same artist covering identical tracks are combined. Resolve ??? fields before crediting unverified suggestions."
+					hint="Edit artist names and roles before adding. Name corrections preserve chosen RYM links and update the credited name. Anonymous and Unknown Artist must be credited in plain text. Blank Tracks means the whole release. Ordinary roles for the same artist covering identical tracks are combined. Resolve ??? fields before crediting unverified suggestions."
 					credits={suggestions}
 					showDetails
 					loading={loading}
+					isReissue={isReissue}
 					warning={trackNotice}
 					notice={
 						<div>
 							{isReissue && (
 								<div>
 									On reissues, RYM permits only featured, guest and remixer
-									credits. Other suggestions are omitted.
+									credits. Other verified suggestions are omitted; check
+									unverified suggestions before adding them.
 								</div>
 							)}
 							{loading && (

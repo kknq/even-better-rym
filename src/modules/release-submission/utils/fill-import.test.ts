@@ -84,6 +84,7 @@ describe("release import artist modes", () => {
 		const listener = vi.fn((event: CustomEvent<string[]>) => {
 			received.push(event.detail);
 		});
+
 		document.addEventListener("releaseArtistsEvent", listener);
 		try {
 			await fill({ artists: ["Existing Artist"] }, options);
@@ -94,6 +95,17 @@ describe("release import artist modes", () => {
 		} finally {
 			document.removeEventListener("releaseArtistsEvent", listener);
 		}
+	});
+
+	test("formats imported release titles even when capitalization is kept as-is", async () => {
+		document.body.insertAdjacentHTML("beforeend", '<input id="title">');
+		await fill(
+			{ title: "Ａｌｂｕｍ | “title” — {mix} [bonus track]" },
+			{ ...options, fillFields: { ...options.fillFields, title: true } },
+		);
+		expect(document.querySelector<HTMLInputElement>("#title")?.value).toBe(
+			'Album / "title" - (mix) [bonus track]',
+		);
 	});
 
 	test("respects the artists import option for text-only names", async () => {

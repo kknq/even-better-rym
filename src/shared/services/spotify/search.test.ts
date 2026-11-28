@@ -13,6 +13,39 @@ const diagnostics = [
 ];
 const metadata = { artist: "Artist", title: "Album" };
 
+test("passes EP type through bracket and title-format query retries", async () => {
+	vi.mocked(sendBackgroundMessage).mockImplementation((request) =>
+		Promise.resolve({
+			id: "request",
+			type: "spotifySearch",
+			data:
+				request.type === "spotifySearch" &&
+				"artist" in request.data &&
+				"title" in request.data &&
+				request.data.artist === "KRTM" &&
+				request.data.title === "Pass Down - EP"
+					? { url: "https://open.spotify.com/album/3LVCasUE61xwGfngRdiijq" }
+					: {},
+		}),
+	);
+	await expect(
+		withArtistAlias(search)({
+			artist: "[KRTM]",
+			title: "Pass Down EP",
+			releaseType: "ep",
+		}),
+	).resolves.toBe("https://open.spotify.com/album/3LVCasUE61xwGfngRdiijq");
+	expect(sendBackgroundMessage).toHaveBeenLastCalledWith({
+		type: "spotifySearch",
+		data: {
+			artist: "KRTM",
+			artistAlias: "[KRTM]",
+			title: "Pass Down - EP",
+			releaseType: "ep",
+		},
+	});
+});
+
 test("passes RYM's artist alias to the background search", async () => {
 	vi.mocked(sendBackgroundMessage).mockResolvedValue({
 		id: "request",

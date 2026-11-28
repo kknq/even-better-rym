@@ -10,6 +10,182 @@ vi.mock("~/shared/utils/fetch", () => ({ fetch: vi.fn() }));
 import { search, toRegionalAppleMusicUrl } from "./search";
 
 describe("Apple Music search", () => {
+	test.each([
+		"Pass Down EP",
+		"Pass Down - EP",
+	])("finds Pass Down despite bracketed artist credits (%s)", async (title) => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			JSON.stringify({
+				results: [
+					{
+						artistId: 472642140,
+						artistName: "Krtm",
+						collectionName: "Pass Down - EP",
+						collectionViewUrl:
+							"https://music.apple.com/pl/album/pass-down-ep/6829797226",
+					},
+				],
+			}),
+		);
+		await expect(
+			search({ artist: "[KRTM]", title, releaseType: "ep" }),
+		).resolves.toBe("https://music.apple.com/pl/album/pass-down-ep/6829797226");
+	});
+
+	test.each([
+		["[KRTM]", "Pass Down EP", "Pass Down - EP", "ep", "Krtm extended"],
+		["[KRTM]", "Pass Down EP", "Pass Down - EP", "album", "Krtm"],
+		["[KRTM]", "Pass Down EP", "Pass Down 2 - EP", "ep", "Krtm"],
+		["[KRTM] Extra", "Pass Down EP", "Pass Down - EP", "ep", "Krtm Extra"],
+		["[KRTM]", "Pass Down EP", "Pass Down (Expanded Edition)", "ep", "Krtm"],
+	] as const)("rejects unsafe EP or bracket matches (%s, %s, %s, %s, %s)", async (artist, title, collectionName, releaseType, artistName) => {
+		vi.mocked(fetch).mockResolvedValue(
+			JSON.stringify({
+				results: [
+					{
+						artistId: 1,
+						artistName,
+						collectionName,
+						collectionViewUrl: "https://music.apple.com/pl/album/wrong/1",
+					},
+				],
+			}),
+		);
+		await expect(
+			search({ artist, title, releaseType }),
+		).resolves.toBeUndefined();
+	});
+
+	test("prefers exact credits and titles over bracket and EP fallbacks", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			JSON.stringify({
+				results: [
+					{
+						artistId: 1,
+						artistName: "Krtm",
+						collectionName: "Pass Down - EP",
+						collectionViewUrl: "https://music.apple.com/pl/album/fallback/1",
+					},
+					{
+						artistId: 2,
+						artistName: "[KRTM]",
+						collectionName: "Pass Down - EP",
+						collectionViewUrl: "https://music.apple.com/pl/album/label/2",
+					},
+					{
+						artistId: 3,
+						artistName: "[KRTM]",
+						collectionName: "Pass Down EP",
+						collectionViewUrl: "https://music.apple.com/pl/album/exact/3",
+					},
+				],
+			}),
+		);
+		await expect(
+			search({ artist: "[KRTM]", title: "Pass Down EP", releaseType: "ep" }),
+		).resolves.toBe("https://music.apple.com/pl/album/exact/3");
+	});
+
+	test("finds bracketed artist releases through the artist catalog fallback", async () => {
+		vi.mocked(fetch)
+			.mockResolvedValueOnce(JSON.stringify({ results: [] }))
+			.mockResolvedValueOnce(
+				JSON.stringify({
+					results: [{ artistId: 472642140, artistName: "Krtm" }],
+				}),
+			)
+			.mockResolvedValueOnce(
+				JSON.stringify({
+					results: [
+						{
+							artistId: 472642140,
+							artistName: "Krtm",
+							collectionName: "Pass Down - EP",
+							collectionViewUrl:
+								"https://music.apple.com/pl/album/pass-down-ep/6829797226",
+						},
+					],
+				}),
+			);
+		await expect(
+			search({ artist: "[KRTM]", title: "Pass Down EP", releaseType: "ep" }),
+		).resolves.toBe("https://music.apple.com/pl/album/pass-down-ep/6829797226");
+	});
+
+	test("finds Loose Ends despite missing terminal punctuation", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			JSON.stringify({
+				results: [
+					{
+						artistId: 1,
+						artistName: "Loose Ends",
+						collectionName: "So Where Are You",
+						collectionViewUrl:
+							"https://music.apple.com/pl/album/so-where-are-you/724210053",
+					},
+				],
+			}),
+		);
+		await expect(
+			search({ artist: "Loose Ends", title: "So Where Are You?" }),
+		).resolves.toBe(
+			"https://music.apple.com/pl/album/so-where-are-you/724210053",
+		);
+	});
+
+	test.each([
+		false,
+		true,
+	])("selects Saturday Night's expanded edition only as a fallback (standard=%s)", async (standard) => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			JSON.stringify({
+				results: [
+					{
+						artistId: 1,
+						artistName: "Oliver Cheatham",
+						collectionName: "Saturday Night (Expanded Edition)",
+						collectionViewUrl:
+							"https://music.apple.com/pl/album/saturday-night/1646553916",
+					},
+					...(standard
+						? [
+								{
+									artistId: 1,
+									artistName: "Oliver Cheatham",
+									collectionName: "Saturday Night",
+									collectionViewUrl:
+										"https://music.apple.com/pl/album/saturday-night/1",
+								},
+							]
+						: []),
+				],
+			}),
+		);
+		await expect(
+			search({ artist: "Oliver Cheatham", title: "Saturday Night" }),
+		).resolves.toBe(
+			`https://music.apple.com/pl/album/saturday-night/${standard ? "1" : "1646553916"}`,
+		);
+	});
+
+	test("matches volume abbreviations and separators while retaining the artist check", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			JSON.stringify({
+				results: [
+					{
+						artistId: 1,
+						artistName: "Artist",
+						collectionName: "Album, Vol. 1: Music",
+						collectionViewUrl: "https://music.apple.com/us/album/music/1",
+					},
+				],
+			}),
+		);
+		await expect(
+			search({ artist: "Artist", title: "Album: Volume 1 - Music" }),
+		).resolves.toBe("https://music.apple.com/us/album/music/1");
+	});
+
 	const metadata = {
 		artist: "The Broken Family Band",
 		title: "Balls",
@@ -203,8 +379,8 @@ describe("Apple Music search", () => {
 		{ releaseType: "single", collectionName: "Balls - Single", matches: true },
 		{ releaseType: "ep", collectionName: "Balls - EP", matches: true },
 		{ releaseType: "album", collectionName: "Balls - Single", matches: false },
-		{ releaseType: "ep", collectionName: "Balls - Single", matches: false },
-		{ releaseType: "single", collectionName: "Balls - EP", matches: false },
+		{ releaseType: "ep", collectionName: "Balls - Single", matches: true },
+		{ releaseType: "single", collectionName: "Balls - EP", matches: true },
 		{ collectionName: "Balls - EP", matches: false },
 	])("checks release-type suffixes: %j", async ({
 		releaseType,
@@ -216,6 +392,71 @@ describe("Apple Music search", () => {
 		const result = await search({ ...metadata, releaseType });
 		if (matches) expect(result).toContain("/pl/album/balls/");
 		else expect(result).toBeUndefined();
+	});
+
+	test("finds the Vice City EP credited to performers and labelled Single by Apple", async () => {
+		const title = "Grand Theft Auto: Vice City - Music from Radio Espantoso";
+		const url =
+			"https://music.apple.com/us/album/radio-espantoso/1710746514?uo=4";
+		respond({
+			results: [
+				{
+					artistId: 1,
+					artistName: "Alpha Banditos, Tres Apenas como eso & Unaesta",
+					collectionName: `${title} - Single`,
+					collectionViewUrl: url,
+				},
+			],
+		});
+		await expect(
+			search({
+				artist: "Various Artists",
+				title,
+				releaseType: "ep",
+				serviceRegions: { applemusic: "pl" },
+			}),
+		).resolves.toBe(url.replace("/us/", "/pl/"));
+		expect(vi.mocked(fetch).mock.calls[0][0].urlParameters).toMatchObject({
+			term: title,
+			country: "pl",
+		});
+	});
+
+	test("prefers a Various Artists credit over a title-only performer match", async () => {
+		respond({
+			results: [
+				{ ...album, collectionName: "Compilation", artistName: "Performer" },
+				{
+					...album,
+					collectionName: "Compilation",
+					artistName: "Various Artists",
+					collectionViewUrl: "https://music.apple.com/pl/album/compilation/2",
+				},
+			],
+		});
+		await expect(
+			search({
+				artist: "Various Artists",
+				title: "Compilation",
+			}),
+		).resolves.toBe("https://music.apple.com/pl/album/compilation/2");
+	});
+
+	test.each([
+		{ collectionName: "Compilation Live", artistName: "Performer" },
+		{ collectionName: "Compilation Vol. 2", artistName: "Performer" },
+		{ collectionName: "Compilation - Single Deluxe", artistName: "Performer" },
+		{ collectionName: "Compilation", artistName: "" },
+		{ collectionName: undefined, artistName: "Performer" },
+	])("rejects unverified Various Artists titles: %j", async (candidate) => {
+		respond({ results: [{ ...album, ...candidate }] }, { results: [] });
+		await expect(
+			search({
+				artist: "Various Artists",
+				title: "Compilation",
+				releaseType: "ep",
+			}),
+		).resolves.toBeUndefined();
 	});
 
 	test("requires both matching artist ID and names in the catalog fallback", async () => {

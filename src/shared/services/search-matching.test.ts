@@ -1,11 +1,276 @@
 import { expect, test, vi } from "vitest";
 
 import {
+	getAlbumSearchQuery,
+	getSearchTitleVariants,
+	getUnbracketedArtist,
+	isEditionSuffix,
+	isEditionTitle,
+	isEpTitle,
+	isExpandedTitle,
+	isReissueTitle,
+	isSoundtrackTitle,
 	normalizeSearchArtist,
 	normalizeSearchText,
+	normalizeSearchTitle,
 	withArtistAlias,
+	withSearchTitleVariants,
 } from "./search-matching";
 import type { SearchFunction } from "./types";
+
+test.each([
+	"Pass Down EP",
+	"Pass Down - EP",
+	"Pass Down",
+])("matches EP labels only for EP releases (%s)", (candidate) => {
+	expect(isEpTitle(candidate, "Pass Down EP", "ep")).toBe(true);
+	expect(isEpTitle(candidate, "Pass Down EP", "album")).toBe(false);
+	expect(isEpTitle(candidate, "Pass Down 2 EP", "ep")).toBe(false);
+	expect(isEpTitle(candidate, "EP", "ep")).toBe(false);
+});
+
+test("retries EP formatting only on EP releases", () => {
+	expect(getSearchTitleVariants("Pass Down EP", "ep")).toEqual([
+		"Pass Down EP",
+		"Pass Down - EP",
+	]);
+	expect(getSearchTitleVariants("Pass Down - EP", "ep")).toEqual([
+		"Pass Down - EP",
+		"Pass Down EP",
+	]);
+	expect(getSearchTitleVariants("Pass Down EP", "album")).toEqual([
+		"Pass Down EP",
+	]);
+});
+
+test("only unwraps a complete nonempty bracketed artist", () => {
+	expect(getUnbracketedArtist("[KRTM]")).toBe("KRTM");
+	for (const name of ["[]", "[ ]", "[KRTM] Extra", "A [KRTM]", "[[KRTM]]"])
+		expect(getUnbracketedArtist(name)).toBeUndefined();
+});
+
+test("retries an unbracketed artist after exact queries without discarding metadata", async () => {
+	const search = vi
+		.fn<SearchFunction>()
+		.mockResolvedValueOnce(undefined)
+		.mockResolvedValueOnce("found");
+	await expect(
+		withArtistAlias(search)({
+			artist: "[KRTM]",
+			title: "Pass Down EP",
+			releaseType: "ep",
+		}),
+	).resolves.toBe("found");
+	expect(search.mock.calls.map(([data]) => data.artist)).toEqual([
+		"[KRTM]",
+		"KRTM",
+	]);
+	expect(search.mock.calls[1][0]).toEqual({
+		artist: "KRTM",
+		artistAlias: "[KRTM]",
+		title: "Pass Down EP",
+		releaseType: "ep",
+	});
+});
+
+test("keeps an exact bracketed artist result ahead of fallbacks", async () => {
+	const search = vi.fn<SearchFunction>().mockResolvedValue("exact");
+	await expect(
+		withArtistAlias(search)({ artist: "[KRTM]", title: "Pass Down EP" }),
+	).resolves.toBe("exact");
+	expect(search).toHaveBeenCalledTimes(1);
+});
+
+test.each([
+	"?",
+	".",
+	"!",
+	"?!...",
+	"",
+])("ignores terminal title punctuation: %s", (punctuation) => {
+	expect(normalizeSearchTitle(`So Where Are You${punctuation}`)).toBe(
+		normalizeSearchTitle("So Where Are You"),
+	);
+	expect(
+		isExpandedTitle(`Album${punctuation} (Expanded Edition)`, "Album!"),
+	).toBe(true);
+	expect(isEditionTitle(`Album${punctuation} (Deluxe Edition)`, "Album?")).toBe(
+		true,
+	);
+	expect(
+		isSoundtrackTitle(`Album${punctuation} (Original Soundtrack)`, "Album."),
+	).toBe(true);
+	expect(isReissueTitle(`Album${punctuation} (Reissue)`, "Album?")).toBe(true);
+});
+
+test("preserves internal punctuation and artist punctuation", () => {
+	expect(normalizeSearchTitle("?!...")).not.toBe("");
+	expect(normalizeSearchTitle("What? Now")).not.toBe(
+		normalizeSearchTitle("What Now"),
+	);
+	expect(normalizeSearchArtist("Artist!")).not.toBe(
+		normalizeSearchArtist("Artist"),
+	);
+});
+
+test("adds punctuation-free queries without changing the original query", () => {
+	expect(getSearchTitleVariants("So Where Are You?")).toEqual([
+		"So Where Are You?",
+		"So Where Are You",
+	]);
+	expect(getSearchTitleVariants("Album: Volume 1 - Music!")).toContain(
+		"Album, Vol. 1: Music",
+	);
+});
+
+test.each([
+	" (deluxe edition)",
+	" [deluxe version]",
+	" - remastered 2020",
+	" (2020 remaster)",
+	" (deluxe edition) [remastered version]",
+	" \t(deluxe\nedition)",
+])("recognizes edition suffixes: %s", (suffix) => {
+	expect(isEditionSuffix(suffix)).toBe(true);
+	expect(isEditionTitle(`Album${suffix}`, "Album")).toBe(true);
+});
+
+test.each([
+	"",
+	" (live)",
+	" (deluxe edition) live",
+	" (remastered 20201)",
+	" deluxe edition",
+])("rejects non-edition suffixes: %s", (suffix) => {
+	expect(isEditionSuffix(suffix)).toBe(false);
+	expect(isEditionTitle(`Album${suffix}`, "Album")).toBe(false);
+});
+
+test("rejects long malformed suffixes without backtracking across editions", () => {
+	expect(isEditionSuffix(`${" (deluxe edition)".repeat(20_000)}!`)).toBe(false);
+	expect(isEditionSuffix(`${" ".repeat(200_000)}!`)).toBe(false);
+});
+
+test.each([
+	"Soundtrack",
+	"Original Soundtrack",
+	"Official Soundtrack",
+	"Original Motion Picture Soundtrack",
+	"Original Video Game Soundtrack",
+])("recognizes shared soundtrack titles: %s", (label) => {
+	expect(isSoundtrackTitle(`Album (${label})`, "Album")).toBe(true);
+});
+
+test.each([
+	"Album Live (Official Soundtrack)",
+	"Album (Unofficial Soundtrack)",
+	"Album (Original Soundtrack) [Deluxe Edition]",
+])("rejects unrelated soundtrack titles: %s", (candidate) => {
+	expect(isSoundtrackTitle(candidate, "Album")).toBe(false);
+});
+
+test("shared suffix matching preserves base titles and rejects empty titles", () => {
+	expect(isEditionTitle("Another Album (Deluxe Edition)", "Album")).toBe(false);
+	expect(isEditionTitle("(Deluxe Edition)", "")).toBe(false);
+	expect(isSoundtrackTitle("(Original Soundtrack)", "")).toBe(false);
+	expect(
+		isEditionTitle("Album Vol. 1 (Deluxe Edition)", "Album Volume 1"),
+	).toBe(true);
+});
+
+test.each([
+	" (Expanded Edition)",
+	" [Expanded]",
+	" - Expanded Edition",
+])("accepts a complete expanded suffix: %s", (suffix) =>
+	expect(isExpandedTitle(`Saturday Night${suffix}`, "Saturday Night")).toBe(
+		true,
+	));
+
+test.each([
+	"Get Down Saturday Night (Expanded Edition)",
+	"Saturday Night Live (Expanded Edition)",
+	"Saturday Night (Expanded Edition) Vol. 2",
+])("rejects unrelated expanded titles: %s", (candidate) =>
+	expect(isExpandedTitle(candidate, "Saturday Night")).toBe(false));
+
+test.each([
+	["Album: Volume 1 - Music", "Album, Vol. 1: Music"],
+	["Album Vol. 2", "Album Volume 2"],
+	["Album vol 3", "Album Volume 3"],
+])("matches numbered volume title variants: %s / %s", (left, right) => {
+	expect(normalizeSearchTitle(left)).toBe(normalizeSearchTitle(right));
+});
+
+test.each([
+	["Album Volume 1", "Album Vol. 2"],
+	["Album Volume 1 - Music", "Album Vol. 1 - Score"],
+	["Volume Control", "Vol. Control"],
+	["Album: Music", "Album, Music"],
+])("preserves distinct titles: %s / %s", (left, right) => {
+	expect(normalizeSearchTitle(left)).not.toBe(normalizeSearchTitle(right));
+});
+
+test("generates service and RYM volume spellings in both directions", () => {
+	const rym = "The Music of Grand Theft Auto V: Volume 1 - Original Music";
+	const service = "The Music of Grand Theft Auto V, Vol. 1: Original Music";
+	expect(getSearchTitleVariants(rym)).toContain(service);
+	expect(getSearchTitleVariants(service)).toContain(rym);
+	expect(getSearchTitleVariants("Volume Control")).toEqual(["Volume Control"]);
+});
+
+test("title retries stop at the first match and preserve metadata", async () => {
+	const search = vi
+		.fn<SearchFunction>()
+		.mockResolvedValueOnce(undefined)
+		.mockResolvedValueOnce("found");
+	const metadata = {
+		artist: "Artist",
+		title: "Album Volume 1",
+		serviceRegions: { tidal: "PL" },
+	};
+	await expect(withSearchTitleVariants(search)(metadata)).resolves.toBe(
+		"found",
+	);
+	expect(search.mock.calls.map(([input]) => input.title)).toEqual([
+		"Album Volume 1",
+		"Album Vol. 1",
+	]);
+	expect(search.mock.calls[1][0]).toEqual({
+		...metadata,
+		title: "Album Vol. 1",
+	});
+});
+
+test("title retries propagate errors", async () => {
+	const search = vi
+		.fn<SearchFunction>()
+		.mockRejectedValue(new Error("HTTP 429"));
+	await expect(
+		withSearchTitleVariants(search)({
+			artist: "Artist",
+			title: "Album Volume 1",
+		}),
+	).rejects.toThrow("HTTP 429");
+	expect(search).toHaveBeenCalledOnce();
+});
+
+test.each([
+	"Various Artists",
+	"VARIOUS ARTISTS",
+	" various  artists ",
+])("searches by title alone for %s", (artist) => {
+	expect(getAlbumSearchQuery(artist, "Heart of Gold")).toBe("Heart of Gold");
+});
+
+test("retains the artist for named artists and similarly named groups", () => {
+	expect(getAlbumSearchQuery("Neil Young", "Harvest")).toBe(
+		"Neil Young Harvest",
+	);
+	expect(getAlbumSearchQuery("Various Artists Tribute", "Album")).toBe(
+		"Various Artists Tribute Album",
+	);
+});
 
 test.each([
 	["Svartidauði", "Svartidaudi"],

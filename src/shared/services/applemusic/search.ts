@@ -1,9 +1,16 @@
 import { fetch } from "~/shared/utils/fetch";
 import {
+	getAlbumSearchQuery,
 	getSearchArtists,
+	getSearchTitleSuffix,
+	getUnbracketedArtist,
+	isEpTitle,
+	isExpandedTitle,
 	isReissueTitle,
 	normalizeSearchText as normalize,
 	normalizeSearchArtist,
+	normalizeSearchTitle,
+	withSearchTitleVariants,
 } from "../search-matching";
 import type { SearchFunction } from "../types";
 import type { SearchObject } from "./codec";
@@ -23,7 +30,7 @@ export const toRegionalAppleMusicUrl = (
 	return url.toString();
 };
 
-export const search: SearchFunction = async ({
+const searchTitle: SearchFunction = async ({
 	artist,
 	artistAlias,
 	title,
@@ -55,32 +62,67 @@ export const search: SearchFunction = async ({
 	const artistNames = new Set(
 		artists.map((name) => normalizeSearchArtist(name)),
 	);
-	const albumTitle = normalize(title);
+	const bracketArtistNames = new Set(
+		artists
+			.flatMap((name) => {
+				const unbracketed = getUnbracketedArtist(name);
+				return unbracketed ? [normalizeSearchArtist(unbracketed)] : [];
+			})
+			.filter(Boolean),
+	);
+	const albumTitle = normalizeSearchTitle(title);
+	const isVariousArtists = normalize(artist) === "various artists";
+	const hasMatchingArtist = (album: SearchObject["results"][number]) =>
+		artistNames.has(normalizeSearchArtist(album.artistName ?? ""));
+	const hasBracketArtist = (album: SearchObject["results"][number]) =>
+		bracketArtistNames.has(normalizeSearchArtist(album.artistName ?? ""));
 	const isMatchingAlbum = (album: SearchObject["results"][number]) => {
-		if (
-			!album.collectionViewUrl ||
-			!artistNames.has(normalizeSearchArtist(album.artistName ?? ""))
-		)
-			return false;
-		const collectionTitle = normalize(album.collectionName ?? "");
+		if (!album.collectionViewUrl || albumTitle.length === 0) return false;
+		const collectionTitle = normalizeSearchTitle(album.collectionName ?? "");
 		return (
 			collectionTitle === albumTitle ||
 			((releaseType === "single" || releaseType === "ep") &&
-				collectionTitle === `${albumTitle} - ${releaseType}`)
+				collectionTitle.startsWith(albumTitle) &&
+				[" - single", " - ep"].includes(
+					getSearchTitleSuffix(collectionTitle, albumTitle),
+				)) ||
+			isEpTitle(collectionTitle, albumTitle, releaseType)
 		);
 	};
 
 	const findAlbum = (results: SearchObject["results"]) =>
-		results.find(isMatchingAlbum) ??
 		results.find(
 			(album) =>
 				album.collectionViewUrl &&
-				artistNames.has(normalizeSearchArtist(album.artistName ?? "")) &&
+				hasMatchingArtist(album) &&
+				normalizeSearchTitle(album.collectionName ?? "") === albumTitle,
+		) ??
+		results.find(
+			(album) => hasMatchingArtist(album) && isMatchingAlbum(album),
+		) ??
+		results.find(
+			(album) =>
+				album.collectionViewUrl &&
+				hasMatchingArtist(album) &&
 				isReissueTitle(album.collectionName ?? "", title),
-		);
+		) ??
+		(isVariousArtists
+			? results.find(
+					(album) =>
+						normalize(album.artistName ?? "").length > 0 &&
+						isMatchingAlbum(album),
+				)
+			: undefined) ??
+		results.find(
+			(album) =>
+				album.collectionViewUrl &&
+				hasMatchingArtist(album) &&
+				isExpandedTitle(album.collectionName ?? "", title),
+		) ??
+		results.find((album) => hasBracketArtist(album) && isMatchingAlbum(album));
 	const visitedArtists = new Set<number>();
 	const response = await request("search", {
-		term: `${artist} ${title}`,
+		term: getAlbumSearchQuery(artist, title),
 		media: "music",
 		entity: "album",
 		limit: "200",
@@ -96,7 +138,7 @@ export const search: SearchFunction = async ({
 	});
 	for (const candidate of candidates.results) {
 		if (
-			!artistNames.has(normalizeSearchArtist(candidate.artistName)) ||
+			(!hasMatchingArtist(candidate) && !hasBracketArtist(candidate)) ||
 			visitedArtists.has(candidate.artistId)
 		)
 			continue;
@@ -113,3 +155,5 @@ export const search: SearchFunction = async ({
 	}
 	return undefined;
 };
+
+export const search = withSearchTitleVariants(searchTitle);
