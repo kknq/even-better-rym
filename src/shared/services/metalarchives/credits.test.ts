@@ -313,11 +313,62 @@ test("distinguishes empty lineups from missing or malformed source data", () => 
 	]);
 });
 
-test("never falls back to category tabs when Complete Lineup is missing or empty", () => {
-	const document_ = page(row("Person", "Vocals"));
+test("uses category tabs only when Complete Lineup is missing", () => {
+	const document_ = page(
+		row("Person", "Vocals"),
+		row("Guest", "Guitars"),
+		row("Producer", "Production"),
+	);
 	const complete = document_.querySelector("#album_all_members_lineup");
 	complete?.replaceChildren();
 	expect(getReleasePersonnel(document_)).toEqual([]);
 	complete?.remove();
-	expect(() => getReleasePersonnel(document_)).toThrow("lineup is unavailable");
+	expect(
+		getReleasePersonnel(document_).map(({ name, category }) => [
+			name,
+			category,
+		]),
+	).toEqual([
+		["Person", "lineup"],
+		["Guest", "guest"],
+		["Producer", "misc"],
+	]);
+});
+
+test("reads a single Band members tab as in the saved Naå Nebørravåkkorüm I page", () => {
+	const document_ = new DOMParser().parseFromString(
+		`<div id="album_tabs_lineup"><div id="album_members_lineup">
+			<table class="display lineupTable"><tr class="lineupRow">
+			<td><a href="https://www.metal-archives.com/artists/S%C3%A4arhkkt%C3%B8s/93034">S&auml;arhkkt&oslash;s</a></td>
+			<td>All instruments, Vocals</td></tr></table>
+		</div></div>`,
+		"text/html",
+	);
+	expect(getReleasePersonnel(document_)).toEqual([
+		{
+			name: "Säarhkktøs",
+			url: "https://www.metal-archives.com/artists/S%C3%A4arhkkt%C3%B8s/93034",
+			category: "lineup",
+			sourceRole: "All instruments, Vocals",
+		},
+	]);
+	expect(getMetalArchivesCredits(document_, tracks).releaseCredits).toEqual([
+		{ name: "Säarhkktøs", role: "all instruments" },
+		{ name: "Säarhkktøs", role: "vocals" },
+	]);
+});
+
+test("treats a single Band members tab explicitly marked None as an empty lineup", () => {
+	const document_ = new DOMParser().parseFromString(
+		`<div id="album_tabs_lineup"><div id="album_members_lineup">
+			<div class="ui-tabs-panel-content"><em>(None)</em></div>
+		</div></div>`,
+		"text/html",
+	);
+	expect(getReleasePersonnel(document_)).toEqual([]);
+	expect(getMetalArchivesCredits(document_, tracks)).toEqual({
+		trackCredits: tracks.map(() => []),
+		releaseCredits: [],
+		unverifiedCredits: [],
+	});
 });

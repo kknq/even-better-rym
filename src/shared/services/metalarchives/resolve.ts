@@ -354,13 +354,20 @@ export const resolve: ResolveFunction = async (url) => {
 		delete data.tracks;
 	}
 
-	const { trackCredits, releaseCredits, unverifiedCredits } =
-		getMetalArchivesCredits(document_, data.tracks ?? []);
-	data.tracks?.forEach((track, index) => {
-		if (trackCredits[index]?.length) track.credits = trackCredits[index];
-	});
-	if (releaseCredits.length) data.releaseCredits = releaseCredits;
-	if (unverifiedCredits.length) data.unverifiedCredits = unverifiedCredits;
+	try {
+		const { trackCredits, releaseCredits, unverifiedCredits } =
+			getMetalArchivesCredits(document_, data.tracks ?? []);
+		data.tracks?.forEach((track, index) => {
+			if (trackCredits[index]?.length) track.credits = trackCredits[index];
+		});
+		if (releaseCredits.length) data.releaseCredits = releaseCredits;
+		if (unverifiedCredits.length) data.unverifiedCredits = unverifiedCredits;
+	} catch (error) {
+		console.warn("EvenBetterRYM: could not read Metal Archives lineup", error);
+		data.warnings = [
+			"Metal Archives lineup could not be imported. Other release details were imported.",
+		];
+	}
 
 	return data;
 };

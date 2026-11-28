@@ -239,5 +239,6 @@ export type ResolveData = {
 	tracks?: Track[];
 	releaseCredits?: TrackCredit[];
 	unverifiedCredits?: UnverifiedCredit[];
+	warnings?: string[];
 	countries?: string[];
 };

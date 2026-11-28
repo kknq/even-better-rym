@@ -161,15 +161,53 @@ test("preserves Forgotten Paths guest scopes inside vocal qualifiers", async () 
 	expect(fetch).toHaveBeenCalledExactlyOnceWith({ url });
 });
 
-test("rejects blocked responses and missing lineups instead of caching an empty successful import", async () => {
+test("rejects blocked responses", async () => {
 	vi.mocked(fetch).mockResolvedValue(
 		"<html><title>Just a moment...</title></html>",
 	);
 	await expect(resolve(url)).rejects.toThrow(
 		"unavailable or access was blocked",
 	);
+});
+
+test("imports a release with a lineup explicitly marked None without a warning", async () => {
 	vi.mocked(fetch).mockResolvedValue(
-		'<h1 class="album_name">Album</h1><h2 class="band_name"><a>Band</a></h2>',
+		html().replace(
+			/<div id="album_tabs_lineup">[\s\S]*$/,
+			'<div id="album_tabs_lineup"><div id="album_members_lineup"><div class="ui-tabs-panel-content"><em>(None)</em></div></div></div>',
+		),
 	);
-	await expect(resolve(url)).rejects.toThrow("release lineup is unavailable");
+	const result = await resolve(url);
+	expect(result.tracks).toHaveLength(11);
+	expect(result.label?.name).toBe("Metal Blade Records");
+	expect(result.warnings).toBeUndefined();
+	expect(result.releaseCredits).toBeUndefined();
+});
+
+test.each([
+	["missing", ""],
+	[
+		"malformed",
+		'<div id="album_tabs_lineup"><div id="album_members_lineup"><table><tr class="lineupRow"><td>Person</td></tr></table></div></div>',
+	],
+])("imports remaining details when the lineup is %s", async (_case, lineup) => {
+	const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+	try {
+		vi.mocked(fetch).mockResolvedValue(
+			html().replace(/<div id="album_tabs_lineup">[\s\S]*$/, lineup),
+		);
+		const result = await resolve(url);
+		expect(result.title).toBe("Eaten Back to Life");
+		expect(result.artists).toEqual(["Cannibal Corpse"]);
+		expect(result.tracks).toHaveLength(11);
+		expect(result.date).toEqual({ year: 1990, month: 8, day: 17 });
+		expect(result.label?.name).toBe("Metal Blade Records");
+		expect(result.warnings).toEqual([
+			"Metal Archives lineup could not be imported. Other release details were imported.",
+		]);
+		expect(result.releaseCredits).toBeUndefined();
+		expect(warn).toHaveBeenCalledOnce();
+	} finally {
+		warn.mockRestore();
+	}
 });

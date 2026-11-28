@@ -26,9 +26,11 @@ function Import() {
 	const { info, fetchInfo } = useReleaseInfo();
 	const [formOptions, setFormOptions] = useState(DEFAULT_FORM_OPTIONS);
 	const [importError, setImportError] = useState<string>();
+	const [importWarnings, setImportWarnings] = useState<string[]>([]);
 
 	const fetchInfoOuter = useCallback(
 		async (url: string, service: Service & Resolvable) => {
+			setImportWarnings([]);
 			const info = await fetchInfo(url, service);
 			if (isComplete(info)) {
 				setImportError(undefined);
@@ -41,6 +43,7 @@ function Import() {
 					);
 					return;
 				}
+				setImportWarnings(info.data.warnings ?? []);
 
 				if (formOptions.downloadArt && info.data.coverArt) {
 					const filename = getFilename(info.data);
@@ -66,6 +69,11 @@ function Import() {
 					<ImportOptionsForm onOptionsUpdate={setFormOptions} />
 				</ServiceLinkForm>
 				{importError && <div role="alert">{importError}</div>}
+				{importWarnings.map((warning) => (
+					<div key={warning} role="alert">
+						{warning}
+					</div>
+				))}
 			</div>
 		</>
 	);

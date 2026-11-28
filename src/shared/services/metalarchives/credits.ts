@@ -73,9 +73,25 @@ export function getReleasePersonnel(
 	const complete = document_.querySelector(
 		"#album_tabs_lineup #album_all_members_lineup",
 	);
-	if (!complete)
+	if (complete) return getCompletePersonnel(complete);
+	const categories: [string, PersonnelCategory][] = [
+		["#album_members_lineup", "lineup"],
+		["#album_members_guest", "guest"],
+		["#album_members_misc", "misc"],
+	];
+	const tabs = document_.querySelector("#album_tabs_lineup");
+	if (!tabs) throw new Error("Metal Archives release lineup is unavailable");
+	const sections = categories.flatMap(([selector, category]) => {
+		const section = tabs.querySelector(selector);
+		return section ? [{ section, category }] : [];
+	});
+	if (!sections.length)
 		throw new Error("Metal Archives release lineup is unavailable");
-	return getCompletePersonnel(complete);
+	return sections.flatMap(({ section, category }) =>
+		[...section.querySelectorAll("tr.lineupRow")].map((row) =>
+			parsePerson(row, category),
+		),
+	);
 }
 
 const splitRoles = (source: string): string[] | undefined => {

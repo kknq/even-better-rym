@@ -9,5 +9,10 @@ export const MetalArchives: Service & Resolvable = {
 	name: "The Metal Archives",
 	regex: /https?:\/\/.*\.?metal-archives\.com\/albums\/.*\/.*\/\d*/,
 	icon: MetalAchivesIcon,
-	resolve: withCache("metal-archives-resolve-v4", resolve),
+	resolve: withCache(
+		"metal-archives-resolve-v5",
+		resolve,
+		undefined,
+		(data) => !data.warnings?.length,
+	),
 };
