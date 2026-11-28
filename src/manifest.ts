@@ -134,6 +134,12 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/release-theme/main.ts"],
+			css: ["src/modules/release-theme/release-theme.css"],
+			matches: ["*://*.rateyourmusic.com/release/*"],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/artist-search-hint/main.ts"],
 			css: ["src/modules/artist-search-hint/artist-search-hint.css"],
 			matches: ["*://*.rateyourmusic.com/artist/*"],

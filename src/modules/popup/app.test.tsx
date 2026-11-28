@@ -251,6 +251,22 @@ describe("App", () => {
 		expect(setModuleEnabled).toHaveBeenCalledWith("albumIdCopy", false);
 	});
 
+	test("offers cover-based release themes as an opt-in feature", async () => {
+		features.releaseTheme = false;
+		await showApp();
+		await act(() => findButton("Release Page").click());
+
+		const row = featureRow("releaseTheme");
+		expect(row.textContent).toContain("Cover-Based Release Themes (beta)");
+		const toggle = row.querySelector<HTMLButtonElement>('[role="switch"]')!;
+		expect(toggle.getAttribute("aria-checked")).toBe("false");
+		await act(() => toggle.click());
+		await vi.waitFor(() => {
+			expect(toggle.getAttribute("aria-checked")).toBe("true");
+		});
+		expect(setModuleEnabled).toHaveBeenCalledWith("releaseTheme", true);
+	});
+
 	test.each([
 		["Charts", "chartShortcuts", "Chart Shortcuts", "Shortcut settings"],
 		[
