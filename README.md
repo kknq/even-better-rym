@@ -37,6 +37,12 @@ Adds a summary between the rating distribution and rating trend on release pages
 
 ---
 
+### Cover-Based Release Themes (beta)
+
+Uses a release's cover-art color palette to theme its page, keeping white backgrounds in light mode while coloring shaded areas and controls. Disabled by default; enable it from the extension popup.
+
+---
+
 ### WhoSampled Link
 
 Adds a direct WhoSampled album link for the current release.

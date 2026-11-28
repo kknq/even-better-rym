@@ -55,6 +55,9 @@ test("preserves saved release switches when reorganizing popup groups", async ()
 	expect(groups.find(([label]) => label === "Release Page")?.[1]).toContain(
 		"userReception",
 	);
+	expect(groups.find(([label]) => label === "Release Page")?.[1]).toContain(
+		"releaseTheme",
+	);
 });
 
 test("enables profile edits and follow status by default", async () => {
@@ -119,6 +122,8 @@ test("retains other module settings and defaults", async () => {
 	expect(enabled.hideReviews).toBe(false);
 	expect(enabled.hideRatings).toBe(true);
 	expect(await getModuleEnabled("hideCommentBoxes")).toBe(false);
+	expect(await getModuleEnabled("releaseTheme")).toBe(false);
+	expect((await getAllModulesEnabled()).releaseTheme).toBe(false);
 	expect(enabled.discographyOrder).toBe(false);
 });
 

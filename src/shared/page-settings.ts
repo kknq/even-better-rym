@@ -9,6 +9,7 @@ import * as storage from "./utils/storage";
 const modulesDisabledByDefault = new Set<PageKey>([
 	"hideReviews",
 	"hideCommentBoxes",
+	"releaseTheme",
 ]);
 
 export const getModuleEnabled = async (key: PageKey): Promise<boolean> => {
