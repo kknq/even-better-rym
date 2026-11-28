@@ -1,23 +1,12 @@
 import {
 	getSearchArtists,
+	isEditionTitle,
+	isExpandedTitle,
 	isReissueTitle,
 	normalizeSearchArtist,
 	normalizeSearchTitle,
 } from "~/shared/services/search-matching";
 import type { SearchCategory } from "./messages";
-
-export const isEditionSuffix = (suffix: string): boolean => {
-	const normalized = suffix.replace(/\s+/g, " ");
-	const edition =
-		/ *(?:[([] *|[-–—] )(?:(?:\d{4} )?remaster(?:ed)?(?: (?:version|\d{4}))?|deluxe(?: (?:edition|version))?)[)\]]?/y;
-	let position = 0;
-	while (position < normalized.length) {
-		edition.lastIndex = position;
-		if (!edition.exec(normalized)) return false;
-		position = edition.lastIndex;
-	}
-	return position > 0;
-};
 
 export const readSpotifySearchPage = async (
 	artist: string,
@@ -41,7 +30,8 @@ export const readSpotifySearchPage = async (
 		if (!spotifyTitle.startsWith(searchedTitle)) return false;
 		const suffix = spotifyTitle.slice(searchedTitle.length);
 		return (
-			isEditionSuffix(suffix) ||
+			isEditionTitle(spotifyTitle, searchedTitle) ||
+			isExpandedTitle(spotifyTitle, searchedTitle) ||
 			isReissueTitle(spotifyTitle, searchedTitle) ||
 			(releaseType === "music video" && videoSuffix.test(suffix))
 		);

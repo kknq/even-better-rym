@@ -1,32 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { isEditionSuffix, readSpotifySearchPage } from "./read-results";
-
-test.each([
-	" (deluxe edition)",
-	" [deluxe version]",
-	" - remastered 2020",
-	" (2020 remaster)",
-	" (deluxe edition) [remastered version]",
-	" \t(deluxe\nedition)",
-])("recognizes edition suffixes: %s", (suffix) => {
-	expect(isEditionSuffix(suffix)).toBe(true);
-});
-
-test.each([
-	"",
-	" (live)",
-	" (deluxe edition) live",
-	" (remastered 20201)",
-	" deluxe edition",
-])("rejects non-edition suffixes: %s", (suffix) => {
-	expect(isEditionSuffix(suffix)).toBe(false);
-});
-
-test("rejects long malformed suffixes without backtracking across editions", () => {
-	expect(isEditionSuffix(`${" (deluxe edition)".repeat(20_000)}!`)).toBe(false);
-	expect(isEditionSuffix(`${" ".repeat(200_000)}!`)).toBe(false);
-});
+import { readSpotifySearchPage } from "./read-results";
 
 const artist = "Молодёжьвыбираеткосмос";
 const title = "компиляция, Ч. 2";
@@ -89,6 +63,19 @@ afterEach(() => {
 });
 
 describe("readSpotifySearchPage", () => {
+	test("accepts Saturday Night's expanded edition after settling", async () => {
+		setSearchPage([
+			resultLink(
+				"Saturday Night (Expanded Edition)",
+				albumUrl,
+				"2026 • Oliver Cheatham",
+			),
+		]);
+		const pending = readSpotifySearchPage("Oliver Cheatham", "Saturday Night");
+		await vi.advanceTimersByTimeAsync(1_500);
+		await expect(pending).resolves.toBe(albumUrl);
+	});
+
 	test("matches volume spellings and separators without confusing volumes", async () => {
 		setSearchPage([
 			resultLink("Album, Vol. 2: Music", albumUrl, "2026 • Artist"),

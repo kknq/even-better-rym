@@ -102,3 +102,53 @@ export const isReissueTitle = (candidate: string, title: string): boolean => {
 		)
 	);
 };
+
+export const isExpandedTitle = (candidate: string, title: string): boolean => {
+	const normalized = normalizeSearchTitle(candidate);
+	const original = normalizeSearchTitle(title);
+	return (
+		original.length > 0 &&
+		normalized.startsWith(original) &&
+		/^(?: \[expanded(?: edition)?\]| \(expanded(?: edition)?\)| [-–—] expanded(?: edition)?)$/.test(
+			normalized.slice(original.length),
+		)
+	);
+};
+
+export const isEditionSuffix = (suffix: string): boolean => {
+	const normalized = suffix.replace(/\s+/g, " ");
+	const edition =
+		/ *(?:[([] *|[-–—] )(?:(?:\d{4} )?remaster(?:ed)?(?: (?:version|\d{4}))?|deluxe(?: (?:edition|version))?)[)\]]?/y;
+	let position = 0;
+	while (position < normalized.length) {
+		edition.lastIndex = position;
+		if (!edition.exec(normalized)) return false;
+		position = edition.lastIndex;
+	}
+	return position > 0;
+};
+
+export const isEditionTitle = (candidate: string, title: string): boolean => {
+	const normalized = normalizeSearchTitle(candidate);
+	const original = normalizeSearchTitle(title);
+	return (
+		original.length > 0 &&
+		normalized.startsWith(original) &&
+		isEditionSuffix(normalized.slice(original.length))
+	);
+};
+
+export const isSoundtrackTitle = (
+	candidate: string,
+	title: string,
+): boolean => {
+	const normalized = normalizeSearchTitle(candidate);
+	const original = normalizeSearchTitle(title);
+	return (
+		original.length > 0 &&
+		normalized.startsWith(original) &&
+		/^\s+\((?:official |original (?:(?:motion picture|video game) )?)?soundtrack\)$/.test(
+			normalized.slice(original.length),
+		)
+	);
+};

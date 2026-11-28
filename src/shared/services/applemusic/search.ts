@@ -2,6 +2,7 @@ import { fetch } from "~/shared/utils/fetch";
 import {
 	getAlbumSearchQuery,
 	getSearchArtists,
+	isExpandedTitle,
 	isReissueTitle,
 	normalizeSearchText as normalize,
 	normalizeSearchArtist,
@@ -89,7 +90,13 @@ const searchTitle: SearchFunction = async ({
 						normalize(album.artistName ?? "").length > 0 &&
 						isMatchingAlbum(album),
 				)
-			: undefined);
+			: undefined) ??
+		results.find(
+			(album) =>
+				album.collectionViewUrl &&
+				hasMatchingArtist(album) &&
+				isExpandedTitle(album.collectionName ?? "", title),
+		);
 	const visitedArtists = new Set<number>();
 	const response = await request("search", {
 		term: getAlbumSearchQuery(artist, title),

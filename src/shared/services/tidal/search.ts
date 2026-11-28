@@ -2,7 +2,9 @@ import { fetch } from "~/shared/utils/fetch";
 import {
 	getAlbumSearchQuery,
 	getSearchArtists,
+	isExpandedTitle,
 	isReissueTitle,
+	isSoundtrackTitle,
 	normalizeSearchArtist,
 	normalizeSearchText,
 	normalizeSearchTitle,
@@ -143,16 +145,8 @@ const searchTitle: SearchFunction = async ({
 		normalizeSearchTitle(album.attributes?.title ?? "") === normalizedTitle;
 	const hasReissueTitle = (album: TidalResource) =>
 		isReissueTitle(album.attributes?.title ?? "", title);
-	const hasSoundtrackTitle = (album: TidalResource) => {
-		const candidate = normalizeSearchTitle(album.attributes?.title ?? "");
-		return (
-			normalizedTitle.length > 0 &&
-			candidate.startsWith(normalizedTitle) &&
-			/^\s+\((?:official |original (?:(?:motion picture|video game) )?)?soundtrack\)$/.test(
-				candidate.slice(normalizedTitle.length),
-			)
-		);
-	};
+	const hasSoundtrackTitle = (album: TidalResource) =>
+		isSoundtrackTitle(album.attributes?.title ?? "", title);
 
 	const album =
 		exactArtists.find(hasExactTitle) ??
@@ -170,6 +164,12 @@ const searchTitle: SearchFunction = async ({
 				normalizedTitle.length > 0 &&
 				hasExactTitle(candidate) &&
 				hasMatchingCollaborator(candidate),
+		) ??
+		exactArtists.find((candidate) =>
+			isExpandedTitle(candidate.attributes?.title ?? "", title),
+		) ??
+		matches.find((candidate) =>
+			isExpandedTitle(candidate.attributes?.title ?? "", title),
 		);
 	if (album) {
 		return `https://tidal.com/browse/album/${album.id}`;

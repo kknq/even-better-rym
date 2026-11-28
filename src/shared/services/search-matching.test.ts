@@ -3,6 +3,10 @@ import { expect, test, vi } from "vitest";
 import {
 	getAlbumSearchQuery,
 	getSearchTitleVariants,
+	isEditionSuffix,
+	isEditionTitle,
+	isExpandedTitle,
+	isSoundtrackTitle,
 	normalizeSearchArtist,
 	normalizeSearchText,
 	normalizeSearchTitle,
@@ -10,6 +14,77 @@ import {
 	withSearchTitleVariants,
 } from "./search-matching";
 import type { SearchFunction } from "./types";
+
+test.each([
+	" (deluxe edition)",
+	" [deluxe version]",
+	" - remastered 2020",
+	" (2020 remaster)",
+	" (deluxe edition) [remastered version]",
+	" \t(deluxe\nedition)",
+])("recognizes edition suffixes: %s", (suffix) => {
+	expect(isEditionSuffix(suffix)).toBe(true);
+	expect(isEditionTitle(`Album${suffix}`, "Album")).toBe(true);
+});
+
+test.each([
+	"",
+	" (live)",
+	" (deluxe edition) live",
+	" (remastered 20201)",
+	" deluxe edition",
+])("rejects non-edition suffixes: %s", (suffix) => {
+	expect(isEditionSuffix(suffix)).toBe(false);
+	expect(isEditionTitle(`Album${suffix}`, "Album")).toBe(false);
+});
+
+test("rejects long malformed suffixes without backtracking across editions", () => {
+	expect(isEditionSuffix(`${" (deluxe edition)".repeat(20_000)}!`)).toBe(false);
+	expect(isEditionSuffix(`${" ".repeat(200_000)}!`)).toBe(false);
+});
+
+test.each([
+	"Soundtrack",
+	"Original Soundtrack",
+	"Official Soundtrack",
+	"Original Motion Picture Soundtrack",
+	"Original Video Game Soundtrack",
+])("recognizes shared soundtrack titles: %s", (label) => {
+	expect(isSoundtrackTitle(`Album (${label})`, "Album")).toBe(true);
+});
+
+test.each([
+	"Album Live (Official Soundtrack)",
+	"Album (Unofficial Soundtrack)",
+	"Album (Original Soundtrack) [Deluxe Edition]",
+])("rejects unrelated soundtrack titles: %s", (candidate) => {
+	expect(isSoundtrackTitle(candidate, "Album")).toBe(false);
+});
+
+test("shared suffix matching preserves base titles and rejects empty titles", () => {
+	expect(isEditionTitle("Another Album (Deluxe Edition)", "Album")).toBe(false);
+	expect(isEditionTitle("(Deluxe Edition)", "")).toBe(false);
+	expect(isSoundtrackTitle("(Original Soundtrack)", "")).toBe(false);
+	expect(
+		isEditionTitle("Album Vol. 1 (Deluxe Edition)", "Album Volume 1"),
+	).toBe(true);
+});
+
+test.each([
+	" (Expanded Edition)",
+	" [Expanded]",
+	" - Expanded Edition",
+])("accepts a complete expanded suffix: %s", (suffix) =>
+	expect(isExpandedTitle(`Saturday Night${suffix}`, "Saturday Night")).toBe(
+		true,
+	));
+
+test.each([
+	"Get Down Saturday Night (Expanded Edition)",
+	"Saturday Night Live (Expanded Edition)",
+	"Saturday Night (Expanded Edition) Vol. 2",
+])("rejects unrelated expanded titles: %s", (candidate) =>
+	expect(isExpandedTitle(candidate, "Saturday Night")).toBe(false));
 
 test.each([
 	["Album: Volume 1 - Music", "Album, Vol. 1: Music"],

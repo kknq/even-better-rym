@@ -45,6 +45,34 @@ const result = (
 	});
 
 describe("Tidal search", () => {
+	test.each([
+		false,
+		true,
+	])("selects Saturday Night's expanded edition only as a fallback (standard=%s)", async (standard) => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			result([
+				{
+					id: "wrong",
+					title: "Saturday Night (Expanded Edition)",
+					artist: "Another Artist",
+				},
+				{
+					id: "251353160",
+					title: "Saturday Night (Expanded Edition)",
+					artist: "Oliver Cheatham",
+				},
+				...(standard
+					? [{ id: "1", title: "Saturday Night", artist: "Oliver Cheatham" }]
+					: []),
+			]),
+		);
+		await expect(
+			search({ artist: "Oliver Cheatham", title: "Saturday Night" }),
+		).resolves.toBe(
+			`https://tidal.com/browse/album/${standard ? "1" : "251353160"}`,
+		);
+	});
+
 	beforeEach(() => {
 		vi.mocked(fetch).mockReset();
 		vi.mocked(requestToken).mockReset().mockResolvedValue({

@@ -10,6 +10,41 @@ vi.mock("~/shared/utils/fetch", () => ({ fetch: vi.fn() }));
 import { search, toRegionalAppleMusicUrl } from "./search";
 
 describe("Apple Music search", () => {
+	test.each([
+		false,
+		true,
+	])("selects Saturday Night's expanded edition only as a fallback (standard=%s)", async (standard) => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			JSON.stringify({
+				results: [
+					{
+						artistId: 1,
+						artistName: "Oliver Cheatham",
+						collectionName: "Saturday Night (Expanded Edition)",
+						collectionViewUrl:
+							"https://music.apple.com/pl/album/saturday-night/1646553916",
+					},
+					...(standard
+						? [
+								{
+									artistId: 1,
+									artistName: "Oliver Cheatham",
+									collectionName: "Saturday Night",
+									collectionViewUrl:
+										"https://music.apple.com/pl/album/saturday-night/1",
+								},
+							]
+						: []),
+				],
+			}),
+		);
+		await expect(
+			search({ artist: "Oliver Cheatham", title: "Saturday Night" }),
+		).resolves.toBe(
+			`https://music.apple.com/pl/album/saturday-night/${standard ? "1" : "1646553916"}`,
+		);
+	});
+
 	test("matches volume abbreviations and separators while retaining the artist check", async () => {
 		vi.mocked(fetch).mockResolvedValueOnce(
 			JSON.stringify({
