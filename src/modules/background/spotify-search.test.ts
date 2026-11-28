@@ -49,7 +49,9 @@ beforeEach(() => {
 	vi.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
 	vi.clearAllMocks();
 	vi.mocked(readHiddenPage).mockReset().mockResolvedValue(failure);
-	vi.mocked(browser.storage.local.get).mockReset().mockResolvedValue({});
+	vi.mocked(browser.storage.local.get)
+		.mockReset()
+		.mockResolvedValue({ extensiveLogging: true });
 	vi.mocked(browser.storage.local.set).mockReset().mockResolvedValue();
 	vi.spyOn(console, "info").mockImplementation(() => undefined);
 	vi.spyOn(console, "warn").mockImplementation(() => undefined);
@@ -88,6 +90,7 @@ test("retains only the latest 20 failures", async () => {
 		requestId: `${id}`,
 	}));
 	vi.mocked(browser.storage.local.get).mockResolvedValue({
+		extensiveLogging: true,
 		spotifySearchFailures: history,
 	});
 	await spotifySearch(request);
@@ -100,7 +103,7 @@ test("retains only the latest 20 failures", async () => {
 });
 
 test("serializes concurrent history updates without losing failures", async () => {
-	const stored: Record<string, unknown> = {};
+	const stored: Record<string, unknown> = { extensiveLogging: true };
 	vi.mocked(browser.storage.local.get).mockImplementation(() =>
 		Promise.resolve({ ...stored }),
 	);
@@ -186,4 +189,38 @@ test("reports storage failures without replacing the search failure or blocking 
 	);
 	await spotifySearch({ ...request, id: "second" });
 	expect(browser.storage.local.set).toHaveBeenCalledTimes(2);
+});
+
+test.each([
+	undefined,
+	false,
+])("does not store or log Spotify diagnostics when logging is %s", async (extensiveLogging) => {
+	vi.mocked(browser.storage.local.get).mockResolvedValue({
+		extensiveLogging,
+	});
+	await expect(spotifySearch(request)).resolves.toHaveProperty("data", {
+		error: "Spotify search page failed to render",
+		diagnostics,
+	});
+	expect(browser.storage.local.set).not.toHaveBeenCalled();
+	expect(console.info).not.toHaveBeenCalled();
+	expect(console.warn).toHaveBeenCalledExactlyOnceWith(
+		"[EvenBetterRYM Spotify] search failed",
+		{ requestId: request.id, error: failure.message },
+	);
+});
+
+test("stops saving when logging is disabled while a search is running", async () => {
+	vi.mocked(readHiddenPage).mockImplementation(() => {
+		vi.mocked(browser.storage.local.get).mockResolvedValue({
+			extensiveLogging: false,
+		});
+		return Promise.resolve(failure);
+	});
+	await spotifySearch(request);
+	expect(browser.storage.local.set).not.toHaveBeenCalled();
+	expect(console.warn).toHaveBeenCalledExactlyOnceWith(
+		"[EvenBetterRYM Spotify] search failed",
+		{ requestId: request.id, error: failure.message },
+	);
 });

@@ -4,6 +4,7 @@ import {
 	type YearRange,
 	yearRange,
 } from "~/shared/chart-date-range";
+import { isExtensiveLoggingEnabled } from "~/shared/debug-settings";
 import {
 	chartReleaseTypeLabels,
 	chartReleaseTypeSingularLabels,
@@ -819,7 +820,9 @@ function wireGenreChartControls(seeChartButton: HTMLAnchorElement): void {
 }
 
 export async function mainMusicGenre(): Promise<void> {
-	console.log("Even Better RYM: Genre pages script loaded");
+	void isExtensiveLoggingEnabled().then((enabled) => {
+		if (enabled) console.log("Even Better RYM: Genre pages script loaded");
+	});
 	await waitForDocumentReady();
 
 	const seeChartButton = document.querySelector<HTMLAnchorElement>(

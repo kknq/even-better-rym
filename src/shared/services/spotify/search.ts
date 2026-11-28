@@ -1,3 +1,4 @@
+import { isExtensiveLoggingEnabled } from "~/shared/debug-settings";
 import type {
 	SpotifySearchRequest,
 	SpotifySearchResponse,
@@ -30,12 +31,13 @@ const searchTitle: SearchFunction = async ({
 		},
 	});
 	if (
-		response.data.error ||
-		response.data.diagnostics?.some(
-			(entry) =>
-				entry.stage === "page-reader-failed" ||
-				entry.stage === "page-runtime-errors",
-		)
+		(response.data.error ||
+			response.data.diagnostics?.some(
+				(entry) =>
+					entry.stage === "page-reader-failed" ||
+					entry.stage === "page-runtime-errors",
+			)) &&
+		(await isExtensiveLoggingEnabled())
 	) {
 		const log = response.data.error ? console.warn : console.info;
 		let status = response.data.url ? "found" : "not-found";

@@ -4,6 +4,10 @@ import { render } from "preact";
 import { act } from "preact/test-utils";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import {
+	getExtensiveLogging,
+	setExtensiveLogging,
+} from "~/shared/debug-settings";
 import { getAllModulesEnabled, setModuleEnabled } from "~/shared/page-settings";
 import { type PageKey, pageLabels, pages } from "~/shared/pages";
 import { App, Toggle } from "./app";
@@ -16,6 +20,10 @@ vi.mock("webextension-polyfill", () => ({
 vi.mock("~/shared/page-settings", () => ({
 	getAllModulesEnabled: vi.fn(),
 	setModuleEnabled: vi.fn(),
+}));
+vi.mock("~/shared/debug-settings", () => ({
+	getExtensiveLogging: vi.fn(),
+	setExtensiveLogging: vi.fn(),
 }));
 vi.mock("./collection-view", () => ({
 	CollectionView: ({
@@ -103,6 +111,8 @@ beforeEach(() => {
 	) as Record<PageKey, boolean>;
 	vi.mocked(getAllModulesEnabled).mockResolvedValue(features);
 	vi.mocked(setModuleEnabled).mockResolvedValue();
+	vi.mocked(getExtensiveLogging).mockResolvedValue(false);
+	vi.mocked(setExtensiveLogging).mockResolvedValue();
 	container = document.createElement("div");
 	document.body.appendChild(container);
 });
@@ -136,6 +146,91 @@ async function showApp() {
 }
 
 describe("App", () => {
+	test("opens Debug Options and saves the extensive logging switch", async () => {
+		await showApp();
+		await act(() => findButton("Debug Options").click());
+		await vi.waitFor(() =>
+			expect(container.querySelector('[role="switch"]')).not.toBeNull(),
+		);
+		const toggle =
+			container.querySelector<HTMLButtonElement>('[role="switch"]')!;
+		expect(toggle.getAttribute("aria-checked")).toBe("false");
+		expect(toggle.getAttribute("aria-labelledby")).toBe(
+			"extensive-logging-label",
+		);
+		await act(() => toggle.click());
+		await vi.waitFor(() =>
+			expect(toggle.getAttribute("aria-checked")).toBe("true"),
+		);
+		expect(setExtensiveLogging).toHaveBeenCalledExactlyOnceWith(true);
+		await act(() => toggle.click());
+		await vi.waitFor(() =>
+			expect(toggle.getAttribute("aria-checked")).toBe("false"),
+		);
+		expect(setExtensiveLogging).toHaveBeenLastCalledWith(false);
+		expect(
+			container.querySelector('[aria-label="Dismiss reload notice"]'),
+		).toBeNull();
+	});
+
+	test("reports a debug setting save failure without changing the switch", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		vi.mocked(setExtensiveLogging).mockRejectedValue(new Error("storage"));
+		await showApp();
+		await act(() => findButton("Debug Options").click());
+		await vi.waitFor(() =>
+			expect(container.querySelector('[role="switch"]')).not.toBeNull(),
+		);
+		const toggle =
+			container.querySelector<HTMLButtonElement>('[role="switch"]')!;
+		await act(() => toggle.click());
+		await vi.waitFor(() =>
+			expect(container.querySelector('[role="alert"]')?.textContent).toBe(
+				"Could not save debug settings.",
+			),
+		);
+		expect(toggle.getAttribute("aria-checked")).toBe("false");
+		vi.restoreAllMocks();
+	});
+
+	test("loads the saved debug setting when reopening the section", async () => {
+		vi.mocked(getExtensiveLogging)
+			.mockResolvedValueOnce(false)
+			.mockResolvedValueOnce(true);
+		await showApp();
+		await act(() => findButton("Debug Options").click());
+		await vi.waitFor(() =>
+			expect(container.querySelector('[role="switch"]')).not.toBeNull(),
+		);
+		await act(() => findButton("Debug Options").click());
+		await act(() => findButton("Debug Options").click());
+		await vi.waitFor(() =>
+			expect(
+				container
+					.querySelector('[role="switch"]')
+					?.getAttribute("aria-checked"),
+			).toBe("true"),
+		);
+	});
+
+	test("offers a retry when debug settings cannot be loaded", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		vi.mocked(getExtensiveLogging)
+			.mockRejectedValueOnce(new Error("storage"))
+			.mockResolvedValueOnce(false);
+		await showApp();
+		await act(() => findButton("Debug Options").click());
+		await vi.waitFor(() =>
+			expect(container.querySelector('[role="alert"]')?.textContent).toBe(
+				"Could not load debug settings.",
+			),
+		);
+		await act(() => findButton("Retry").click());
+		await vi.waitFor(() =>
+			expect(container.querySelector('[role="switch"]')).not.toBeNull(),
+		);
+		vi.restoreAllMocks();
+	});
 	test("shows external project and donation links at the bottom of the menu", async () => {
 		await showApp();
 		const links = [

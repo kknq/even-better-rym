@@ -43,7 +43,6 @@ if (window.parent !== window) {
 					pageErrors.diagnostic([data.artist, data.title]),
 				],
 			};
-			console.warn("[EvenBetterRYM Spotify]", { id, category, ...result });
 		} finally {
 			pageErrors.dispose();
 		}

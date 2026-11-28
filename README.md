@@ -8,6 +8,8 @@ Kudos to [jgchk](https://github.com/jgchk) and all the beautiful people who main
 
 Turn each feature on or off from the extension popup. Settings are grouped by purpose: Search and navigation, Charts, Release and submission tools, Release insights, External reference links, Library and user profiles, Artist profiles, and Content visibility.
 
+Debug Options includes an off-by-default Extensive logging switch for additional console logs and locally stored Spotify failure diagnostics. Turning it off stops new diagnostic logs; previously saved diagnostics remain in extension storage.
+
 ---
 
 ### Suggested Streaming Links on Release Pages

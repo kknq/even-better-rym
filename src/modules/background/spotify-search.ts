@@ -6,6 +6,7 @@ import {
 	type SearchDiagnostic,
 	type SearchResult,
 } from "~/modules/spotify-search/messages";
+import { isExtensiveLoggingEnabled } from "~/shared/debug-settings";
 import type {
 	SpotifySearchRequest,
 	SpotifySearchResponse,
@@ -48,6 +49,7 @@ const saveFailure = async (
 	};
 	try {
 		await saveQueue(async () => {
+			if (!(await isExtensiveLoggingEnabled())) return;
 			const history =
 				(await storage.get<SearchFailure[]>("spotifySearchFailures")) ?? [];
 			await storage.set(
@@ -66,12 +68,12 @@ const saveFailure = async (
 export const spotifySearch = (
 	request: SpotifySearchRequest,
 ): Promise<SpotifySearchResponse> => {
-	console.info("[EvenBetterRYM Spotify] queued", { requestId: request.id });
 	return (async (): Promise<SpotifySearchResponse> => {
-		console.info("[EvenBetterRYM Spotify] started", {
-			requestId: request.id,
-			manifestVersion: browser.runtime.getManifest().manifest_version,
-		});
+		if (await isExtensiveLoggingEnabled())
+			console.info("[EvenBetterRYM Spotify] started", {
+				requestId: request.id,
+				manifestVersion: browser.runtime.getManifest().manifest_version,
+			});
 		const network = spotifyNetworkDiagnostics();
 		try {
 			let result = await readHiddenPage({
@@ -87,21 +89,25 @@ export const spotifySearch = (
 					...result,
 					diagnostics: [...(result.diagnostics ?? []), network.diagnostic()],
 				};
-			const log = result.status === "error" ? console.warn : console.info;
-			log("[EvenBetterRYM Spotify] completed", {
-				requestId: request.id,
-				...result,
-			});
-			await saveFailure(request.id, result);
+			if (await isExtensiveLoggingEnabled()) {
+				const log = result.status === "error" ? console.warn : console.info;
+				log("[EvenBetterRYM Spotify] completed", {
+					requestId: request.id,
+					...result,
+				});
+				await saveFailure(request.id, result);
+			} else if (result.status === "error") {
+				console.warn("[EvenBetterRYM Spotify] search failed", {
+					requestId: request.id,
+					error: result.message,
+				});
+			}
+			const outcome = result.status === "found" ? { url: result.url } : {};
 			return {
 				id: request.id,
 				type: "spotifySearch",
 				data: {
-					...(result.status === "error"
-						? { error: result.message }
-						: result.status === "found"
-							? { url: result.url }
-							: {}),
+					...(result.status === "error" ? { error: result.message } : outcome),
 					...(result.diagnostics ? { diagnostics: result.diagnostics } : {}),
 				},
 			};
@@ -112,7 +118,12 @@ export const spotifySearch = (
 			});
 			const message = error instanceof Error ? error.message : String(error);
 			const diagnostics = [network.diagnostic()];
-			await saveFailure(request.id, { status: "error", message, diagnostics });
+			if (await isExtensiveLoggingEnabled())
+				await saveFailure(request.id, {
+					status: "error",
+					message,
+					diagnostics,
+				});
 			return {
 				id: request.id,
 				type: "spotifySearch",

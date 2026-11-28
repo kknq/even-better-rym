@@ -6,6 +6,7 @@ import type { PageKey } from "~/shared/pages";
 import { featureGroups, pageHints, pageLabels } from "~/shared/pages";
 
 import { CollectionView } from "./collection-view";
+import { DebugOptions } from "./debug-options";
 import { DiscographyOrderView } from "./discography-order-view";
 import { DiscographyProgressView } from "./discography-progress-view";
 import { ReferenceLinksView } from "./reference-links-view";
@@ -339,6 +340,20 @@ function FeatureList({
 					</div>
 				);
 			})}
+			<div style={styles.card}>
+				<button
+					type="button"
+					aria-expanded={expandedGroups.has("Debug Options")}
+					onClick={() => onToggleGroup("Debug Options")}
+					style={styles.groupHeader}
+				>
+					<span>Debug Options</span>
+					<span aria-hidden="true">
+						{expandedGroups.has("Debug Options") ? "⌄" : "›"}
+					</span>
+				</button>
+				{expandedGroups.has("Debug Options") && <DebugOptions />}
+			</div>
 		</main>
 	);
 }
