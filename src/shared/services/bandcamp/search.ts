@@ -1,8 +1,9 @@
 import { fetch } from "~/shared/utils/fetch";
 
+import { withSearchTitleVariants } from "../search-matching";
 import type { SearchFunction } from "../types";
 
-export const search: SearchFunction = async ({ artist, title }) => {
+const searchTitle: SearchFunction = async ({ artist, title }) => {
 	const response = await fetch({
 		url: "https://bandcamp.com/search",
 		method: "GET",
@@ -21,3 +22,5 @@ export const search: SearchFunction = async ({ artist, title }) => {
 	const url = topResult.querySelector(".result-info .itemurl a")?.textContent;
 	return url ?? undefined;
 };
+
+export const search = withSearchTitleVariants(searchTitle);

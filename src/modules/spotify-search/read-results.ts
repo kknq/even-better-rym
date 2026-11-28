@@ -2,9 +2,22 @@ import {
 	getSearchArtists,
 	isReissueTitle,
 	normalizeSearchArtist,
-	normalizeSearchText,
+	normalizeSearchTitle,
 } from "~/shared/services/search-matching";
 import type { SearchCategory } from "./messages";
+
+export const isEditionSuffix = (suffix: string): boolean => {
+	const normalized = suffix.replace(/\s+/g, " ");
+	const edition =
+		/ *(?:[([] *|[-–—] )(?:(?:\d{4} )?remaster(?:ed)?(?: (?:version|\d{4}))?|deluxe(?: (?:edition|version))?)[)\]]?/y;
+	let position = 0;
+	while (position < normalized.length) {
+		edition.lastIndex = position;
+		if (!edition.exec(normalized)) return false;
+		position = edition.lastIndex;
+	}
+	return position > 0;
+};
 
 export const readSpotifySearchPage = async (
 	artist: string,
@@ -17,11 +30,9 @@ export const readSpotifySearchPage = async (
 	const artistNames = getSearchArtists(artist, artistAlias).map((name) =>
 		normalizeSearchArtist(name),
 	);
-	const searchedTitle = normalizeSearchText(title);
+	const searchedTitle = normalizeSearchTitle(title);
 	const entity = category === "albums" ? "album" : "track";
 	const resultSelector = `a[href^="/${entity}/"], a[href^="https://open.spotify.com/${entity}/"]`;
-	const editionSuffix =
-		/^(?:(?:\s*(?:\(|\[)|\s+[-\u2013\u2014]\s+)\s*(?:(?:\d{4}\s+)?remaster(?:ed)?(?:\s+(?:version|\d{4}))?|deluxe(?:\s+(?:edition|version))?)(?:\)|\])?)+$/;
 	const videoSuffix =
 		/^(?:\s*(?:\(|\[|-\s+)\s*(?:official\s+)?(?:music\s+)?video(?:\)|\])?)$/;
 
@@ -30,7 +41,7 @@ export const readSpotifySearchPage = async (
 		if (!spotifyTitle.startsWith(searchedTitle)) return false;
 		const suffix = spotifyTitle.slice(searchedTitle.length);
 		return (
-			editionSuffix.test(suffix) ||
+			isEditionSuffix(suffix) ||
 			isReissueTitle(spotifyTitle, searchedTitle) ||
 			(releaseType === "music video" && videoSuffix.test(suffix))
 		);
@@ -58,7 +69,7 @@ export const readSpotifySearchPage = async (
 	const findMatchingLinks = (links: Iterable<HTMLAnchorElement>) => {
 		let editionUrl: string | undefined;
 		for (const link of links) {
-			const spotifyTitle = normalizeSearchText(link.textContent ?? "");
+			const spotifyTitle = normalizeSearchTitle(link.textContent ?? "");
 			if (!matchesTitle(spotifyTitle)) continue;
 			const match = /^\/(album|track)\/([a-zA-Z0-9]{22})(?:[/?#]|$)/.exec(
 				new URL(link.href).pathname,

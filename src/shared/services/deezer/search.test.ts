@@ -7,6 +7,58 @@ vi.mock("~/shared/utils/fetch", () => ({ fetch: vi.fn() }));
 
 beforeEach(() => vi.mocked(fetch).mockReset());
 
+test("retries GTA V's volume spelling and accepts localized Various Artists credits", async () => {
+	const title = "The Music of Grand Theft Auto V: Volume 1 - Original Music";
+	vi.mocked(fetch)
+		.mockResolvedValueOnce('{"data":[]}')
+		.mockResolvedValueOnce('{"data":[]}')
+		.mockResolvedValueOnce(
+			JSON.stringify({
+				data: [
+					{
+						title: "The Music of Grand Theft Auto V, Vol. 2: The Score",
+						artist: { name: "Różni wykonawcy" },
+						link: "https://www.deezer.com/album/2",
+					},
+					{
+						title: "The Music of Grand Theft Auto V, Vol. 1: Original Music",
+						artist: { name: "Różni wykonawcy" },
+						link: "https://www.deezer.com/album/377010107",
+					},
+				],
+			}),
+		);
+	await expect(
+		search({
+			artist: "Various Artists",
+			title,
+			serviceRegions: { deezer: "PL" },
+		}),
+	).resolves.toBe("https://www.deezer.com/pl/album/377010107");
+	expect(vi.mocked(fetch).mock.calls[2][0].urlParameters?.q).toBe(
+		'"Various Artists" "The Music of Grand Theft Auto V, Vol. 1: Original Music"',
+	);
+});
+
+test("keeps artist validation for named artists in volume retries", async () => {
+	vi.mocked(fetch).mockResolvedValue(
+		JSON.stringify({
+			data: [
+				{
+					title: "Album Vol. 1",
+					artist: { name: "Another Artist" },
+					link: "https://www.deezer.com/album/1",
+				},
+			],
+			total: 2,
+		}),
+	);
+	vi.mocked(fetch).mockResolvedValueOnce('{"data":[]}');
+	await expect(
+		search({ artist: "Artist", title: "Album Volume 1" }),
+	).resolves.toBeUndefined();
+});
+
 test.each(
 	(["combined", "catalog", "localized"] as const).flatMap((path) =>
 		[

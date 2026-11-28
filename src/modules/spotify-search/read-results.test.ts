@@ -1,6 +1,32 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { readSpotifySearchPage } from "./read-results";
+import { isEditionSuffix, readSpotifySearchPage } from "./read-results";
+
+test.each([
+	" (deluxe edition)",
+	" [deluxe version]",
+	" - remastered 2020",
+	" (2020 remaster)",
+	" (deluxe edition) [remastered version]",
+	" \t(deluxe\nedition)",
+])("recognizes edition suffixes: %s", (suffix) => {
+	expect(isEditionSuffix(suffix)).toBe(true);
+});
+
+test.each([
+	"",
+	" (live)",
+	" (deluxe edition) live",
+	" (remastered 20201)",
+	" deluxe edition",
+])("rejects non-edition suffixes: %s", (suffix) => {
+	expect(isEditionSuffix(suffix)).toBe(false);
+});
+
+test("rejects long malformed suffixes without backtracking across editions", () => {
+	expect(isEditionSuffix(`${" (deluxe edition)".repeat(20_000)}!`)).toBe(false);
+	expect(isEditionSuffix(`${" ".repeat(200_000)}!`)).toBe(false);
+});
 
 const artist = "Молодёжьвыбираеткосмос";
 const title = "компиляция, Ч. 2";
@@ -63,6 +89,16 @@ afterEach(() => {
 });
 
 describe("readSpotifySearchPage", () => {
+	test("matches volume spellings and separators without confusing volumes", async () => {
+		setSearchPage([
+			resultLink("Album, Vol. 2: Music", albumUrl, "2026 • Artist"),
+			resultLink("Album, Vol. 1: Music", albumUrl, "2026 • Artist"),
+		]);
+		await expect(
+			readSpotifySearchPage("Artist", "Album: Volume 1 - Music"),
+		).resolves.toBe(albumUrl);
+	});
+
 	test("finds the matching tribute compilation rather than another volume or artist", async () => {
 		const title =
 			"Heart of Gold: The Songs of Neil Young, Vol. 3 - Into the Black";

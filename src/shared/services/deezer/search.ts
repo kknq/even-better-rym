@@ -2,8 +2,10 @@ import { fetch } from "~/shared/utils/fetch";
 
 import {
 	getSearchArtists,
+	getSearchTitleVariants,
 	normalizeSearchArtist,
 	normalizeSearchText,
+	normalizeSearchTitle,
 } from "../search-matching";
 import type { SearchFunction } from "../types";
 import { DEEZER_ALBUM_REGEX } from "./regex";
@@ -61,18 +63,28 @@ export const search: SearchFunction = async ({
 	const album = response.data?.[0];
 	if (album) return toUrl(album.link);
 
+	const albumTitle = normalizeSearchTitle(title);
 	const artistNames = new Set(
 		getSearchArtists(artist, artistAlias).map((name) =>
 			normalizeSearchArtist(name),
 		),
 	);
-	const albumTitle = normalizeSearchText(title);
+	for (const variant of getSearchTitleVariants(title).slice(1)) {
+		const results = await searchAlbums(`"${artist}" "${variant}"`);
+		const match = results.data?.find(
+			(candidate) =>
+				normalizeSearchTitle(candidate.title) === albumTitle &&
+				(normalizeSearchText(artist) === "various artists" ||
+					artistNames.has(normalizeSearchArtist(candidate.artist.name))),
+		);
+		if (match) return toUrl(match.link);
+	}
 	for (let index = 0; ; index += SEARCH_LIMIT) {
 		const results = await searchAlbums(`artist:"${artist}"`, index);
 		const match = results.data?.find(
 			(candidate) =>
 				artistNames.has(normalizeSearchArtist(candidate.artist.name)) &&
-				normalizeSearchText(candidate.title) === albumTitle,
+				normalizeSearchTitle(candidate.title) === albumTitle,
 		);
 		if (match) return toUrl(match.link);
 		if (!results.next) break;

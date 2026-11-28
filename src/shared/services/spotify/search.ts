@@ -4,9 +4,10 @@ import type {
 } from "~/shared/utils/messaging";
 import { sendBackgroundMessage } from "~/shared/utils/messaging";
 
+import { withSearchTitleVariants } from "../search-matching";
 import type { SearchFunction } from "../types";
 
-export const search: SearchFunction = async ({
+const searchTitle: SearchFunction = async ({
 	artist,
 	artistAlias,
 	title,
@@ -46,3 +47,5 @@ export const search: SearchFunction = async ({
 	if (response.data.error) throw new Error(response.data.error);
 	return response.data.url;
 };
+
+export const search = withSearchTitleVariants(searchTitle);

@@ -1,10 +1,11 @@
 import { fetch } from "~/shared/utils/fetch";
 import { isDefined } from "~/shared/utils/types";
 
+import { withSearchTitleVariants } from "../search-matching";
 import type { SearchFunction } from "../types";
 import type { SearchObject } from "./codecs";
 
-export const search: SearchFunction = async ({ artist, title }) => {
+const searchTitle: SearchFunction = async ({ artist, title }) => {
 	const response = await fetch({
 		url: "https://youtube.com/results",
 		urlParameters: {
@@ -37,3 +38,5 @@ export const search: SearchFunction = async ({ artist, title }) => {
 		.find(isDefined)?.videoId;
 	return videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined;
 };
+
+export const search = withSearchTitleVariants(searchTitle);

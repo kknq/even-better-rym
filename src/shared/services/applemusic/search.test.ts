@@ -10,6 +10,24 @@ vi.mock("~/shared/utils/fetch", () => ({ fetch: vi.fn() }));
 import { search, toRegionalAppleMusicUrl } from "./search";
 
 describe("Apple Music search", () => {
+	test("matches volume abbreviations and separators while retaining the artist check", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			JSON.stringify({
+				results: [
+					{
+						artistId: 1,
+						artistName: "Artist",
+						collectionName: "Album, Vol. 1: Music",
+						collectionViewUrl: "https://music.apple.com/us/album/music/1",
+					},
+				],
+			}),
+		);
+		await expect(
+			search({ artist: "Artist", title: "Album: Volume 1 - Music" }),
+		).resolves.toBe("https://music.apple.com/us/album/music/1");
+	});
+
 	const metadata = {
 		artist: "The Broken Family Band",
 		title: "Balls",

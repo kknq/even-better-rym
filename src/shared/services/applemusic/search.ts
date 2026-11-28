@@ -5,6 +5,8 @@ import {
 	isReissueTitle,
 	normalizeSearchText as normalize,
 	normalizeSearchArtist,
+	normalizeSearchTitle,
+	withSearchTitleVariants,
 } from "../search-matching";
 import type { SearchFunction } from "../types";
 import type { SearchObject } from "./codec";
@@ -24,7 +26,7 @@ export const toRegionalAppleMusicUrl = (
 	return url.toString();
 };
 
-export const search: SearchFunction = async ({
+const searchTitle: SearchFunction = async ({
 	artist,
 	artistAlias,
 	title,
@@ -56,13 +58,13 @@ export const search: SearchFunction = async ({
 	const artistNames = new Set(
 		artists.map((name) => normalizeSearchArtist(name)),
 	);
-	const albumTitle = normalize(title);
+	const albumTitle = normalizeSearchTitle(title);
 	const isVariousArtists = normalize(artist) === "various artists";
 	const hasMatchingArtist = (album: SearchObject["results"][number]) =>
 		artistNames.has(normalizeSearchArtist(album.artistName ?? ""));
 	const isMatchingAlbum = (album: SearchObject["results"][number]) => {
 		if (!album.collectionViewUrl || albumTitle.length === 0) return false;
-		const collectionTitle = normalize(album.collectionName ?? "");
+		const collectionTitle = normalizeSearchTitle(album.collectionName ?? "");
 		return (
 			collectionTitle === albumTitle ||
 			((releaseType === "single" || releaseType === "ep") &&
@@ -123,3 +125,5 @@ export const search: SearchFunction = async ({
 	}
 	return undefined;
 };
+
+export const search = withSearchTitleVariants(searchTitle);

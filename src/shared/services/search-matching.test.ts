@@ -2,11 +2,75 @@ import { expect, test, vi } from "vitest";
 
 import {
 	getAlbumSearchQuery,
+	getSearchTitleVariants,
 	normalizeSearchArtist,
 	normalizeSearchText,
+	normalizeSearchTitle,
 	withArtistAlias,
+	withSearchTitleVariants,
 } from "./search-matching";
 import type { SearchFunction } from "./types";
+
+test.each([
+	["Album: Volume 1 - Music", "Album, Vol. 1: Music"],
+	["Album Vol. 2", "Album Volume 2"],
+	["Album vol 3", "Album Volume 3"],
+])("matches numbered volume title variants: %s / %s", (left, right) => {
+	expect(normalizeSearchTitle(left)).toBe(normalizeSearchTitle(right));
+});
+
+test.each([
+	["Album Volume 1", "Album Vol. 2"],
+	["Album Volume 1 - Music", "Album Vol. 1 - Score"],
+	["Volume Control", "Vol. Control"],
+	["Album: Music", "Album, Music"],
+])("preserves distinct titles: %s / %s", (left, right) => {
+	expect(normalizeSearchTitle(left)).not.toBe(normalizeSearchTitle(right));
+});
+
+test("generates service and RYM volume spellings in both directions", () => {
+	const rym = "The Music of Grand Theft Auto V: Volume 1 - Original Music";
+	const service = "The Music of Grand Theft Auto V, Vol. 1: Original Music";
+	expect(getSearchTitleVariants(rym)).toContain(service);
+	expect(getSearchTitleVariants(service)).toContain(rym);
+	expect(getSearchTitleVariants("Volume Control")).toEqual(["Volume Control"]);
+});
+
+test("title retries stop at the first match and preserve metadata", async () => {
+	const search = vi
+		.fn<SearchFunction>()
+		.mockResolvedValueOnce(undefined)
+		.mockResolvedValueOnce("found");
+	const metadata = {
+		artist: "Artist",
+		title: "Album Volume 1",
+		serviceRegions: { tidal: "PL" },
+	};
+	await expect(withSearchTitleVariants(search)(metadata)).resolves.toBe(
+		"found",
+	);
+	expect(search.mock.calls.map(([input]) => input.title)).toEqual([
+		"Album Volume 1",
+		"Album Vol. 1",
+	]);
+	expect(search.mock.calls[1][0]).toEqual({
+		...metadata,
+		title: "Album Vol. 1",
+	});
+});
+
+test("title retries propagate errors", async () => {
+	const search = vi
+		.fn<SearchFunction>()
+		.mockRejectedValue(new Error("HTTP 429"));
+	await expect(
+		withSearchTitleVariants(search)({
+			artist: "Artist",
+			title: "Album Volume 1",
+		}),
+	).rejects.toThrow("HTTP 429");
+	expect(search).toHaveBeenCalledOnce();
+});
 
 test.each([
 	"Various Artists",

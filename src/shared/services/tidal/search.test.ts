@@ -54,6 +54,48 @@ describe("Tidal search", () => {
 		});
 	});
 
+	test("retries GTA V's service title spelling without confusing its volumes", async () => {
+		const title = "The Music of Grand Theft Auto V: Volume 1 - Original Music";
+		vi.mocked(fetch)
+			.mockResolvedValueOnce(result([]))
+			.mockResolvedValueOnce(result([]))
+			.mockResolvedValueOnce(
+				result([
+					{
+						id: "261445586",
+						title: "The Music of Grand Theft Auto V, Vol. 2: The Score",
+						artist: "Various Artists",
+					},
+					{
+						id: "261443234",
+						title: "The Music of Grand Theft Auto V, Vol. 1: Original Music",
+						artist: "Various Artists",
+					},
+				]),
+			);
+		await expect(
+			search({
+				artist: "Various Artists",
+				title,
+				serviceRegions: { tidal: "PL" },
+			}),
+		).resolves.toBe("https://tidal.com/browse/album/261443234");
+		expect(vi.mocked(fetch).mock.calls[2][0].urlParameters).toMatchObject({
+			"filter[query]":
+				"The Music of Grand Theft Auto V, Vol. 1: Original Music",
+			countryCode: "PL",
+		});
+	});
+
+	test("does not substitute another volume after all query retries", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([{ id: "2", title: "Album Vol. 2", artist: "Artist" }]),
+		);
+		await expect(
+			search({ artist: "Artist", title: "Album Volume 1" }),
+		).resolves.toBeUndefined();
+	});
+
 	test.each([
 		["Ghostface Killah", "MF Doom"],
 		["MF DOOM", "Ghostface Killah"],

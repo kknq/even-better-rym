@@ -3,6 +3,37 @@ import type { SearchFunction } from "./types";
 export const normalizeSearchText = (value: string): string =>
 	value.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 
+export const normalizeSearchTitle = (value: string): string =>
+	normalizeSearchText(value)
+		.replace(/\b(?:volume|vol\.?)(?=\s*\d)/g, "vol.")
+		.replace(/\s*[:,]\s*(vol\.\s*\d+)\b/g, " $1")
+		.replace(/\b(vol\.\s*\d+)\s*(?:[:,]|\s[-–—])\s*/g, "$1 ");
+
+export const getSearchTitleVariants = (title: string): string[] => {
+	if (!/\b(?:volume|vol\.?)(?=\s*\d)/i.test(title)) return [title];
+	const abbreviated = title.replace(/\b(?:volume|vol\.?)(?=\s*\d)/gi, "Vol.");
+	const alternate = abbreviated
+		.replace(/\s*:\s*(Vol\.\s*\d+)\b/g, ", $1")
+		.replace(/\b(Vol\.\s*\d+)\s+[-–—]\s*/g, "$1: ");
+	const expanded = abbreviated.replace(/\bVol\.(?=\s*\d)/g, "Volume");
+	const expandedAlternate = expanded
+		.replace(/\s*,\s*(Volume\s*\d+)\b/g, ": $1")
+		.replace(/\b(Volume\s*\d+)\s*:\s*/g, "$1 - ");
+	return [
+		...new Set([title, abbreviated, alternate, expanded, expandedAlternate]),
+	];
+};
+
+export const withSearchTitleVariants =
+	(search: SearchFunction): SearchFunction =>
+	async (metadata) => {
+		for (const title of getSearchTitleVariants(metadata.title)) {
+			const result = await search({ ...metadata, title });
+			if (result !== undefined) return result;
+		}
+		return undefined;
+	};
+
 export const getAlbumSearchQuery = (artist: string, title: string): string =>
 	normalizeSearchText(artist) === "various artists"
 		? title
@@ -61,8 +92,8 @@ export const withArtistAlias =
 	};
 
 export const isReissueTitle = (candidate: string, title: string): boolean => {
-	const normalized = normalizeSearchText(candidate);
-	const original = normalizeSearchText(title);
+	const normalized = normalizeSearchTitle(candidate);
+	const original = normalizeSearchTitle(title);
 	return (
 		original.length > 0 &&
 		normalized.startsWith(original) &&

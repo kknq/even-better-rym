@@ -5,6 +5,8 @@ import {
 	isReissueTitle,
 	normalizeSearchArtist,
 	normalizeSearchText,
+	normalizeSearchTitle,
+	withSearchTitleVariants,
 } from "../search-matching";
 import type { SearchFunction } from "../types";
 import { requestToken } from "./auth";
@@ -32,7 +34,7 @@ type TidalSearchResponse = {
 	errors?: { detail?: string; title?: string }[];
 };
 
-export const search: SearchFunction = async ({
+const searchTitle: SearchFunction = async ({
 	artist,
 	artistAlias,
 	title,
@@ -136,13 +138,13 @@ export const search: SearchFunction = async ({
 			artistNames.has(normalizeSearchText(name)),
 		),
 	);
-	const normalizedTitle = normalizeSearchText(title);
+	const normalizedTitle = normalizeSearchTitle(title);
 	const hasExactTitle = (album: TidalResource) =>
-		normalizeSearchText(album.attributes?.title ?? "") === normalizedTitle;
+		normalizeSearchTitle(album.attributes?.title ?? "") === normalizedTitle;
 	const hasReissueTitle = (album: TidalResource) =>
 		isReissueTitle(album.attributes?.title ?? "", title);
 	const hasSoundtrackTitle = (album: TidalResource) => {
-		const candidate = normalizeSearchText(album.attributes?.title ?? "");
+		const candidate = normalizeSearchTitle(album.attributes?.title ?? "");
 		return (
 			normalizedTitle.length > 0 &&
 			candidate.startsWith(normalizedTitle) &&
@@ -151,6 +153,7 @@ export const search: SearchFunction = async ({
 			)
 		);
 	};
+
 	const album =
 		exactArtists.find(hasExactTitle) ??
 		matches.find(hasExactTitle) ??
@@ -173,3 +176,5 @@ export const search: SearchFunction = async ({
 	}
 	return undefined;
 };
+
+export const search = withSearchTitleVariants(searchTitle);

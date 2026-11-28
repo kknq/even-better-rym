@@ -1,8 +1,9 @@
 import { fetch } from "~/shared/utils/fetch";
 
+import { withSearchTitleVariants } from "../search-matching";
 import type { SearchFunction } from "../types";
 
-export const search: SearchFunction = async ({ artist, title }) => {
+const searchTitle: SearchFunction = async ({ artist, title }) => {
 	const query = `${artist} ${title}`.replace(/\//g, " ");
 	const normalized = query
 		.normalize("NFKD")
@@ -31,3 +32,5 @@ export const search: SearchFunction = async ({ artist, title }) => {
 	}
 	return undefined;
 };
+
+export const search = withSearchTitleVariants(searchTitle);
