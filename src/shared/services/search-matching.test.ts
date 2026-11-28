@@ -3,8 +3,10 @@ import { expect, test, vi } from "vitest";
 import {
 	getAlbumSearchQuery,
 	getSearchTitleVariants,
+	getUnbracketedArtist,
 	isEditionSuffix,
 	isEditionTitle,
+	isEpTitle,
 	isExpandedTitle,
 	isReissueTitle,
 	isSoundtrackTitle,
@@ -15,6 +17,69 @@ import {
 	withSearchTitleVariants,
 } from "./search-matching";
 import type { SearchFunction } from "./types";
+
+test.each([
+	"Pass Down EP",
+	"Pass Down - EP",
+	"Pass Down",
+])("matches EP labels only for EP releases (%s)", (candidate) => {
+	expect(isEpTitle(candidate, "Pass Down EP", "ep")).toBe(true);
+	expect(isEpTitle(candidate, "Pass Down EP", "album")).toBe(false);
+	expect(isEpTitle(candidate, "Pass Down 2 EP", "ep")).toBe(false);
+	expect(isEpTitle(candidate, "EP", "ep")).toBe(false);
+});
+
+test("retries EP formatting only on EP releases", () => {
+	expect(getSearchTitleVariants("Pass Down EP", "ep")).toEqual([
+		"Pass Down EP",
+		"Pass Down - EP",
+	]);
+	expect(getSearchTitleVariants("Pass Down - EP", "ep")).toEqual([
+		"Pass Down - EP",
+		"Pass Down EP",
+	]);
+	expect(getSearchTitleVariants("Pass Down EP", "album")).toEqual([
+		"Pass Down EP",
+	]);
+});
+
+test("only unwraps a complete nonempty bracketed artist", () => {
+	expect(getUnbracketedArtist("[KRTM]")).toBe("KRTM");
+	for (const name of ["[]", "[ ]", "[KRTM] Extra", "A [KRTM]", "[[KRTM]]"])
+		expect(getUnbracketedArtist(name)).toBeUndefined();
+});
+
+test("retries an unbracketed artist after exact queries without discarding metadata", async () => {
+	const search = vi
+		.fn<SearchFunction>()
+		.mockResolvedValueOnce(undefined)
+		.mockResolvedValueOnce("found");
+	await expect(
+		withArtistAlias(search)({
+			artist: "[KRTM]",
+			title: "Pass Down EP",
+			releaseType: "ep",
+		}),
+	).resolves.toBe("found");
+	expect(search.mock.calls.map(([data]) => data.artist)).toEqual([
+		"[KRTM]",
+		"KRTM",
+	]);
+	expect(search.mock.calls[1][0]).toEqual({
+		artist: "KRTM",
+		artistAlias: "[KRTM]",
+		title: "Pass Down EP",
+		releaseType: "ep",
+	});
+});
+
+test("keeps an exact bracketed artist result ahead of fallbacks", async () => {
+	const search = vi.fn<SearchFunction>().mockResolvedValue("exact");
+	await expect(
+		withArtistAlias(search)({ artist: "[KRTM]", title: "Pass Down EP" }),
+	).resolves.toBe("exact");
+	expect(search).toHaveBeenCalledTimes(1);
+});
 
 test.each([
 	"?",

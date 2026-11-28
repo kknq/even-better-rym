@@ -1,4 +1,4 @@
-import type { SearchFunction } from "./types";
+import type { ReleaseType, SearchFunction } from "./types";
 
 export const normalizeSearchText = (value: string): string =>
 	value.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
@@ -23,7 +23,24 @@ export const getSearchTitleSuffix = (
 	title: string,
 ): string => candidate.slice(title.length).replace(/^[?!.]+(?=\s)/, "");
 
-export const getSearchTitleVariants = (title: string): string[] => {
+export const isEpTitle = (
+	candidate: string,
+	title: string,
+	releaseType?: ReleaseType | null,
+): boolean => {
+	if (releaseType !== "ep") return false;
+	const withoutLabel = (value: string) =>
+		normalizeSearchTitle(value)
+			.replace(/(?: -)? ep$/, "")
+			.trimEnd();
+	const original = withoutLabel(title);
+	return original.length > 0 && withoutLabel(candidate) === original;
+};
+
+export const getSearchTitleVariants = (
+	title: string,
+	releaseType?: ReleaseType,
+): string[] => {
 	const abbreviated = title.replace(/\b(?:volume|vol\.?)(?=\s*\d)/gi, "Vol.");
 	const alternate = abbreviated
 		.replace(/\s*:\s*(Vol\.\s*\d+)\b/g, ", $1")
@@ -33,15 +50,28 @@ export const getSearchTitleVariants = (title: string): string[] => {
 		.replace(/\s*,\s*(Volume\s*\d+)\b/g, ": $1")
 		.replace(/\b(Volume\s*\d+)\s*:\s*/g, "$1 - ");
 	const variants = [title, abbreviated, alternate, expanded, expandedAlternate];
-	return [
-		...new Set([...variants, ...variants.map(stripTerminalPunctuation)]),
-	].filter((variant) => variant.length > 0 || variant === title);
+	variants.push(...variants.map(stripTerminalPunctuation));
+	if (releaseType === "ep") {
+		variants.push(
+			...variants.map((variant) =>
+				variant.replace(/(?: -)? EP$/i, (label) =>
+					label.startsWith(" -") ? " EP" : " - EP",
+				),
+			),
+		);
+	}
+	return [...new Set(variants)].filter(
+		(variant) => variant.length > 0 || variant === title,
+	);
 };
 
 export const withSearchTitleVariants =
 	(search: SearchFunction): SearchFunction =>
 	async (metadata) => {
-		for (const title of getSearchTitleVariants(metadata.title)) {
+		for (const title of getSearchTitleVariants(
+			metadata.title,
+			metadata.releaseType,
+		)) {
 			const result = await search({ ...metadata, title });
 			if (result !== undefined) return result;
 		}
@@ -79,6 +109,12 @@ export const getSearchArtists = (artist: string, alias?: string): string[] => {
 		: [name];
 };
 
+export const getUnbracketedArtist = (artist: string): string | undefined => {
+	const name = /^\[([^[\]]+)\]$/.exec(artist.trim())?.[1].trim();
+	if (!name) return undefined;
+	return name;
+};
+
 export const withArtistAlias =
 	(search: SearchFunction): SearchFunction =>
 	async (metadata) => {
@@ -90,6 +126,12 @@ export const withArtistAlias =
 		const candidates = [
 			...artists.slice(1),
 			...artists.map((name) => normalizeSearchArtist(name)),
+			...artists.flatMap((name) => {
+				const unbracketed = getUnbracketedArtist(name);
+				return unbracketed
+					? [unbracketed, normalizeSearchArtist(unbracketed)]
+					: [];
+			}),
 		];
 		for (const artist of candidates) {
 			const name = normalizeSearchText(artist);

@@ -69,7 +69,7 @@ export type SpotifySearchRequest = {
 		artist: string;
 		artistAlias?: string;
 		title: string;
-		releaseType?: "single" | "music video";
+		releaseType?: "single" | "ep" | "music video";
 	};
 };
 

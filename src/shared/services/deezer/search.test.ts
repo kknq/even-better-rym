@@ -1,11 +1,33 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { fetch } from "~/shared/utils/fetch";
+import { withArtistAlias } from "../search-matching";
 import { search } from "./search";
 
 vi.mock("~/shared/utils/fetch", () => ({ fetch: vi.fn() }));
 
 beforeEach(() => vi.mocked(fetch).mockReset());
+
+test("finds bracketed artists and alternate EP labels through shared fallback", async () => {
+	vi.mocked(fetch).mockResolvedValue(
+		JSON.stringify({
+			data: [
+				{
+					title: "Pass Down - EP",
+					artist: { name: "Krtm" },
+					link: "https://www.deezer.com/album/1136749421",
+				},
+			],
+		}),
+	);
+	await expect(
+		withArtistAlias(search)({
+			artist: "[KRTM]",
+			title: "Pass Down EP",
+			releaseType: "ep",
+		}),
+	).resolves.toBe("https://www.deezer.com/album/1136749421");
+});
 
 test.each([
 	false,

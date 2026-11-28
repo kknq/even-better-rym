@@ -3,6 +3,7 @@ import { fetch } from "~/shared/utils/fetch";
 import {
 	getSearchArtists,
 	getSearchTitleVariants,
+	isEpTitle,
 	isExpandedTitle,
 	normalizeSearchArtist,
 	normalizeSearchText,
@@ -49,6 +50,7 @@ export const search: SearchFunction = async ({
 	artist,
 	artistAlias,
 	title,
+	releaseType,
 	serviceRegions,
 }) => {
 	const region = serviceRegions?.deezer;
@@ -76,13 +78,17 @@ export const search: SearchFunction = async ({
 		return (
 			albums.find(
 				(candidate) => normalizeSearchTitle(candidate.title) === albumTitle,
-			) ?? albums.find((candidate) => isExpandedTitle(candidate.title, title))
+			) ??
+			albums.find((candidate) =>
+				isEpTitle(candidate.title, title, releaseType),
+			) ??
+			albums.find((candidate) => isExpandedTitle(candidate.title, title))
 		);
 	};
 	const response = await searchAlbums(`artist:"${artist}" album:"${title}"`);
 	const album = findAlbum(response);
 	if (album) return toUrl(album.link);
-	for (const variant of getSearchTitleVariants(title).slice(1)) {
+	for (const variant of getSearchTitleVariants(title, releaseType).slice(1)) {
 		const results = await searchAlbums(`"${artist}" "${variant}"`);
 		const match = findAlbum(results);
 		if (match) return toUrl(match.link);
@@ -90,6 +96,7 @@ export const search: SearchFunction = async ({
 	let expandedAlbum:
 		| NonNullable<DeezerSearchResponse["data"]>[number]
 		| undefined;
+	let epAlbum: NonNullable<DeezerSearchResponse["data"]>[number] | undefined;
 	for (let index = 0; ; index += SEARCH_LIMIT) {
 		const results = await searchAlbums(`artist:"${artist}"`, index);
 		const match = results.data?.find(
@@ -98,6 +105,11 @@ export const search: SearchFunction = async ({
 				normalizeSearchTitle(candidate.title) === albumTitle,
 		);
 		if (match) return toUrl(match.link);
+		epAlbum ??= results.data?.find(
+			(candidate) =>
+				isMatchingArtist(candidate) &&
+				isEpTitle(candidate.title, title, releaseType),
+		);
 		expandedAlbum ??= results.data?.find(
 			(candidate) =>
 				isMatchingArtist(candidate) && isExpandedTitle(candidate.title, title),
@@ -108,6 +120,7 @@ export const search: SearchFunction = async ({
 	const localized = await searchAlbums(`"${artist}" "${title}"`);
 	const localizedAlbum = findAlbum(localized);
 	if (localizedAlbum) return toUrl(localizedAlbum.link);
+	if (epAlbum) return toUrl(epAlbum.link);
 	if (expandedAlbum) return toUrl(expandedAlbum.link);
 	return undefined;
 };

@@ -63,6 +63,20 @@ afterEach(() => {
 });
 
 describe("readSpotifySearchPage", () => {
+	test("matches alternate EP labels after settling", async () => {
+		setSearchPage([
+			resultLink("Pass Down - EP", albumUrl, "Pass Down - EP • Krtm"),
+		]);
+		const pending = readSpotifySearchPage(
+			"Krtm",
+			"Pass Down EP",
+			"albums",
+			"ep",
+		);
+		await vi.advanceTimersByTimeAsync(1_500);
+		await expect(pending).resolves.toBe(albumUrl);
+	});
+
 	test("accepts Saturday Night's expanded edition after settling", async () => {
 		setSearchPage([
 			resultLink(

@@ -2,6 +2,7 @@ import {
 	getSearchArtists,
 	getSearchTitleSuffix,
 	isEditionTitle,
+	isEpTitle,
 	isExpandedTitle,
 	isReissueTitle,
 	normalizeSearchArtist,
@@ -13,7 +14,7 @@ export const readSpotifySearchPage = async (
 	artist: string,
 	title: string,
 	category: SearchCategory = "albums",
-	releaseType: "single" | "music video" | null = null,
+	releaseType: "single" | "ep" | "music video" | null = null,
 	artistAlias?: string,
 ): Promise<string | undefined> => {
 	const RESULTS_TIMEOUT = 7_000;
@@ -28,6 +29,7 @@ export const readSpotifySearchPage = async (
 
 	const matchesTitle = (spotifyTitle: string) => {
 		if (spotifyTitle === searchedTitle) return true;
+		if (isEpTitle(spotifyTitle, searchedTitle, releaseType)) return true;
 		if (!spotifyTitle.startsWith(searchedTitle)) return false;
 		const suffix = getSearchTitleSuffix(spotifyTitle, searchedTitle);
 		return (

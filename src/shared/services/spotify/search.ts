@@ -22,7 +22,9 @@ const searchTitle: SearchFunction = async ({
 			artist,
 			...(artistAlias ? { artistAlias } : {}),
 			title,
-			...(releaseType === "single" || releaseType === "music video"
+			...(releaseType === "single" ||
+			releaseType === "ep" ||
+			releaseType === "music video"
 				? { releaseType }
 				: {}),
 		},

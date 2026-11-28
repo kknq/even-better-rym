@@ -33,6 +33,7 @@ export const isSearchInput = (value: unknown): value is SearchInput =>
 	(!("releaseType" in value) ||
 		value.releaseType === undefined ||
 		value.releaseType === "single" ||
+		value.releaseType === "ep" ||
 		value.releaseType === "music video");
 
 export const isSearchResult = (value: unknown): value is SearchResult => {

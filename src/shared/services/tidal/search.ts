@@ -2,6 +2,7 @@ import { fetch } from "~/shared/utils/fetch";
 import {
 	getAlbumSearchQuery,
 	getSearchArtists,
+	isEpTitle,
 	isExpandedTitle,
 	isReissueTitle,
 	isSoundtrackTitle,
@@ -40,6 +41,7 @@ const searchTitle: SearchFunction = async ({
 	artist,
 	artistAlias,
 	title,
+	releaseType,
 	serviceRegions,
 }) => {
 	const token = await requestToken();
@@ -151,6 +153,12 @@ const searchTitle: SearchFunction = async ({
 	const album =
 		exactArtists.find(hasExactTitle) ??
 		matches.find(hasExactTitle) ??
+		exactArtists.find((candidate) =>
+			isEpTitle(candidate.attributes?.title ?? "", title, releaseType),
+		) ??
+		matches.find((candidate) =>
+			isEpTitle(candidate.attributes?.title ?? "", title, releaseType),
+		) ??
 		exactArtists.find(hasReissueTitle) ??
 		matches.find(hasReissueTitle) ??
 		exactArtists.find(hasSoundtrackTitle) ??

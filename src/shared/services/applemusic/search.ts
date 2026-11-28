@@ -3,6 +3,8 @@ import {
 	getAlbumSearchQuery,
 	getSearchArtists,
 	getSearchTitleSuffix,
+	getUnbracketedArtist,
+	isEpTitle,
 	isExpandedTitle,
 	isReissueTitle,
 	normalizeSearchText as normalize,
@@ -60,10 +62,20 @@ const searchTitle: SearchFunction = async ({
 	const artistNames = new Set(
 		artists.map((name) => normalizeSearchArtist(name)),
 	);
+	const bracketArtistNames = new Set(
+		artists
+			.flatMap((name) => {
+				const unbracketed = getUnbracketedArtist(name);
+				return unbracketed ? [normalizeSearchArtist(unbracketed)] : [];
+			})
+			.filter(Boolean),
+	);
 	const albumTitle = normalizeSearchTitle(title);
 	const isVariousArtists = normalize(artist) === "various artists";
 	const hasMatchingArtist = (album: SearchObject["results"][number]) =>
 		artistNames.has(normalizeSearchArtist(album.artistName ?? ""));
+	const hasBracketArtist = (album: SearchObject["results"][number]) =>
+		bracketArtistNames.has(normalizeSearchArtist(album.artistName ?? ""));
 	const isMatchingAlbum = (album: SearchObject["results"][number]) => {
 		if (!album.collectionViewUrl || albumTitle.length === 0) return false;
 		const collectionTitle = normalizeSearchTitle(album.collectionName ?? "");
@@ -73,11 +85,18 @@ const searchTitle: SearchFunction = async ({
 				collectionTitle.startsWith(albumTitle) &&
 				[" - single", " - ep"].includes(
 					getSearchTitleSuffix(collectionTitle, albumTitle),
-				))
+				)) ||
+			isEpTitle(collectionTitle, albumTitle, releaseType)
 		);
 	};
 
 	const findAlbum = (results: SearchObject["results"]) =>
+		results.find(
+			(album) =>
+				album.collectionViewUrl &&
+				hasMatchingArtist(album) &&
+				normalizeSearchTitle(album.collectionName ?? "") === albumTitle,
+		) ??
 		results.find(
 			(album) => hasMatchingArtist(album) && isMatchingAlbum(album),
 		) ??
@@ -99,7 +118,8 @@ const searchTitle: SearchFunction = async ({
 				album.collectionViewUrl &&
 				hasMatchingArtist(album) &&
 				isExpandedTitle(album.collectionName ?? "", title),
-		);
+		) ??
+		results.find((album) => hasBracketArtist(album) && isMatchingAlbum(album));
 	const visitedArtists = new Set<number>();
 	const response = await request("search", {
 		term: getAlbumSearchQuery(artist, title),
@@ -118,7 +138,7 @@ const searchTitle: SearchFunction = async ({
 	});
 	for (const candidate of candidates.results) {
 		if (
-			!artistNames.has(normalizeSearchArtist(candidate.artistName)) ||
+			(!hasMatchingArtist(candidate) && !hasBracketArtist(candidate)) ||
 			visitedArtists.has(candidate.artistId)
 		)
 			continue;

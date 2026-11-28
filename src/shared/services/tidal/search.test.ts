@@ -45,6 +45,32 @@ const result = (
 	});
 
 describe("Tidal search", () => {
+	test("matches EP label formatting but prefers an exact title", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			result([
+				{ id: "wrong", title: "Pass Down - EP", artist: "Other" },
+				{ id: "fallback", title: "Pass Down - EP", artist: "Krtm" },
+				{ id: "exact", title: "Pass Down EP", artist: "Krtm" },
+			]),
+		);
+		await expect(
+			search({ artist: "Krtm", title: "Pass Down EP", releaseType: "ep" }),
+		).resolves.toBe("https://tidal.com/browse/album/exact");
+	});
+
+	test("finds bracketed artists with alternate EP formatting via shared retries", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([{ id: "575294346", title: "Pass Down - EP", artist: "Krtm" }]),
+		);
+		await expect(
+			withArtistAlias(search)({
+				artist: "[KRTM]",
+				title: "Pass Down EP",
+				releaseType: "ep",
+			}),
+		).resolves.toBe("https://tidal.com/browse/album/575294346");
+	});
+
 	test.each([
 		false,
 		true,

@@ -10,6 +10,108 @@ vi.mock("~/shared/utils/fetch", () => ({ fetch: vi.fn() }));
 import { search, toRegionalAppleMusicUrl } from "./search";
 
 describe("Apple Music search", () => {
+	test.each([
+		"Pass Down EP",
+		"Pass Down - EP",
+	])("finds Pass Down despite bracketed artist credits (%s)", async (title) => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			JSON.stringify({
+				results: [
+					{
+						artistId: 472642140,
+						artistName: "Krtm",
+						collectionName: "Pass Down - EP",
+						collectionViewUrl:
+							"https://music.apple.com/pl/album/pass-down-ep/6829797226",
+					},
+				],
+			}),
+		);
+		await expect(
+			search({ artist: "[KRTM]", title, releaseType: "ep" }),
+		).resolves.toBe("https://music.apple.com/pl/album/pass-down-ep/6829797226");
+	});
+
+	test.each([
+		["[KRTM]", "Pass Down EP", "Pass Down - EP", "ep", "Krtm extended"],
+		["[KRTM]", "Pass Down EP", "Pass Down - EP", "album", "Krtm"],
+		["[KRTM]", "Pass Down EP", "Pass Down 2 - EP", "ep", "Krtm"],
+		["[KRTM] Extra", "Pass Down EP", "Pass Down - EP", "ep", "Krtm Extra"],
+		["[KRTM]", "Pass Down EP", "Pass Down (Expanded Edition)", "ep", "Krtm"],
+	] as const)("rejects unsafe EP or bracket matches (%s, %s, %s, %s, %s)", async (artist, title, collectionName, releaseType, artistName) => {
+		vi.mocked(fetch).mockResolvedValue(
+			JSON.stringify({
+				results: [
+					{
+						artistId: 1,
+						artistName,
+						collectionName,
+						collectionViewUrl: "https://music.apple.com/pl/album/wrong/1",
+					},
+				],
+			}),
+		);
+		await expect(
+			search({ artist, title, releaseType }),
+		).resolves.toBeUndefined();
+	});
+
+	test("prefers exact credits and titles over bracket and EP fallbacks", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			JSON.stringify({
+				results: [
+					{
+						artistId: 1,
+						artistName: "Krtm",
+						collectionName: "Pass Down - EP",
+						collectionViewUrl: "https://music.apple.com/pl/album/fallback/1",
+					},
+					{
+						artistId: 2,
+						artistName: "[KRTM]",
+						collectionName: "Pass Down - EP",
+						collectionViewUrl: "https://music.apple.com/pl/album/label/2",
+					},
+					{
+						artistId: 3,
+						artistName: "[KRTM]",
+						collectionName: "Pass Down EP",
+						collectionViewUrl: "https://music.apple.com/pl/album/exact/3",
+					},
+				],
+			}),
+		);
+		await expect(
+			search({ artist: "[KRTM]", title: "Pass Down EP", releaseType: "ep" }),
+		).resolves.toBe("https://music.apple.com/pl/album/exact/3");
+	});
+
+	test("finds bracketed artist releases through the artist catalog fallback", async () => {
+		vi.mocked(fetch)
+			.mockResolvedValueOnce(JSON.stringify({ results: [] }))
+			.mockResolvedValueOnce(
+				JSON.stringify({
+					results: [{ artistId: 472642140, artistName: "Krtm" }],
+				}),
+			)
+			.mockResolvedValueOnce(
+				JSON.stringify({
+					results: [
+						{
+							artistId: 472642140,
+							artistName: "Krtm",
+							collectionName: "Pass Down - EP",
+							collectionViewUrl:
+								"https://music.apple.com/pl/album/pass-down-ep/6829797226",
+						},
+					],
+				}),
+			);
+		await expect(
+			search({ artist: "[KRTM]", title: "Pass Down EP", releaseType: "ep" }),
+		).resolves.toBe("https://music.apple.com/pl/album/pass-down-ep/6829797226");
+	});
+
 	test("finds Loose Ends despite missing terminal punctuation", async () => {
 		vi.mocked(fetch).mockResolvedValueOnce(
 			JSON.stringify({

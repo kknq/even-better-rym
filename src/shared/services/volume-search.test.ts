@@ -4,6 +4,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { fetch } from "~/shared/utils/fetch";
 import { search as bandcamp } from "./bandcamp/search";
 import { search as qobuz } from "./qobuz/search";
+import { withArtistAlias } from "./search-matching";
 import { search as soundcloud } from "./soundcloud/search";
 import { search as youtube } from "./youtube/search";
 
@@ -12,9 +13,11 @@ vi.mock("./soundcloud/auth", () => ({
 	requestToken: vi.fn().mockResolvedValue("test-client"),
 }));
 
-beforeEach(() => vi.mocked(fetch).mockReset());
+beforeEach(() => {
+	vi.mocked(fetch).mockReset();
+});
 
-test.each([
+const services = [
 	{
 		service: "Bandcamp",
 		search: bandcamp,
@@ -40,7 +43,11 @@ test.each([
 			'<script>var ytInitialData = {"contents":{"twoColumnSearchResultsRenderer":{"primaryContents":{"sectionListRenderer":{"contents":[{"itemSectionRenderer":{"contents":[{"videoRenderer":{"videoId":"volume1"}}]}}]}}}}};</script>',
 		expected: "https://www.youtube.com/watch?v=volume1",
 	},
-])("$service retries equivalent numbered volume queries", async ({
+];
+
+test.each(
+	services,
+)("$service retries equivalent numbered volume queries", async ({
 	search,
 	empty,
 	found,
@@ -54,6 +61,41 @@ test.each([
 	expect(request.urlParameters?.q ?? request.urlParameters?.search_query).toBe(
 		"Artist Album Vol. 1",
 	);
+});
+
+test.each(
+	services,
+)("$service retries unbracketed artists and EP label formatting", async ({
+	search,
+	empty,
+	found,
+	expected,
+}) => {
+	vi.mocked(fetch).mockImplementation((request) => {
+		const query =
+			request.urlParameters?.q ?? request.urlParameters?.search_query;
+		return Promise.resolve(query === "KRTM Pass Down - EP" ? found : empty);
+	});
+	await expect(
+		withArtistAlias(search)({
+			artist: "[KRTM]",
+			title: "Pass Down EP",
+			releaseType: "ep",
+		}),
+	).resolves.toBe(expected);
+});
+
+test("Qobuz retries EP query formatting", async () => {
+	vi.mocked(fetch).mockImplementation((request) =>
+		Promise.resolve(
+			request.url.endsWith(encodeURIComponent("Artist Pass Down - EP"))
+				? '<div id="release-card-list"><a href="/us-en/album/pass-down/id">Pass Down - EP</a></div>'
+				: '<div id="release-card-list"></div>',
+		),
+	);
+	await expect(
+		qobuz({ artist: "Artist", title: "Pass Down EP", releaseType: "ep" }),
+	).resolves.toBe("https://open.qobuz.com/album/id");
 });
 
 test("Qobuz retries the abbreviated volume after its existing punctuation fallback", async () => {
