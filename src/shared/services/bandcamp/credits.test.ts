@@ -3,6 +3,42 @@
 import { expect, test } from "vitest";
 import { parseBandcampCredits } from "./credits";
 
+test("parses Portal Memories credits without treating dash bullets as roles", () => {
+	expect(
+		parseBandcampCredits([
+			`released August 16, 2024<br><br>- Produced by Avith Ortega<br>
+- Artwork by Avith Ortega<br>
+- Mixed &amp; Mastered by Avith Ortega<br>
+-- This album has an Album DR of 10, and follows the guidelines and practices of preserving a good Dynamic Range in music. Learn more about the topic &amp; about the Loudness War in music here: <a href="https://dynamicrangeday.co.uk/about/">dynamicrangeday.co.uk/about/</a>`,
+		]),
+	).toEqual([
+		{ name: "Avith Ortega", role: "producer" },
+		{ name: "Avith Ortega", role: "artwork" },
+		{ name: "Avith Ortega", role: "mixing engineer" },
+		{ name: "Avith Ortega", role: "mastering engineer" },
+	]);
+});
+
+test("trims role boundary dashes while preserving internal hyphens and track scopes", () => {
+	expect(
+		parseBandcampCredits([
+			`-- Recorded -- by Jean-Paul
+Jean-Paul: - co-producer -, -- custom-role --, -
+Jane (— guitar —)
+John: - bass - (2), - drums (3) -
+- Artwork -: Jane`,
+		]),
+	).toEqual([
+		{ name: "Jean-Paul", role: "recording engineer" },
+		{ name: "Jean-Paul", role: "co-producer" },
+		{ name: "Jean-Paul", role: "custom-role" },
+		{ name: "Jane", role: "guitar" },
+		{ name: "John", role: "bass", trackNumber: 2 },
+		{ name: "John", role: "drums", trackNumber: 3 },
+		{ name: "Jane", role: "artwork" },
+	]);
+});
+
 test("parses structured credit lines, joined roles, track-scoped roles, and unknown roles", () => {
 	const credits = parseBandcampCredits([
 		`<p>leigh - standing drumkit, lyrics<br>

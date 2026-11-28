@@ -31,6 +31,7 @@ const ROLE_TRANSLATIONS = new Map([
 	["электроорган", "electric organ"],
 	["запись", "recording engineer"],
 	["продакшн", "producer"],
+	["produced", "producer"],
 	["production", "producer"],
 	["recorded", "recording engineer"],
 	["recording", "recording engineer"],
@@ -87,8 +88,11 @@ const cleanName = (name: string): string =>
 		.replace(/[.;]+$/, "")
 		.trim();
 
+const cleanRole = (role: string): string =>
+	role.replace(/^[\s–—-]+|[\s–—.;-]+$/g, "");
+
 const normalizeBandcampRole = (role: string): string => {
-	const trimmed = role.trim();
+	const trimmed = cleanRole(role);
 	return (
 		ROLE_TRANSLATIONS.get(trimmed.toLocaleLowerCase()) ??
 		normalizeCreditRole(trimmed)
@@ -123,7 +127,7 @@ const splitRoles = (roles: string): string[] => {
 		part += character;
 	}
 	parts.push(part);
-	return parts.map((role) => role.trim().replace(/[.;]+$/, "")).filter(Boolean);
+	return parts.map(cleanRole).filter(Boolean);
 };
 
 const splitRoleScope = (
@@ -132,7 +136,7 @@ const splitRoleScope = (
 	const match = /\s*\((\d+(?:\s*,\s*\d+)*)\)\s*$/.exec(role);
 	if (!match) return { role };
 	return {
-		role: role.replace(match[0], "").trim(),
+		role: cleanRole(role.replace(match[0], "")),
 		trackNumbers: (match[1] ?? "").split(/\s*,\s*/).map(Number),
 	};
 };
@@ -203,7 +207,9 @@ const parsePersonRoleLine = (line: string): BandcampCredit[] => {
 	if (colon) {
 		const nameOrRole = colon[1] ?? "";
 		const rolesOrName = colon[2] ?? "";
-		const role = ROLE_TRANSLATIONS.get(nameOrRole.trim().toLocaleLowerCase());
+		const role = ROLE_TRANSLATIONS.get(
+			cleanRole(nameOrRole).toLocaleLowerCase(),
+		);
 		if (role) return makeCredits(rolesOrName, role);
 		if (
 			/^(?:[\w.+-]+@)?(?:[\w-]+\.)+[a-z]{2,}(?:[/?#]\S*)?$/i.test(rolesOrName)
