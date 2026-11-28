@@ -1,5 +1,6 @@
 import {
 	getSearchArtists,
+	getSearchTitleSuffix,
 	isEditionTitle,
 	isExpandedTitle,
 	isReissueTitle,
@@ -23,12 +24,12 @@ export const readSpotifySearchPage = async (
 	const entity = category === "albums" ? "album" : "track";
 	const resultSelector = `a[href^="/${entity}/"], a[href^="https://open.spotify.com/${entity}/"]`;
 	const videoSuffix =
-		/^(?:\s*(?:\(|\[|-\s+)\s*(?:official\s+)?(?:music\s+)?video(?:\)|\])?)$/;
+		/^(?:\s*(?:[([]|-\s+)\s*(?:official\s+)?(?:music\s+)?video[)\]]?)$/;
 
 	const matchesTitle = (spotifyTitle: string) => {
 		if (spotifyTitle === searchedTitle) return true;
 		if (!spotifyTitle.startsWith(searchedTitle)) return false;
-		const suffix = spotifyTitle.slice(searchedTitle.length);
+		const suffix = getSearchTitleSuffix(spotifyTitle, searchedTitle);
 		return (
 			isEditionTitle(spotifyTitle, searchedTitle) ||
 			isExpandedTitle(spotifyTitle, searchedTitle) ||

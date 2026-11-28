@@ -2,6 +2,7 @@ import { fetch } from "~/shared/utils/fetch";
 import {
 	getAlbumSearchQuery,
 	getSearchArtists,
+	getSearchTitleSuffix,
 	isExpandedTitle,
 	isReissueTitle,
 	normalizeSearchText as normalize,
@@ -69,8 +70,10 @@ const searchTitle: SearchFunction = async ({
 		return (
 			collectionTitle === albumTitle ||
 			((releaseType === "single" || releaseType === "ep") &&
-				(collectionTitle === `${albumTitle} - single` ||
-					collectionTitle === `${albumTitle} - ep`))
+				collectionTitle.startsWith(albumTitle) &&
+				[" - single", " - ep"].includes(
+					getSearchTitleSuffix(collectionTitle, albumTitle),
+				))
 		);
 	};
 

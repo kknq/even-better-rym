@@ -673,6 +673,7 @@ describe("Tidal search", () => {
 			.mockResolvedValueOnce(
 				result([{ id: "1", title: "Master of Puppets", artist: "Metallica" }]),
 			)
+			.mockResolvedValueOnce(result([]))
 			.mockResolvedValueOnce(
 				result([{ id: "2", title: "Рок жив!", artist: "7B" }]),
 			);
@@ -684,7 +685,7 @@ describe("Tidal search", () => {
 			}),
 		).resolves.toBe("https://tidal.com/browse/album/2");
 		expect(
-			vi.mocked(fetch).mock.calls[1][0].urlParameters?.["filter[query]"],
+			vi.mocked(fetch).mock.calls[2][0].urlParameters?.["filter[query]"],
 		).toBe("7B Рок Жив!");
 	});
 

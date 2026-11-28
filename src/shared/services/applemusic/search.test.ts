@@ -10,6 +10,27 @@ vi.mock("~/shared/utils/fetch", () => ({ fetch: vi.fn() }));
 import { search, toRegionalAppleMusicUrl } from "./search";
 
 describe("Apple Music search", () => {
+	test("finds Loose Ends despite missing terminal punctuation", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			JSON.stringify({
+				results: [
+					{
+						artistId: 1,
+						artistName: "Loose Ends",
+						collectionName: "So Where Are You",
+						collectionViewUrl:
+							"https://music.apple.com/pl/album/so-where-are-you/724210053",
+					},
+				],
+			}),
+		);
+		await expect(
+			search({ artist: "Loose Ends", title: "So Where Are You?" }),
+		).resolves.toBe(
+			"https://music.apple.com/pl/album/so-where-are-you/724210053",
+		);
+	});
+
 	test.each([
 		false,
 		true,

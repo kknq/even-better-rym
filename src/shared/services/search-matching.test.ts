@@ -6,6 +6,7 @@ import {
 	isEditionSuffix,
 	isEditionTitle,
 	isExpandedTitle,
+	isReissueTitle,
 	isSoundtrackTitle,
 	normalizeSearchArtist,
 	normalizeSearchText,
@@ -14,6 +15,48 @@ import {
 	withSearchTitleVariants,
 } from "./search-matching";
 import type { SearchFunction } from "./types";
+
+test.each([
+	"?",
+	".",
+	"!",
+	"?!...",
+	"",
+])("ignores terminal title punctuation: %s", (punctuation) => {
+	expect(normalizeSearchTitle(`So Where Are You${punctuation}`)).toBe(
+		normalizeSearchTitle("So Where Are You"),
+	);
+	expect(
+		isExpandedTitle(`Album${punctuation} (Expanded Edition)`, "Album!"),
+	).toBe(true);
+	expect(isEditionTitle(`Album${punctuation} (Deluxe Edition)`, "Album?")).toBe(
+		true,
+	);
+	expect(
+		isSoundtrackTitle(`Album${punctuation} (Original Soundtrack)`, "Album."),
+	).toBe(true);
+	expect(isReissueTitle(`Album${punctuation} (Reissue)`, "Album?")).toBe(true);
+});
+
+test("preserves internal punctuation and artist punctuation", () => {
+	expect(normalizeSearchTitle("?!...")).not.toBe("");
+	expect(normalizeSearchTitle("What? Now")).not.toBe(
+		normalizeSearchTitle("What Now"),
+	);
+	expect(normalizeSearchArtist("Artist!")).not.toBe(
+		normalizeSearchArtist("Artist"),
+	);
+});
+
+test("adds punctuation-free queries without changing the original query", () => {
+	expect(getSearchTitleVariants("So Where Are You?")).toEqual([
+		"So Where Are You?",
+		"So Where Are You",
+	]);
+	expect(getSearchTitleVariants("Album: Volume 1 - Music!")).toContain(
+		"Album, Vol. 1: Music",
+	);
+});
 
 test.each([
 	" (deluxe edition)",

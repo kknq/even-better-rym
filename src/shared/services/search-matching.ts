@@ -3,14 +3,27 @@ import type { SearchFunction } from "./types";
 export const normalizeSearchText = (value: string): string =>
 	value.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 
+const stripTerminalPunctuation = (value: string): string => {
+	const trimmed = value.trimEnd();
+	let end = trimmed.length;
+	while (end > 0 && "?.!".includes(trimmed[end - 1])) end--;
+	return trimmed.slice(0, end).trimEnd() || trimmed;
+};
+
 export const normalizeSearchTitle = (value: string): string =>
-	normalizeSearchText(value)
-		.replace(/\b(?:volume|vol\.?)(?=\s*\d)/g, "vol.")
-		.replace(/\s*[:,]\s*(vol\.\s*\d+)\b/g, " $1")
-		.replace(/\b(vol\.\s*\d+)\s*(?:[:,]|\s[-–—])\s*/g, "$1 ");
+	stripTerminalPunctuation(
+		normalizeSearchText(value)
+			.replace(/\b(?:volume|vol\.?)(?=\s*\d)/g, "vol.")
+			.replace(/\s*[:,]\s*(vol\.\s*\d+)\b/g, " $1")
+			.replace(/\b(vol\.\s*\d+)\s*(?:[:,]|\s[-–—])\s*/g, "$1 "),
+	);
+
+export const getSearchTitleSuffix = (
+	candidate: string,
+	title: string,
+): string => candidate.slice(title.length).replace(/^[?!.]+(?=\s)/, "");
 
 export const getSearchTitleVariants = (title: string): string[] => {
-	if (!/\b(?:volume|vol\.?)(?=\s*\d)/i.test(title)) return [title];
 	const abbreviated = title.replace(/\b(?:volume|vol\.?)(?=\s*\d)/gi, "Vol.");
 	const alternate = abbreviated
 		.replace(/\s*:\s*(Vol\.\s*\d+)\b/g, ", $1")
@@ -19,9 +32,10 @@ export const getSearchTitleVariants = (title: string): string[] => {
 	const expandedAlternate = expanded
 		.replace(/\s*,\s*(Volume\s*\d+)\b/g, ": $1")
 		.replace(/\b(Volume\s*\d+)\s*:\s*/g, "$1 - ");
+	const variants = [title, abbreviated, alternate, expanded, expandedAlternate];
 	return [
-		...new Set([title, abbreviated, alternate, expanded, expandedAlternate]),
-	];
+		...new Set([...variants, ...variants.map(stripTerminalPunctuation)]),
+	].filter((variant) => variant.length > 0 || variant === title);
 };
 
 export const withSearchTitleVariants =
@@ -98,7 +112,7 @@ export const isReissueTitle = (candidate: string, title: string): boolean => {
 		original.length > 0 &&
 		normalized.startsWith(original) &&
 		/^(?:\s*\((?:переиздание|reissue|reissued)\)|\s*\[(?:переиздание|reissue|reissued)\]|\s+[-–—]\s+(?:переиздание|reissue|reissued))$/u.test(
-			normalized.slice(original.length),
+			getSearchTitleSuffix(normalized, original),
 		)
 	);
 };
@@ -110,7 +124,7 @@ export const isExpandedTitle = (candidate: string, title: string): boolean => {
 		original.length > 0 &&
 		normalized.startsWith(original) &&
 		/^(?: \[expanded(?: edition)?\]| \(expanded(?: edition)?\)| [-–—] expanded(?: edition)?)$/.test(
-			normalized.slice(original.length),
+			getSearchTitleSuffix(normalized, original),
 		)
 	);
 };
@@ -134,7 +148,7 @@ export const isEditionTitle = (candidate: string, title: string): boolean => {
 	return (
 		original.length > 0 &&
 		normalized.startsWith(original) &&
-		isEditionSuffix(normalized.slice(original.length))
+		isEditionSuffix(getSearchTitleSuffix(normalized, original))
 	);
 };
 
@@ -148,7 +162,7 @@ export const isSoundtrackTitle = (
 		original.length > 0 &&
 		normalized.startsWith(original) &&
 		/^\s+\((?:official |original (?:(?:motion picture|video game) )?)?soundtrack\)$/.test(
-			normalized.slice(original.length),
+			getSearchTitleSuffix(normalized, original),
 		)
 	);
 };
