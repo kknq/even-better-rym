@@ -224,6 +224,15 @@ const sharedManifest = {
 			run_at: "document_start",
 		},
 		{
+			js: ["src/modules/wishlist-shuffle/main.ts"],
+			css: ["src/modules/wishlist-shuffle/wishlist-shuffle.css"],
+			matches: [
+				"*://*.rateyourmusic.com/collection/*",
+				"*://*.rateyourmusic.com/~*",
+			],
+			run_at: "document_start",
+		},
+		{
 			js: ["src/modules/user-page/main.ts"],
 			matches: ["*://*.rateyourmusic.com/~*"],
 			run_at: "document_start",

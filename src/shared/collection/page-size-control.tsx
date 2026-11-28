@@ -18,13 +18,11 @@ export function PageSizeControl({
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState("");
 	useEffect(() => {
-		setChoice(
-			value === null || value === 25
-				? ""
-				: presets.includes(value)
-					? String(value)
-					: "custom",
-		);
+		let nextChoice = "";
+		if (value !== null && value !== 25) {
+			nextChoice = presets.includes(value) ? String(value) : "custom";
+		}
+		setChoice(nextChoice);
 		setCustom(value === null ? "" : String(value));
 	}, [value]);
 
@@ -33,8 +31,8 @@ export function PageSizeControl({
 			class="ebr-collection-page-size"
 			onSubmit={(event) => {
 				event.preventDefault();
-				const next =
-					choice === "" ? 25 : Number(choice === "custom" ? custom : choice);
+				const selected = choice === "custom" ? custom : choice;
+				const next = choice === "" ? 25 : Number(selected);
 				if (!isCollectionPageSize(next)) {
 					setError("Enter a positive whole number.");
 					return;
@@ -92,7 +90,10 @@ export function PageSizeControl({
 					required
 					value={custom}
 					onInput={(event) => setCustom(event.currentTarget.value)}
-					style={{ width: "7em" }}
+					style={{
+						width: `${Math.max(10, custom.length + 4)}ch`,
+						maxWidth: "100%",
+					}}
 				/>
 			)}
 			<button type="submit" class="btn btn_small" disabled={saving}>

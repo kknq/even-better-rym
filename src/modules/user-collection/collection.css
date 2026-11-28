@@ -211,8 +211,11 @@
 	grid-row: 2;
 }
 
-.ebr-collection-pagination select,
-.ebr-collection-pagination input,
-.ebr-collection-pagination button {
+.ebr-collection-pagination select {
 	font-weight: normal;
+}
+
+.ebr-collection-pagination input[type="number"],
+.ebr-collection-pagination .btn {
+	font-weight: bold;
 }

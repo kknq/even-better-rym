@@ -1,0 +1,74 @@
+.ebr-collection-pagination > .ebr-wishlist-shuffle-controls {
+	grid-column: 1;
+	grid-row: 1;
+	justify-self: start;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	max-width: 100%;
+	text-align: left;
+}
+
+.ebr-wishlist-shuffle-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	min-height: 30px;
+	margin: 0;
+	padding: 4px 9px;
+	border: 0;
+	border-radius: 3px;
+	box-shadow: none;
+	font: inherit;
+	font-weight: bold;
+	line-height: 1.3;
+	cursor: pointer;
+}
+
+.ebr-wishlist-shuffle-controls .ebr-wishlist-shuffle-button {
+	flex: 0 0 auto;
+}
+
+.ebr-wishlist-shuffle-button:focus:not(:focus-visible) {
+	outline: none;
+}
+
+.ebr-wishlist-shuffle-button:focus-visible {
+	outline: 2px solid var(--gen-blue-med);
+	outline-offset: 2px;
+}
+
+#musicwanted .ookii .ebr-wishlist-shuffle-button {
+	margin-left: 12px;
+	font-size: 0.6em;
+	vertical-align: middle;
+}
+
+.ebr-wishlist-shuffle-status:empty {
+	display: none;
+}
+
+.ebr-collection-pagination-stacked.ebr-wishlist-shuffle-row {
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.ebr-collection-pagination-stacked > .ebr-wishlist-shuffle-controls {
+	grid-column: 1;
+	grid-row: 2;
+}
+
+.ebr-collection-pagination-stacked > .ebr-collection-page-size-host {
+	grid-column: 2 / -1;
+}
+
+.ebr-wishlist-shuffle-no-navigation.ebr-collection-pagination-stacked
+	> .ebr-wishlist-shuffle-controls {
+	grid-row: 1;
+}
+
+.ebr-wishlist-shuffle-no-navigation.ebr-collection-pagination-stacked
+	> .ebr-collection-page-size-host {
+	grid-column: 1 / -1;
+}
