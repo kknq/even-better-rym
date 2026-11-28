@@ -1,0 +1,39 @@
+.ebr-issue-rating-catalog .disco_cat_inner {
+	display: none;
+}
+
+.ebr-issue-rating {
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	float: right;
+	min-width: 6.2em;
+	padding: 0.3em 0.3em 0;
+	margin-top: 0.65em;
+	box-sizing: content-box;
+	line-height: 1.15;
+	color: #393;
+	font-weight: bold;
+}
+
+.ebr-issue-rating-value {
+	display: inline-flex;
+	flex-direction: column;
+}
+
+.ebr-issue-rating-label {
+	color: var(--mono-6);
+	font-size: 0.75em;
+	font-weight: normal;
+}
+
+.disco_cat.ebr-issue-rating-pending {
+	position: relative;
+}
+
+.ebr-issue-rating-loading {
+	position: absolute;
+	left: 0.5em;
+	top: 0;
+	color: var(--mono-6);
+}

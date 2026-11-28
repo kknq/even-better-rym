@@ -137,10 +137,12 @@ function parseCallbackResponse(body: string, pattern: string): Document {
 }
 
 const requests = new Map<string, Promise<Document>>();
+const issueRequests = new Map<string, Promise<Document>>();
 const enqueue = createSerialQueue();
 const requestInterval = () => 750 + Math.floor(Math.random() * 101);
 const cooldownKey = "discography-progress.cooldown-until";
 const cacheDuration = 3_600_000;
+const issueCacheDuration = 30_000;
 let nextRequestAt = Date.now() + requestInterval();
 let cooldownUntil = 0;
 
@@ -187,13 +189,13 @@ export function loadSection(type: ReleaseType): Promise<Document> {
 	]);
 	const existing = requests.get(key);
 	if (existing !== undefined) return existing;
-	const request = enqueue(async () => {
+	const request = (async () => {
 		const cached = await readCachedSection(key, type);
 		if (cached !== null) return cached;
 		const section = await loadCompleteSection(type);
 		await cacheSection(key, section);
 		return section;
-	}).finally(() => {
+	})().finally(() => {
 		requests.delete(key);
 	});
 	requests.set(key, request);
@@ -201,6 +203,12 @@ export function loadSection(type: ReleaseType): Promise<Document> {
 }
 
 async function pacedRequest(params: Record<string, string>): Promise<string> {
+	return enqueue(() => performPacedRequest(params));
+}
+
+async function performPacedRequest(
+	params: Record<string, string>,
+): Promise<string> {
 	await checkCooldown();
 	await sleep(Math.max(0, nextRequestAt - Date.now()));
 	await checkCooldown();
@@ -222,6 +230,73 @@ async function pacedRequest(params: Record<string, string>): Promise<string> {
 	} finally {
 		nextRequestAt = Date.now() + requestInterval();
 	}
+}
+
+export function loadIssues(releaseId: string): Promise<Document> {
+	if (!/^\d+$/.test(releaseId)) {
+		return Promise.reject(new Error("Invalid release ID"));
+	}
+	const username = getCurrentUsername();
+	const key = JSON.stringify([
+		"artist-issues.v1",
+		location.origin,
+		username === null ? null : normalizeUsername(username),
+		location.pathname,
+		releaseId,
+	]);
+	const existing = issueRequests.get(key);
+	if (existing) return existing;
+	const request = (async () => {
+		if (username !== null) {
+			try {
+				const html = await cache.get<unknown>(key);
+				if (html !== undefined) {
+					if (typeof html !== "string") {
+						throw new TypeError("Invalid cached issue response");
+					}
+					const issues = new DOMParser().parseFromString(html, "text/html");
+					if (
+						!issues.querySelector(
+							'.disco_cat_inner_issue [id^="disco_cat_catalog_msg_"]',
+						)
+					) {
+						throw new Error("Incomplete cached issue response");
+					}
+					return issues;
+				}
+			} catch (error) {
+				console.error(
+					"EvenBetterRYM: could not read issue ratings cache",
+					error,
+				);
+			}
+		}
+		const body = await pacedRequest({
+			action: "ExpandDiscographyIssues",
+			album_id: releaseId,
+		});
+		const issues = parseCallbackResponse(
+			body,
+			String.raw`RYMartistPage\._expandIssuesCallback\(\s*["']?${releaseId}["']?\s*,\s*`,
+		);
+		if (
+			username !== null &&
+			issues.querySelector(
+				'.disco_cat_inner_issue [id^="disco_cat_catalog_msg_"]',
+			)
+		) {
+			try {
+				await cache.set(key, issues.body.innerHTML, issueCacheDuration);
+			} catch (error) {
+				console.error("EvenBetterRYM: could not cache issue ratings", error);
+			}
+		}
+		return issues;
+	})().finally(() => {
+		issueRequests.delete(key);
+	});
+	issueRequests.set(key, request);
+	return request;
 }
 
 async function loadCompleteSection(type: ReleaseType): Promise<Document> {
@@ -247,14 +322,7 @@ async function loadCompleteSection(type: ReleaseType): Promise<Document> {
 			if (!hasMultipleCatalogs(row)) return;
 			const releaseId = /^release_(\d+)$/.exec(row.id)?.[1];
 			if (!releaseId || editionCatalogs(section, releaseId).length > 0) return;
-			const body = await pacedRequest({
-				action: "ExpandDiscographyIssues",
-				album_id: releaseId,
-			});
-			const issues = parseCallbackResponse(
-				body,
-				String.raw`RYMartistPage\._expandIssuesCallback\(\s*["']?${releaseId}["']?\s*,\s*`,
-			);
+			const issues = await loadIssues(releaseId);
 			const panel = section.querySelector(`#issues_${releaseId}`);
 			const html = issues.body.innerHTML;
 			if (panel) {

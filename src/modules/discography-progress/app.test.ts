@@ -41,7 +41,9 @@ function section(type: string, rows: string, total: number) {
 }
 
 function overall() {
-	return document.querySelector(".ebr-discography-overall progress");
+	return document.querySelector<HTMLProgressElement>(
+		".ebr-discography-overall progress",
+	);
 }
 
 beforeEach(() => {
@@ -117,6 +119,49 @@ test("shows zero overall coverage by default", async () => {
 	expect(
 		document.querySelector<HTMLElement>(".ebr-discography-overall")?.hidden,
 	).toBe(false);
+});
+
+test("shows empty coverage as 100% without awarding a completion star", async () => {
+	document.body.innerHTML = `<div id="discography">${section("s", "", 0)}</div>`;
+	await main();
+	const summary = document.querySelector<HTMLElement>(
+		".ebr-discography-overall",
+	);
+	expect(summary?.hidden).toBe(false);
+	for (const bar of document.querySelectorAll(".ebr-discography-bar")) {
+		const progress = bar.querySelector("progress");
+		expect(progress?.max).toBe(1);
+		expect(progress?.value).toBe(1);
+		expect(progress?.getAttribute("aria-valuetext")).toBe(
+			"You have listened to 0 of 0",
+		);
+		expect(bar.querySelector(".ebr-discography-percentage")?.textContent).toBe(
+			"100%",
+		);
+		expect(bar.querySelector(".ebr-discography-complete")).toBeNull();
+	}
+	expect(document.querySelectorAll(".ebr-discography-bar")).toHaveLength(2);
+	const changed = vi.mocked(watchHideZeroCoverage).mock.calls[0][0];
+	changed(true);
+	expect(summary?.hidden).toBe(true);
+	changed(false);
+	expect(summary?.hidden).toBe(false);
+});
+
+test("hides empty coverage when selected release types have no matching sections", async () => {
+	document.body.innerHTML = `<div id="discography">${section("j", row(1), 1)}</div>`;
+	vi.mocked(getSelectedTypes).mockResolvedValue(new Set(["s"]));
+	vi.mocked(getHideZeroCoverage).mockResolvedValue(true);
+	await main();
+	expect(
+		document.querySelector<HTMLElement>(".ebr-discography-overall")?.hidden,
+	).toBe(true);
+	expect(overall()?.value).toBe(1);
+	expect(
+		document.querySelector(
+			".ebr-discography-overall .ebr-discography-percentage",
+		)?.textContent,
+	).toBe("100%");
 });
 
 test("hides only the zero overall summary and applies visibility changes live", async () => {
