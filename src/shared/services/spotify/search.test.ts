@@ -1,10 +1,14 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { isExtensiveLoggingEnabled } from "~/shared/debug-settings";
 import { sendBackgroundMessage } from "~/shared/utils/messaging";
 import { withArtistAlias } from "../search-matching";
 import { search } from "./search";
 
 vi.mock("~/shared/utils/messaging", () => ({
 	sendBackgroundMessage: vi.fn(),
+}));
+vi.mock("~/shared/debug-settings", () => ({
+	isExtensiveLoggingEnabled: vi.fn(),
 }));
 
 const diagnostics = [
@@ -83,8 +87,23 @@ test("uses the shared retry for an alternate artist name", async () => {
 
 beforeEach(() => {
 	vi.mocked(sendBackgroundMessage).mockReset();
+	vi.mocked(isExtensiveLoggingEnabled).mockResolvedValue(true);
 	vi.spyOn(console, "warn").mockImplementation(() => undefined);
 	vi.spyOn(console, "info").mockImplementation(() => undefined);
+});
+
+test("does not log search diagnostics when extensive logging is disabled", async () => {
+	vi.mocked(isExtensiveLoggingEnabled).mockResolvedValue(false);
+	vi.mocked(sendBackgroundMessage).mockResolvedValue({
+		id: "request",
+		type: "spotifySearch",
+		data: { error: "Spotify search page failed to render", diagnostics },
+	});
+	await expect(search(metadata)).rejects.toThrow(
+		"Spotify search page failed to render",
+	);
+	expect(console.warn).not.toHaveBeenCalled();
+	expect(console.info).not.toHaveBeenCalled();
 });
 afterEach(() => vi.restoreAllMocks());
 
