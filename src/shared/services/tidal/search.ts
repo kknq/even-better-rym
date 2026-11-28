@@ -105,11 +105,23 @@ export const search: SearchFunction = async ({
 		normalizeSearchText(album.attributes?.title ?? "") === normalizedTitle;
 	const hasReissueTitle = (album: TidalResource) =>
 		isReissueTitle(album.attributes?.title ?? "", title);
+	const hasSoundtrackTitle = (album: TidalResource) => {
+		const candidate = normalizeSearchText(album.attributes?.title ?? "");
+		return (
+			normalizedTitle.length > 0 &&
+			candidate.startsWith(normalizedTitle) &&
+			/^\s+\((?:original (?:motion picture )?)?soundtrack\)$/.test(
+				candidate.slice(normalizedTitle.length),
+			)
+		);
+	};
 	const album =
 		exactArtists.find(hasExactTitle) ??
 		matches.find(hasExactTitle) ??
 		exactArtists.find(hasReissueTitle) ??
-		matches.find(hasReissueTitle);
+		matches.find(hasReissueTitle) ??
+		exactArtists.find(hasSoundtrackTitle) ??
+		matches.find(hasSoundtrackTitle);
 	if (album) {
 		return `https://tidal.com/browse/album/${album.id}`;
 	}
