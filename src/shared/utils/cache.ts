@@ -46,6 +46,7 @@ export const withCache =
 		key: string,
 		function_: (...arguments_: A[]) => T | Promise<T>,
 		ttl?: number,
+		shouldCache: (result: T) => boolean = () => true,
 	) =>
 	async (...arguments_: A[]): Promise<T> => {
 		const argumentKey = JSON.stringify([key, arguments_]);
@@ -53,6 +54,7 @@ export const withCache =
 		if (cached !== undefined) return cached;
 
 		const result = await function_(...arguments_);
-		if (result !== undefined) void set(argumentKey, result, ttl);
+		if (result !== undefined && shouldCache(result))
+			void set(argumentKey, result, ttl);
 		return result;
 	};
