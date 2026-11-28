@@ -2,6 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
+	loadIssues,
 	loadSection,
 	parseSectionResponse,
 	readReleases,
@@ -411,6 +412,119 @@ describe("background section loading", () => {
 		const cached = await load("e");
 		expect(readReleases(cached).get("release_16390215")).toBe(true);
 		expect(runScript).toHaveBeenCalledOnce();
+	});
+
+	test("shares a simultaneous issue request with discography coverage", async () => {
+		document.body.innerHTML = `<span id="disco_header_showing_e">Showing all (1)</span>
+			<div id="disco_type_e">${row(16390215, "2 cataloged")}</div>`;
+		reply(
+			`RYMartistPage._expandIssuesCallback(16390215, ${JSON.stringify(editions(16390215, ["3.5", "2.5"]))})`,
+		);
+		const issues = loadIssues("16390215");
+		expect(loadIssues("16390215")).toBe(issues);
+		const section = load("e");
+		await vi.runAllTimersAsync();
+		expect((await issues).querySelectorAll(".issue_info")).toHaveLength(2);
+		expect(readReleases(await section).get("release_16390215")).toBe(true);
+		expect(runScript).toHaveBeenCalledOnce();
+	});
+
+	test("caches issue details for 30 seconds and refreshes after expiry", async () => {
+		document.body.innerHTML =
+			'<div class="header_profile_logged_in"><a class="header_profile_main" href="/~Alice"></a></div>';
+		const key = JSON.stringify([
+			"artist-issues.v1",
+			location.origin,
+			"alice",
+			location.pathname,
+			"16390215",
+		]);
+		reply(
+			`RYMartistPage._expandIssuesCallback(16390215, ${JSON.stringify(editions(16390215, ["3.5", "2.5"]))})`,
+		);
+		const first = loadIssues("16390215");
+		await vi.runAllTimersAsync();
+		expect((await first).querySelectorAll(".issue_info")).toHaveLength(2);
+		expect(saved.get(key)).toHaveProperty("expire", Date.now() + 30_000);
+		await vi.advanceTimersByTimeAsync(29_999);
+		expect(
+			(await loadIssues("16390215")).querySelectorAll(".issue_info"),
+		).toHaveLength(2);
+		expect(runScript).toHaveBeenCalledOnce();
+		await vi.advanceTimersByTimeAsync(2);
+		const refreshed = loadIssues("16390215");
+		await vi.runAllTimersAsync();
+		await refreshed;
+		expect(runScript).toHaveBeenCalledTimes(2);
+	});
+
+	test("isolates cached issue details by user and artist", async () => {
+		document.body.innerHTML =
+			'<div class="header_profile_logged_in"><a class="header_profile_main" href="/~Alice"></a></div>';
+		reply(
+			`RYMartistPage._expandIssuesCallback(1, ${JSON.stringify(editions(1, ["3.5", "2.5"]))})`,
+		);
+		const first = loadIssues("1");
+		await vi.runAllTimersAsync();
+		await first;
+		document
+			.querySelector(".header_profile_main")
+			?.setAttribute("href", "/~Bob");
+		const second = loadIssues("1");
+		await vi.runAllTimersAsync();
+		await second;
+		history.replaceState({}, "", "/artist/another-artist");
+		const third = loadIssues("1");
+		await vi.runAllTimersAsync();
+		await third;
+		expect(runScript).toHaveBeenCalledTimes(3);
+	});
+
+	test("does not persist issue details without a known user or when the response is incomplete", async () => {
+		reply('RYMartistPage._expandIssuesCallback(1, "<ul></ul>")');
+		const incomplete = loadIssues("1");
+		await vi.runAllTimersAsync();
+		await incomplete;
+		expect(storage.set).not.toHaveBeenCalled();
+		document.body.innerHTML =
+			'<div class="header_profile_logged_in"><a class="header_profile_main" href="/~Alice"></a></div>';
+		const loggedIn = loadIssues("1");
+		await vi.runAllTimersAsync();
+		await loggedIn;
+		expect(storage.set).not.toHaveBeenCalled();
+		reply(
+			`RYMartistPage._expandIssuesCallback(1, ${JSON.stringify(editions(1, ["3.5"]))})`,
+		);
+		document.body.innerHTML = "";
+		const anonymous = loadIssues("1");
+		await vi.runAllTimersAsync();
+		await anonymous;
+		expect(storage.set).not.toHaveBeenCalled();
+	});
+
+	test("falls back to the network for invalid cached issue data", async () => {
+		document.body.innerHTML =
+			'<div class="header_profile_logged_in"><a class="header_profile_main" href="/~Alice"></a></div>';
+		const key = JSON.stringify([
+			"artist-issues.v1",
+			location.origin,
+			"alice",
+			location.pathname,
+			"1",
+		]);
+		saved.set(key, { expire: Date.now() + 30_000, data: "<ul></ul>" });
+		const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+		reply(
+			`RYMartistPage._expandIssuesCallback(1, ${JSON.stringify(editions(1, ["3.5"]))})`,
+		);
+		const pending = loadIssues("1");
+		await vi.runAllTimersAsync();
+		expect((await pending).querySelectorAll(".issue_info")).toHaveLength(1);
+		expect(runScript).toHaveBeenCalledOnce();
+		expect(log).toHaveBeenCalledWith(
+			"EvenBetterRYM: could not read issue ratings cache",
+			expect.any(Error),
+		);
 	});
 
 	test("paces edition requests after loading a missing section", async () => {

@@ -151,6 +151,12 @@ Adds a button on artist profiles to open their all-time chart of albums, EPs, mi
 
 ---
 
+### Artist Issue Ratings
+
+Shows your first rated issue and average rating for releases with multiple cataloged issues, alongside the catalog count. Click to see the individual issues. Issue details are cached for 30 seconds.
+
+---
+
 ### Artist Timeline
 
 Adds a timeline showing group members' activity and releases. Artist pages with shows also include a map of concert locations.

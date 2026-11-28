@@ -36,12 +36,12 @@ function createBar(
 	text.textContent = `You have ${activity} ${listened} of ${total}`;
 	const progress = document.createElement("progress");
 	progress.max = total || 1;
-	progress.value = listened;
+	progress.value = total === 0 ? 1 : listened;
 	progress.setAttribute("aria-label", label);
 	progress.setAttribute("aria-valuetext", text.textContent);
 	const percentage = document.createElement("span");
 	percentage.className = "ebr-discography-percentage";
-	percentage.textContent = `${total > 0 ? Math.floor((listened * 100) / total) : 0}%`;
+	percentage.textContent = `${total > 0 ? Math.floor((listened * 100) / total) : 100}%`;
 	if (total > 0 && listened === total) {
 		const star = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 		star.classList.add("ebr-discography-complete");

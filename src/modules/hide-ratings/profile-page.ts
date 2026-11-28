@@ -19,9 +19,13 @@ const refreshProfileRatings = (
 	const releases = document.querySelectorAll(".disco_release");
 	for (const release of releases) {
 		const rating = release.querySelector<HTMLElement>(".disco_cat_inner");
-		const ownRating = Number.parseFloat(rating?.textContent ?? "");
+		const ownRating = /^\d+(?:\.\d+)?(?:\s*\/|$)/.test(
+			rating?.textContent?.trim() ?? "",
+		);
 		const shouldShow =
-			visible || (visibility === "unrated" && Number.isFinite(ownRating));
+			visible ||
+			(visibility === "unrated" &&
+				(ownRating || release.getAttribute("data-ebr-issue-rated") === "true"));
 
 		for (const value of release.querySelectorAll(
 			".disco_avg_rating, .disco_ratings",

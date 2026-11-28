@@ -363,6 +363,27 @@ describe("Hide Ratings feature", () => {
 		).not.toContain("ebr-rating-visible");
 	});
 
+	it("recognizes rated issues on artist pages in unrated-only mode", async () => {
+		setPathname("/artist/example");
+		document.body.innerHTML = `
+			<div class="section_artist_discography">
+				<div class="disco_release"><span class="disco_cat_inner">2 cataloged</span>
+					<span class="disco_avg_rating">4.2</span></div>
+			</div>`;
+		await main();
+		const row = document.querySelector<HTMLElement>(".disco_release")!;
+		const average = row.querySelector(".disco_avg_rating");
+		expect(average?.classList).not.toContain("ebr-rating-visible");
+		row.dataset.ebrIssueRated = "true";
+		row.append(document.createElement("span"));
+		await flushMutationObserver();
+		expect(average?.classList).toContain("ebr-rating-visible");
+		delete row.dataset.ebrIssueRated;
+		row.lastElementChild?.remove();
+		await flushMutationObserver();
+		expect(average?.classList).not.toContain("ebr-rating-visible");
+	});
+
 	it("lets the generic control show and re-hide page ratings", async () => {
 		setPathname("/song/the-beatles/here-comes-the-sun/");
 		mocks.getRatingSettings.mockResolvedValue(getSettings({ buttons: true }));
