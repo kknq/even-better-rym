@@ -8,7 +8,9 @@ import { search } from "./search";
 vi.mock("~/shared/utils/fetch", () => ({ fetch: vi.fn() }));
 vi.mock("./auth", () => ({ requestToken: vi.fn() }));
 
-const result = (albums: { id: string; title: string; artist: string }[]) =>
+const result = (
+	albums: { id: string; title: string; artist: string | string[] }[],
+) =>
 	JSON.stringify({
 		data: [
 			{
@@ -17,17 +19,29 @@ const result = (albums: { id: string; title: string; artist: string }[]) =>
 				},
 			},
 		],
-		included: albums.flatMap(({ id, title, artist }) => [
-			{
-				id,
-				type: "albums",
-				attributes: { title },
-				relationships: {
-					artists: { data: [{ id: `artist-${id}`, type: "artists" }] },
+		included: albums.flatMap(({ id, title, artist }) => {
+			const artists = typeof artist === "string" ? [artist] : artist;
+			return [
+				{
+					id,
+					type: "albums",
+					attributes: { title },
+					relationships: {
+						artists: {
+							data: artists.map((_, index) => ({
+								id: `artist-${id}-${index}`,
+								type: "artists",
+							})),
+						},
+					},
 				},
-			},
-			{ id: `artist-${id}`, type: "artists", attributes: { name: artist } },
-		]),
+				...artists.map((name, index) => ({
+					id: `artist-${id}-${index}`,
+					type: "artists",
+					attributes: { name },
+				})),
+			];
+		}),
 	});
 
 describe("Tidal search", () => {
@@ -38,6 +52,182 @@ describe("Tidal search", () => {
 			expires_in: 3600,
 			token_type: "Bearer",
 		});
+	});
+
+	test.each([
+		["Ghostface Killah", "MF Doom"],
+		["MF DOOM", "Ghostface Killah"],
+	])("matches Chinatown Wars' separate artist credits: %j", async (...artists) => {
+		const title = "Grand Theft Auto: Chinatown Wars";
+		vi.mocked(fetch).mockResolvedValue(
+			result([{ id: "261447549", title, artist: artists }]),
+		);
+		await expect(
+			search({
+				artist: "Ghostface Killah & Doom",
+				title,
+				serviceRegions: { tidal: "PL" },
+			}),
+		).resolves.toBe("https://tidal.com/browse/album/261447549");
+	});
+
+	test("matches separate collaborators through an explicit RYM alias", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{ id: "1", title: "Album", artist: ["Ghostface Killah", "MF Doom"] },
+			]),
+		);
+		await expect(
+			search({
+				artist: "DOOMSTARKS",
+				artistAlias: "Ghostface Killah & Doom",
+				title: "Album",
+			}),
+		).resolves.toBe("https://tidal.com/browse/album/1");
+	});
+
+	test.each([
+		["Alpha & Beta", ["Alpha", "DJ Beta"]],
+		["Beta & Alpha", ["DJ Beta", "Alpha"]],
+		["Alpha & Beta & Gamma", ["Alpha", "DJ Beta", "MC Gamma"]],
+	])("matches prefixed collaborator names without artist-specific aliases: %s", async (artist, names) => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([{ id: "1", title: "Album", artist: names }]),
+		);
+		await expect(search({ artist, title: "Album" })).resolves.toBe(
+			"https://tidal.com/browse/album/1",
+		);
+	});
+
+	test.each([
+		["Alpha & Beta", ["DJ Alpha", "DJ Beta"]],
+		["Alpha & Beta", ["Alphabetabeta", "Beta Tribute"]],
+	])("rejects collaborations without an exact participant: %s / %j", async (artist, names) => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([{ id: "1", title: "Album", artist: names }]),
+		);
+		await expect(search({ artist, title: "Album" })).resolves.toBeUndefined();
+	});
+
+	test.each([
+		["Ghostface Killah"],
+		["MF Doom"],
+		["Ghostface Killah", "Another Artist"],
+		["Ghostface Killah", "MF Doom Tribute"],
+		["Ghostface Killah", "MF Doom", "Another Artist"],
+	])("falls back to an exact participant despite different remaining credits: %j", async (...artists) => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([{ id: "1", title: "Album", artist: artists }]),
+		);
+		await expect(
+			search({
+				artist: "Ghostface Killah & MF Doom",
+				title: "Album",
+			}),
+		).resolves.toBe("https://tidal.com/browse/album/1");
+	});
+
+	test("finds Chinatown Wars when RYM uses a completely different collaborator alias", async () => {
+		const title = "Grand Theft Auto: Chinatown Wars";
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{ id: "261447549", title, artist: ["Ghostface Killah", "MF Doom"] },
+			]),
+		);
+		await expect(
+			search({
+				artist: "Ghostface Killah & King Geedorah",
+				title,
+			}),
+		).resolves.toBe("https://tidal.com/browse/album/261447549");
+	});
+
+	test("prefers the complete collaboration over a one-participant match", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{
+					id: "1",
+					title: "Album",
+					artist: ["Ghostface Killah", "Another Artist"],
+				},
+				{ id: "2", title: "Album", artist: ["Ghostface Killah", "MF Doom"] },
+			]),
+		);
+		await expect(
+			search({
+				artist: "Ghostface Killah & Doom",
+				title: "Album",
+			}),
+		).resolves.toBe("https://tidal.com/browse/album/2");
+	});
+
+	test("requires an exact title for the one-participant fallback", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{
+					id: "1",
+					title: "Album (Reissue)",
+					artist: ["Ghostface Killah", "MF Doom"],
+				},
+			]),
+		);
+		await expect(
+			search({
+				artist: "Ghostface Killah & King Geedorah",
+				title: "Album",
+			}),
+		).resolves.toBeUndefined();
+	});
+
+	test("requires an exact title for the separate-credit fallback", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{
+					id: "1",
+					title: "Album Live",
+					artist: ["Ghostface Killah", "MF Doom"],
+				},
+			]),
+		);
+		await expect(
+			search({
+				artist: "Ghostface Killah & Doom",
+				title: "Album",
+			}),
+		).resolves.toBeUndefined();
+	});
+
+	test("prefers an intact artist credit to the collaboration fallback", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{ id: "1", title: "Album", artist: ["Simon", "Garfunkel"] },
+				{ id: "2", title: "Album", artist: "Simon & Garfunkel" },
+			]),
+		);
+		await expect(
+			search({
+				artist: "Simon & Garfunkel",
+				title: "Album",
+			}),
+		).resolves.toBe("https://tidal.com/browse/album/2");
+	});
+
+	test("does not accept a partial participant name", async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{
+					id: "1",
+					title: "Album",
+					artist: ["Belle Tribute", "Another Artist"],
+				},
+			]),
+		);
+		await expect(
+			search({
+				artist: "Belle & Sebastian",
+				title: "Album",
+			}),
+		).resolves.toBeUndefined();
 	});
 
 	test("finds the Various Artists tribute using its title alone in the preferred region", async () => {

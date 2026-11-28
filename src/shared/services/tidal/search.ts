@@ -85,16 +85,52 @@ export const search: SearchFunction = async ({
 				?.name;
 			return name === undefined ? [] : [name];
 		});
-	const matches = (data.data ?? [])
+	const collaborations = artists
+		.map((name) =>
+			name.split(/\s+&\s+/).map((part) => normalizeSearchArtist(part)),
+		)
+		.filter(
+			(names) =>
+				names.length > 1 &&
+				names.every(Boolean) &&
+				new Set(names).size === names.length,
+		);
+	const hasMatchingCollaboration = (album: TidalResource) => {
+		const names = new Set(
+			getArtistNames(album).map((name) => normalizeSearchArtist(name)),
+		);
+		return collaborations.some((collaborators) => {
+			if (names.size !== collaborators.length) return false;
+			const unmatched = new Set(names);
+			const remaining = collaborators.filter((name) => !unmatched.delete(name));
+			if (remaining.length === collaborators.length) return false;
+			return remaining.every((name) => {
+				const candidates = [...unmatched].filter((candidate) =>
+					candidate.endsWith(` ${name}`),
+				);
+				if (candidates.length !== 1) return false;
+				unmatched.delete(candidates[0]);
+				return true;
+			});
+		});
+	};
+	const hasMatchingCollaborator = (album: TidalResource) => {
+		const names = new Set(
+			getArtistNames(album).map((name) => normalizeSearchArtist(name)),
+		);
+		return collaborations.some((collaborators) =>
+			collaborators.some((name) => names.has(name)),
+		);
+	};
+	const albums = (data.data ?? [])
 		.flatMap((result) => result.relationships?.albums?.data ?? [])
 		.map((album) => included.get(`albums:${album.id}`))
-		.filter(
-			(album): album is TidalResource =>
-				album !== undefined &&
-				getArtistNames(album).some((name) =>
-					foldedArtistNames.has(normalizeSearchArtist(name)),
-				),
-		);
+		.filter((album): album is TidalResource => album !== undefined);
+	const matches = albums.filter((album) =>
+		getArtistNames(album).some((name) =>
+			foldedArtistNames.has(normalizeSearchArtist(name)),
+		),
+	);
 	const exactArtists = matches.filter((album) =>
 		getArtistNames(album).some((name) =>
 			artistNames.has(normalizeSearchText(name)),
@@ -121,7 +157,17 @@ export const search: SearchFunction = async ({
 		exactArtists.find(hasReissueTitle) ??
 		matches.find(hasReissueTitle) ??
 		exactArtists.find(hasSoundtrackTitle) ??
-		matches.find(hasSoundtrackTitle);
+		matches.find(hasSoundtrackTitle) ??
+		albums.find(
+			(candidate) =>
+				hasExactTitle(candidate) && hasMatchingCollaboration(candidate),
+		) ??
+		albums.find(
+			(candidate) =>
+				normalizedTitle.length > 0 &&
+				hasExactTitle(candidate) &&
+				hasMatchingCollaborator(candidate),
+		);
 	if (album) {
 		return `https://tidal.com/browse/album/${album.id}`;
 	}
