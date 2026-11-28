@@ -81,7 +81,7 @@ Adds a **Load all comments** button beside the Comments heading on release pages
 
 ### Media Links Submission Helper
 
-Helps turn supported music-service links into the embed codes needed for media-link submissions.
+Helps turn supported music-service links into embed codes and automatically converts new Tidal album links to a format RYM accepts.
 
 ---
 

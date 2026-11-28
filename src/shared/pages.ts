@@ -172,7 +172,7 @@ export const pageHints: Record<PageKey, string> = {
 	discogsCarousel:
 		"Adds an optional carousel of secondary Discogs release images to music release pages.",
 	streamLinkSubmission:
-		"Assists with converting Soundcloud and Bandcamp links to embed codes on the media link submission page.",
+		"Helps convert SoundCloud and Bandcamp links to embed codes and Tidal album links to a format RYM accepts.",
 	userCollection:
 		"Adds configurable filters, columns, and page-size controls to music collections.",
 	filmCollection:

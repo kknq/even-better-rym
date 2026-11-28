@@ -60,9 +60,9 @@ export function StreamLinkConverter({
 		<div
 			style={{
 				display: "flex",
+				flexWrap: "wrap",
 				gap: 4,
 				alignItems: "center",
-				marginTop: 8,
 			}}
 		>
 			<ServiceSelector
