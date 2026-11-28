@@ -101,6 +101,12 @@ The three-dot menu lets you choose which filters to show and, for music, select 
 
 ---
 
+### Wishlist Shuffle
+
+Shuffle your own wishlist from its collection page or your profile's wishlist tab. The shuffle temporarily opens a large collection page; use your browser's Back button to return to the previous view.
+
+---
+
 ### Profile Edit Boxes
 
 Lets you edit your favorite artists and other comments directly from your profile page.

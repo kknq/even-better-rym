@@ -43,7 +43,10 @@ export async function injectCollectionFilterButtons() {
 	);
 	const app = document.createElement("div");
 	app.id = "ebr-collection";
-	const anchor = pagination[0]?.parentElement ?? table;
+	const anchor =
+		pagination[0]?.parentElement ??
+		document.querySelector(".ebr-wishlist-shuffle-row") ??
+		table;
 	if (anchor) anchor.before(app);
 	else if (breadcrumb) (breadcrumb.closest("table") ?? breadcrumb).after(app);
 	else throw new Error("Collection content not found");
@@ -56,15 +59,24 @@ export async function injectCollectionFilterButtons() {
 		row?.classList.add("ebr-collection-pagination");
 		navigation.after(container);
 		render(<PageSize kind={kind} />, container);
-		if (row) alignPagination(row, navigation, container);
+		if (row) alignPagination(row, navigation);
 	}
 	if (!pagination.length) {
 		for (const position of ["before", "after"] as const) {
+			const existing =
+				position === "before"
+					? document.querySelector<HTMLElement>(".ebr-wishlist-shuffle-row")
+					: null;
+			const row = existing ?? document.createElement("div");
+			row.classList.add("ebr-collection-pagination");
+			if (!existing) {
+				if (table) table[position](row);
+				else if (position === "before") app.after(row);
+				else app.parentElement?.append(row);
+			}
 			const container = document.createElement("div");
-			container.className = "ebr-collection-pagination";
-			if (table) table[position](container);
-			else if (position === "before") app.after(container);
-			else app.parentElement?.append(container);
+			container.className = "ebr-collection-page-size-host";
+			row.append(container);
 			render(<PageSize kind={kind} />, container);
 		}
 	}

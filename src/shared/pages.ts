@@ -15,6 +15,7 @@ export const pages = {
 	discogsCarousel: "/release/",
 	streamLinkSubmission: "/submit_media_link",
 	userCollection: "/collection",
+	wishlistShuffle: ["/collection", "/~"],
 	filmCollection: "/film_collection",
 	userPage: "/~",
 	followStatus: ["/~", "/friends/", "/account/friends"],
@@ -62,6 +63,7 @@ export const pageLabels: Record<PageKey, string> = {
 	discogsCarousel: "Discogs Release Image Carousel",
 	streamLinkSubmission: "Media Links Submission Helper",
 	userCollection: "Music Collection Enhancements",
+	wishlistShuffle: "Wishlist Shuffle",
 	filmCollection: "Film Collection Enhancements",
 	userPage: "Profile Edit Boxes",
 	followStatus: "Follow Status",
@@ -123,6 +125,7 @@ export const featureGroups: readonly (readonly [string, readonly PageKey[]])[] =
 			"Library and user profiles",
 			[
 				"userCollection",
+				"wishlistShuffle",
 				"filmCollection",
 				"userPage",
 				"followStatus",
@@ -183,6 +186,8 @@ export const pageHints: Record<PageKey, string> = {
 		"Helps convert SoundCloud and Bandcamp links to embed codes and Tidal album links to a format RYM accepts.",
 	userCollection:
 		"Adds configurable filters, columns, and page-size controls to music collections.",
+	wishlistShuffle:
+		"Shuffles your wishlist from your profile or music collection.",
 	filmCollection:
 		"Adds configurable filters, columns, and page-size controls to film collections.",
 	userPage:
