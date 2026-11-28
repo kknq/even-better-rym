@@ -437,6 +437,7 @@ describe("Tidal search", () => {
 
 	test.each([
 		"Original Motion Picture Soundtrack",
+		"Original Video Game Soundtrack",
 		"Original Soundtrack",
 		"Soundtrack",
 	])("finds The Dog and the Fountain with the %s suffix", async (suffix) => {
@@ -456,6 +457,35 @@ describe("Tidal search", () => {
 				serviceRegions: { tidal: "PL" },
 			}),
 		).resolves.toBe("https://tidal.com/browse/album/301961458");
+	});
+
+	test("finds Vice City's Various Artists video game soundtrack", async () => {
+		const title = "Grand Theft Auto: Vice City - Music from Radio Espantoso";
+		vi.mocked(fetch).mockResolvedValue(
+			result([
+				{
+					id: "wrong",
+					title: `${title} (Original Video Game Soundtrack)`,
+					artist: ["Alpha Banditos", "Tres Apenas como eso", "Unaesta"],
+				},
+				{
+					id: "22211851",
+					title: `${title} (Original Video Game Soundtrack)`,
+					artist: "Various Artists",
+				},
+			]),
+		);
+		await expect(
+			search({
+				artist: "Various Artists",
+				title,
+				serviceRegions: { tidal: "PL" },
+			}),
+		).resolves.toBe("https://tidal.com/browse/album/22211851");
+		expect(vi.mocked(fetch).mock.calls[0][0].urlParameters).toMatchObject({
+			"filter[query]": title,
+			countryCode: "PL",
+		});
 	});
 
 	test("prefers an exact title even when the soundtrack has the exact artist spelling", async () => {

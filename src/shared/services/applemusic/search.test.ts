@@ -203,8 +203,8 @@ describe("Apple Music search", () => {
 		{ releaseType: "single", collectionName: "Balls - Single", matches: true },
 		{ releaseType: "ep", collectionName: "Balls - EP", matches: true },
 		{ releaseType: "album", collectionName: "Balls - Single", matches: false },
-		{ releaseType: "ep", collectionName: "Balls - Single", matches: false },
-		{ releaseType: "single", collectionName: "Balls - EP", matches: false },
+		{ releaseType: "ep", collectionName: "Balls - Single", matches: true },
+		{ releaseType: "single", collectionName: "Balls - EP", matches: true },
 		{ collectionName: "Balls - EP", matches: false },
 	])("checks release-type suffixes: %j", async ({
 		releaseType,
@@ -216,6 +216,71 @@ describe("Apple Music search", () => {
 		const result = await search({ ...metadata, releaseType });
 		if (matches) expect(result).toContain("/pl/album/balls/");
 		else expect(result).toBeUndefined();
+	});
+
+	test("finds the Vice City EP credited to performers and labelled Single by Apple", async () => {
+		const title = "Grand Theft Auto: Vice City - Music from Radio Espantoso";
+		const url =
+			"https://music.apple.com/us/album/radio-espantoso/1710746514?uo=4";
+		respond({
+			results: [
+				{
+					artistId: 1,
+					artistName: "Alpha Banditos, Tres Apenas como eso & Unaesta",
+					collectionName: `${title} - Single`,
+					collectionViewUrl: url,
+				},
+			],
+		});
+		await expect(
+			search({
+				artist: "Various Artists",
+				title,
+				releaseType: "ep",
+				serviceRegions: { applemusic: "pl" },
+			}),
+		).resolves.toBe(url.replace("/us/", "/pl/"));
+		expect(vi.mocked(fetch).mock.calls[0][0].urlParameters).toMatchObject({
+			term: title,
+			country: "pl",
+		});
+	});
+
+	test("prefers a Various Artists credit over a title-only performer match", async () => {
+		respond({
+			results: [
+				{ ...album, collectionName: "Compilation", artistName: "Performer" },
+				{
+					...album,
+					collectionName: "Compilation",
+					artistName: "Various Artists",
+					collectionViewUrl: "https://music.apple.com/pl/album/compilation/2",
+				},
+			],
+		});
+		await expect(
+			search({
+				artist: "Various Artists",
+				title: "Compilation",
+			}),
+		).resolves.toBe("https://music.apple.com/pl/album/compilation/2");
+	});
+
+	test.each([
+		{ collectionName: "Compilation Live", artistName: "Performer" },
+		{ collectionName: "Compilation Vol. 2", artistName: "Performer" },
+		{ collectionName: "Compilation - Single Deluxe", artistName: "Performer" },
+		{ collectionName: "Compilation", artistName: "" },
+		{ collectionName: undefined, artistName: "Performer" },
+	])("rejects unverified Various Artists titles: %j", async (candidate) => {
+		respond({ results: [{ ...album, ...candidate }] }, { results: [] });
+		await expect(
+			search({
+				artist: "Various Artists",
+				title: "Compilation",
+				releaseType: "ep",
+			}),
+		).resolves.toBeUndefined();
 	});
 
 	test("requires both matching artist ID and names in the catalog fallback", async () => {

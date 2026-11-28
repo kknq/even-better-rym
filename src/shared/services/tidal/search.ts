@@ -146,7 +146,7 @@ export const search: SearchFunction = async ({
 		return (
 			normalizedTitle.length > 0 &&
 			candidate.startsWith(normalizedTitle) &&
-			/^\s+\((?:original (?:motion picture )?)?soundtrack\)$/.test(
+			/^\s+\((?:original (?:(?:motion picture|video game) )?)?soundtrack\)$/.test(
 				candidate.slice(normalizedTitle.length),
 			)
 		);
