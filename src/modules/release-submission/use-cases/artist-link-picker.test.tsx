@@ -11,6 +11,7 @@ import {
 	startArtistSearch,
 	watchArtistResultClicks,
 } from "../utils/shortcut-popup";
+import { waitForTracklistEdits } from "../utils/simple-tracklist";
 import type { ReleaseOptions } from "../utils/types";
 import injectArtistLinkPicker from "./artist-link-picker";
 
@@ -97,6 +98,7 @@ test.each([
 			),
 		);
 	} finally {
+		await act(async () => await waitForTracklistEdits());
 		if (container) render(null, container);
 		document.body.replaceChildren();
 	}
@@ -165,6 +167,7 @@ test("bases picker titles on the completed import, not the pre-import tracklist"
 			);
 		});
 	} finally {
+		await act(async () => await waitForTracklistEdits());
 		if (container) render(null, container);
 		document.body.replaceChildren();
 	}
@@ -283,6 +286,7 @@ test("Bandcamp compilation artist buttons update individual tracks without dupli
 			),
 		);
 	} finally {
+		await act(async () => await waitForTracklistEdits());
 		if (container) render(null, container);
 		document.body.replaceChildren();
 		vi.mocked(fetch).mockReset();
@@ -356,6 +360,7 @@ test("explicitly adds main artists to ordinary album titles without a new search
 		});
 		expect(document.querySelector("#ebr-artist-link-picker")).toBeNull();
 	} finally {
+		await act(async () => await waitForTracklistEdits());
 		if (container) render(null, container);
 		document.body.replaceChildren();
 	}
@@ -423,6 +428,7 @@ test("selecting a track artist does not search for the next one", async () => {
 			document.querySelector('input[value="Cancel selection"]'),
 		).toBeNull();
 	} finally {
+		await act(async () => await waitForTracklistEdits());
 		document.removeEventListener("artistAssociationEvent", associated);
 		if (container) render(null, container);
 		document.body.replaceChildren();
@@ -481,6 +487,7 @@ test.each([
 			),
 		);
 	} finally {
+		await act(async () => await waitForTracklistEdits());
 		if (container) render(null, container);
 		document.body.replaceChildren();
 	}
@@ -547,6 +554,7 @@ test("removes a main artist without waiting for undecided guests, including undo
 		await click("Leave out");
 		await expectText(original);
 	} finally {
+		await act(async () => await waitForTracklistEdits());
 		if (container) render(null, container);
 		document.body.replaceChildren();
 	}
@@ -650,6 +658,7 @@ test("adds and removes each main artist independently on a mixed-artist release"
 			);
 		});
 	} finally {
+		await act(async () => await waitForTracklistEdits());
 		if (container) render(null, container);
 		document.body.replaceChildren();
 	}
